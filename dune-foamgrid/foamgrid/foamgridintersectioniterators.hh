@@ -1,5 +1,7 @@
-#ifndef DUNE_IDENTITYGRID_INTERSECTIONITERATOR_HH
-#define DUNE_IDENTITYGRID_INTERSECTIONITERATOR_HH
+#ifndef DUNE_FOAMGRID_INTERSECTIONITERATORS_HH
+#define DUNE_FOAMGRID_INTERSECTIONITERATORS_HH
+
+#include <dune-foamgrid/foamgrid/foamgridintersections.hh>
 
 /** \file
 * \brief The FoamGridLeafIntersectionIterator and FoamGridLevelIntersectionIterator classes
@@ -105,76 +107,65 @@ template<class GridImp>
 class FoamGridLevelIntersectionIterator
 {
     
-        enum {dim=GridImp::dimension};
-    
-        enum {dimworld=GridImp::dimensionworld};
-    
-        // The type used to store coordinates
-        typedef typename GridImp::ctype ctype;
-    
-    typedef typename GridImp::HostGridType::template Codim<0>::Entity::LevelIntersectionIterator HostLevelIntersectionIterator;
-    
-    public:
+    enum { dim=GridImp::dimension };
+    enum { dimworld=GridImp::dimensionworld };
 
-        typedef typename GridImp::template Codim<0>::EntityPointer EntityPointer;
-        typedef typename GridImp::template Codim<1>::Geometry Geometry;
-        typedef typename GridImp::template Codim<1>::LocalGeometry LocalGeometry;
-        typedef typename GridImp::template Codim<0>::Entity Entity;
-        typedef Dune::Intersection<const GridImp, Dune::FoamGridLevelIntersectionIterator> Intersection;
+    //friend class OneDGridEntity<0,dim,GridImp>;
 
-    FoamGridLevelIntersectionIterator(const GridImp* identityGrid,
-                                     const HostLevelIntersectionIterator& hostIterator)
-        : selfLocal_(NULL), neighborLocal_(NULL), intersectionGlobal_(NULL),
-          identityGrid_(identityGrid), hostIterator_(hostIterator)
+    //! Constructor for a given grid entity and a given neighbor
+    FoamGridLevelIntersectionIterator(FoamGridElement* center, int nb) 
+        : intersection_(center,nb)
     {}
 
-        //! equality
-        bool equals(const FoamGridLevelIntersectionIterator<GridImp>& other) const {
-            return hostIterator_ == other.hostIterator_;
-        }
+    /** \brief Constructor creating the 'one-after-last'-iterator */
+    FoamGridLevelIntersectionIterator(FoamGridElement* center) 
+        : intersection_(center,center->corners())
+    {}
 
-        
-        //! prefix increment
-        void increment() {
-            ++hostIterator_;
+public:
 
-            // Delete intersection geometry objects, if present
-            if (intersectionGlobal_ != NULL) {
-                delete intersectionGlobal_;
-                intersectionGlobal_ = NULL;
-            }
+    typedef typename GridImp::template Codim<1>::Geometry Geometry;
+    typedef typename GridImp::template Codim<1>::LocalGeometry LocalGeometry;
+    typedef typename GridImp::template Codim<0>::EntityPointer EntityPointer;
+    typedef typename GridImp::template Codim<0>::Entity Entity;
+    typedef Dune::Intersection<const GridImp, Dune::FoamGridLevelIntersection> Intersection;
 
-            if (selfLocal_ != NULL) {
-                delete selfLocal_;
-                selfLocal_ = NULL;
-            }
+  //! equality
+  bool equals(const FoamGridLevelIntersectionIterator<GridImp>& other) const {
+      return (center_ == other.center_) && (neighbor_ == other.neighbor_);
+  }
 
-            if (neighborLocal_ != NULL) {
-                delete neighborLocal_;
-                neighborLocal_ = NULL;
-            }
-
-        }
+    //! prefix increment
+    void increment() {
+        neighbor_++;
+    }
 
     //! \brief dereferencing
-    const Intersection & dereference() const {
+    const Intersection & dereference() const
+    {
         return reinterpret_cast<const Intersection&>(*this);
     }
 
+    FoamGridElement* target() const {
+        const bool isValid = center_ && neighbor_>=0 && neighbor_<2;
+
+        if (!isValid)
+            return center_;
+        else if (neighbor_==0) 
+            return center_->pred_;
+        else 
+            return center_->succ_;
+
+    }
+
 private:
+  //**********************************************************
+  //  private methods 
+  //**********************************************************
 
-    //! pointer to element holding the selfLocal and selfGlobal information.
-    //! This element is created on demand.
-    mutable MakeableInterfaceObject<LocalGeometry>* selfLocal_;
-    mutable MakeableInterfaceObject<LocalGeometry>* neighborLocal_;
-    
-    //! pointer to element holding the neighbor_global and neighbor_local
-    //! information.
-    mutable MakeableInterfaceObject<Geometry>* intersectionGlobal_;
-    
-    const GridImp* identityGrid_;
-
-    HostLevelIntersectionIterator hostIterator_;
+    /** \brief The actual intersection
+    */
+    mutable MakeableInterfaceObject<FoamGridLevelIntersection<GridImp> > intersection_;
 
 };
 

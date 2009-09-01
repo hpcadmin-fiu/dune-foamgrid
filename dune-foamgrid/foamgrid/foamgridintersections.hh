@@ -1,8 +1,8 @@
-#ifndef DUNE_IDENTITYGRID_INTERSECTIONITERATOR_HH
-#define DUNE_IDENTITYGRID_INTERSECTIONITERATOR_HH
+#ifndef DUNE_FOAMGRID_INTERSECTIONS_HH
+#define DUNE_FOAMGRID_INTERSECTIONS_HH
 
 /** \file
-* \brief The FoamGridLeafIntersectionIterator and FoamGridLevelIntersectionIterator classes
+* \brief The FoamGridLeafIntersection and FoamGridLevelIntersection classes
 */
 
 namespace Dune {
@@ -16,7 +16,7 @@ namespace Dune {
 * of an element!
 */
 template<class GridImp>
-class FoamGridLeafIntersectionIterator
+class FoamGridLeafIntersection
 {
     
     enum {dim=GridImp::dimension};
@@ -36,7 +36,7 @@ public:
     typedef typename GridImp::template Codim<0>::Entity Entity;
     typedef Dune::Intersection<const GridImp, Dune::FoamGridLeafIntersectionIterator> Intersection;
     
-    FoamGridLeafIntersectionIterator(const GridImp* identityGrid,
+    FoamGridLeafIntersection(const GridImp* identityGrid,
                                          const HostLeafIntersectionIterator& hostIterator)
         : selfLocal_(NULL), neighborLocal_(NULL), intersectionGlobal_(NULL),
           identityGrid_(identityGrid), 
@@ -44,42 +44,9 @@ public:
     {}
         
     //! The Destructor
-    ~FoamGridLeafIntersectionIterator() {};
+    ~FoamGridLeafIntersection() {};
     
-    //! equality
-    bool equals(const FoamGridLeafIntersectionIterator<GridImp>& other) const {
-        return hostIterator_ == other.hostIterator_;
-    }
-
-    
-    //! prefix increment
-    void increment() {
-        ++hostIterator_;
-
-        // Delete intersection geometry objects, if present
-        if (intersectionGlobal_ != NULL) {
-            delete intersectionGlobal_;
-            intersectionGlobal_ = NULL;
-        }
-        
-        if (selfLocal_ != NULL) {
-            delete selfLocal_;
-            selfLocal_ = NULL;
-        }
-        
-        if (neighborLocal_ != NULL) {
-            delete neighborLocal_;
-            neighborLocal_ = NULL;
-        }
-    }
-
-    //! \brief dereferencing
-    const Intersection & dereference() const {
-        return reinterpret_cast<const Intersection&>(*this);
-    }
-    
-        
-        //! return EntityPointer to the Entity on the inside of this intersection
+    //! return EntityPointer to the Entity on the inside of this intersection
         //! (that is the Entity where we started this Iterator)
         EntityPointer inside() const {
             return FoamGridEntityPointer<0,GridImp> (identityGrid_, hostIterator_->inside());
@@ -125,7 +92,7 @@ public:
         //! iteration started.
         //! Here returned element is in LOCAL coordinates of the element
         //! where iteration started.
-        const  LocalGeometry& intersectionSelfLocal () const {
+        const  LocalGeometry& geometryInInside () const {
             if (selfLocal_ == NULL)
                 selfLocal_ = new MakeableInterfaceObject<LocalGeometry>(hostIterator_->intersectionSelfLocal());
                 
@@ -134,7 +101,7 @@ public:
     
         //! intersection of codimension 1 of this neighbor with element where iteration started.
         //! Here returned element is in LOCAL coordinates of neighbor
-        const  LocalGeometry& intersectionNeighborLocal () const {
+        const  LocalGeometry& geometryInOutside () const {
             if (neighborLocal_ == NULL)
                 neighborLocal_ = new MakeableInterfaceObject<LocalGeometry>(hostIterator_->intersectionNeighborLocal());
                 
@@ -143,7 +110,7 @@ public:
         
         //! intersection of codimension 1 of this neighbor with element where iteration started.
         //! Here returned element is in GLOBAL coordinates of the element where iteration started.
-        const  Geometry& intersectionGlobal () const {
+        const  Geometry& geometry () const {
             if (intersectionGlobal_ == NULL)
                 intersectionGlobal_ = new MakeableInterfaceObject<Geometry>(hostIterator_->intersectionGlobal());
                 
@@ -203,7 +170,7 @@ public:
 
 //! \todo Please doc me !
 template<class GridImp>
-class FoamGridLevelIntersectionIterator
+class FoamGridLevelIntersection
 {
     
         enum {dim=GridImp::dimension};
@@ -223,49 +190,17 @@ class FoamGridLevelIntersectionIterator
         typedef typename GridImp::template Codim<0>::Entity Entity;
         typedef Dune::Intersection<const GridImp, Dune::FoamGridLevelIntersectionIterator> Intersection;
 
-    FoamGridLevelIntersectionIterator(const GridImp* identityGrid,
-                                     const HostLevelIntersectionIterator& hostIterator)
-        : selfLocal_(NULL), neighborLocal_(NULL), intersectionGlobal_(NULL),
-          identityGrid_(identityGrid), hostIterator_(hostIterator)
+    FoamGridLevelIntersection(FoamGridElement* center, int nb)
+        : center_(center), neighbor_(nb),
+          geometryInInside_(FoamGridGeometry<0,1,GridImp>()),
+          geometryInOutside_(FoamGridGeometry<0,1,GridImp>()),
+          geometry_(FoamGridGeometry<0,1,GridImp>())
     {}
-
-        //! equality
-        bool equals(const FoamGridLevelIntersectionIterator<GridImp>& other) const {
-            return hostIterator_ == other.hostIterator_;
-        }
-
-        
-        //! prefix increment
-        void increment() {
-            ++hostIterator_;
-
-            // Delete intersection geometry objects, if present
-            if (intersectionGlobal_ != NULL) {
-                delete intersectionGlobal_;
-                intersectionGlobal_ = NULL;
-            }
-
-            if (selfLocal_ != NULL) {
-                delete selfLocal_;
-                selfLocal_ = NULL;
-            }
-
-            if (neighborLocal_ != NULL) {
-                delete neighborLocal_;
-                neighborLocal_ = NULL;
-            }
-
-        }
-
-    //! \brief dereferencing
-    const Intersection & dereference() const {
-        return reinterpret_cast<const Intersection&>(*this);
-    }
 
         //! return EntityPointer to the Entity on the inside of this intersection
         //! (that is the Entity where we started this Iterator)
         EntityPointer inside() const {
-            return FoamGridEntityPointer<0,GridImp> (identityGrid_, hostIterator_->inside());
+            return FoamGridEntityPointer<0,GridImp> (center_);
         }
 
         
@@ -364,19 +299,24 @@ class FoamGridLevelIntersectionIterator
 
     private:
 
-    //! pointer to element holding the selfLocal and selfGlobal information.
-    //! This element is created on demand.
-    mutable MakeableInterfaceObject<LocalGeometry>* selfLocal_;
-    mutable MakeableInterfaceObject<LocalGeometry>* neighborLocal_;
-    
-    //! pointer to element holding the neighbor_global and neighbor_local
-    //! information.
-    mutable MakeableInterfaceObject<Geometry>* intersectionGlobal_;
-    
-    const GridImp* identityGrid_;
+    FoamGridElement* center_;
+ 
+    //! vector storing the outer normal 
+    mutable FieldVector<typename GridImp::ctype, dimworld> outerNormal_;
 
-    HostLevelIntersectionIterator hostIterator_;
+    /** \brief Count on which neighbor we are lookin' at.  */
+    int neighbor_;
 
+    /** \brief The geometry that's being returned when intersectionSelfLocal() is called
+    */
+    mutable MakeableInterfaceObject<LocalGeometry> geometryInInside_;
+
+    /** \brief The geometry that's being returned when intersectionNeighborLocal() is called
+    */
+    mutable MakeableInterfaceObject<LocalGeometry> geometryInOutside_;
+    
+    //! The geometry that's being returned when intersectionSelfGlobal() is called
+    mutable MakeableInterfaceObject<Geometry> geometry_;
 };
 
 
