@@ -15,56 +15,70 @@ template<int codim, PartitionIteratorType pitype, class GridImp>
 class FoamGridLeafIterator :
     public Dune::FoamGridEntityPointer <codim,GridImp>
 {
-    private:
-    
-        enum {dim = GridImp::dimension};
-    
+    enum {dim = GridImp::dimension};
+
+    //friend class OneDGridEntity<codim,dim,GridImp>;
+
+    typedef typename SelectType<codim==0, FoamGridElement, FoamGridVertex>::Type TargetType;
+
+public:
+
+    FoamGridLeafIterator(const GridImp& grid) : grid_(&grid) {
+
+        /** \todo Can a make the fullRefineLevel work somehow? */
+        const int fullRefineLevel = 0;
         
-    public:
-    
-        //! \todo Please doc me !
-        explicit FoamGridLeafIterator(const GridImp* identityGrid) :
-            FoamGridEntityPointer<codim,GridImp>(identityGrid, identityGrid->hostgrid_->template leafbegin<codim>()),
-            hostGridLeafIterator_(identityGrid->hostgrid_->template leafbegin<codim>()),
-            hostGridLeafEndIterator_(identityGrid->hostgrid_->template leafend<codim>())
-        {
-            this->virtualEntity_.setToTarget(hostGridLeafIterator_);
+        if (codim==0)
+            this->virtualEntity_.setToTarget((TargetType*)grid_->elements[fullRefineLevel].begin());
+        else
+            this->virtualEntity_.setToTarget((TargetType*)grid_->vertices[fullRefineLevel].begin());
+
+        if (!this->virtualEntity_.target()->isLeaf())
+            increment();
+    }
+
+  //! Constructor
+    FoamGridLeafIterator() 
+    {
+        this->virtualEntity_.setToTarget(NULL);
+    }
+
+    //! prefix increment
+    void increment() {
+        // Increment until you find a leaf entity
+        do {
+            globalIncrement();
+        } while (this->virtualEntity_.target() && !this->virtualEntity_.target()->isLeaf());
+    }
+
+private:
+
+    /** \brief This increment makes the iterator wander over all entities on all levels */
+    void globalIncrement() {
+
+        // Backup current level because it may not be accessible anymore after
+        // setting the pointer to the next entity.
+        const int oldLevel = this->virtualEntity_.level();
+
+        // Increment on this level
+        this->virtualEntity_.setToTarget(this->virtualEntity_.target()->succ_);
+
+        // If beyond the end of this level set to first of next level
+        if (!this->virtualEntity_.target() && oldLevel < grid_->maxLevel()) {
+
+            if (codim==0)
+                this->virtualEntity_.setToTarget((TargetType*)grid_->elements[oldLevel+1].begin());
+            else
+                this->virtualEntity_.setToTarget((TargetType*)grid_->vertices[oldLevel+1].begin());
+
         }
-    
-        
-        /** \brief Constructor which create the end iterator
-        *  \param endDummy Here only to distinguish it from the other constructor
-        */
-        explicit FoamGridLeafIterator(const GridImp* identityGrid, bool endDummy) :
-            FoamGridEntityPointer<codim,GridImp>(identityGrid, identityGrid->hostgrid_->template leafend<codim>()),
-            hostGridLeafIterator_(identityGrid->hostgrid_->template leafbegin<codim>()),
-            hostGridLeafEndIterator_(identityGrid->hostgrid_->template leafend<codim>())
-        {
-        }
-        
-    
-        //! prefix increment
-        void increment() {
-            ++hostGridLeafIterator_;
-            this->virtualEntity_.setToTarget(hostGridLeafIterator_);
-        }
-    
-    
-    private:
-    
-        // /////////////////////////////////////
-        //   Data members
-        // /////////////////////////////////////
-    
-        // LevelIterator to the equivalent entity in the host grid
-        typedef typename GridImp::HostGridType::template Codim<codim>::LeafIterator HostGridLeafIterator;
-        
-        //! \todo Please doc me !
-        HostGridLeafIterator hostGridLeafIterator_;
-        
-        //! \todo Please doc me !
-        HostGridLeafIterator hostGridLeafEndIterator_;
-        
+
+    }
+
+    // /////////////////////////////////////
+    //   Data members
+    // /////////////////////////////////////
+    const GridImp* grid_;
 };
 
 
