@@ -29,6 +29,10 @@ namespace Dune {
             return 3;
         }
 
+        GeometryType type() const {
+            return GeometryType(GeometryType::simplex, 2);
+        }
+
         array<FoamGridEntityImp<2,dimworld>*, 4> sons_;
 
         FoamGridEntityImp<2,dimworld>* father_;

@@ -328,10 +328,13 @@ class FoamGridEntity<0,dim,GridImp> :
         const Geometry& geometry () const
         {
             if (geo_==0)
-            {
-                assert(false);
-                //geo_ = new MakeableInterfaceObject<Geometry>(hostEntity_->geometry());
-            }
+                geo_ = new MakeableInterfaceObject<Geometry>(FoamGridGeometry<dim,GridImp::dimensionworld,GridImp>());
+
+            std::vector<FieldVector<double, GridImp::dimensionworld> > coordinates(target_->corners());
+            for (size_t i=0; i<target_->corners(); i++)
+                coordinates[i] = target_->vertex_[i]->pos_;
+
+            GridImp::getRealImplementation(*geo_).setup(target_->type(), coordinates);
             return *geo_;
         }
     
