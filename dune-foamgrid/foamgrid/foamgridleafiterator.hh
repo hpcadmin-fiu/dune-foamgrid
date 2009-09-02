@@ -23,32 +23,37 @@ class FoamGridLeafIterator :
 
 public:
 
-    FoamGridLeafIterator(const GridImp& grid) : grid_(&grid) {
+    FoamGridLeafIterator(const GridImp& grid) 
+        : grid_(&grid),
+          FoamGridEntityPointer <codim,GridImp>(NULL)
+    {
 
         /** \todo Can a make the fullRefineLevel work somehow? */
         const int fullRefineLevel = 0;
         
         if (codim==0)
-            this->virtualEntity_.setToTarget((TargetType*)grid_->elements[fullRefineLevel].begin());
+            // The &* turns an iterator into a plain pointer
+            this->virtualEntity_.setToTarget((TargetType*)&*grid_->elements_[fullRefineLevel].begin());
         else
-            this->virtualEntity_.setToTarget((TargetType*)grid_->vertices[fullRefineLevel].begin());
+            this->virtualEntity_.setToTarget((TargetType*)&*grid_->vertices_[fullRefineLevel].begin());
 
-        if (!this->virtualEntity_.target()->isLeaf())
+        if (!this->virtualEntity_.getTarget()->isLeaf())
             increment();
     }
 
   //! Constructor
     FoamGridLeafIterator() 
-    {
-        this->virtualEntity_.setToTarget(NULL);
-    }
+        : FoamGridEntityPointer <codim,GridImp>(NULL),
+          grid_(NULL),
+          levelIterator_(grid_->elements_[0].begin())
+    {}
 
     //! prefix increment
     void increment() {
         // Increment until you find a leaf entity
         do {
             globalIncrement();
-        } while (this->virtualEntity_.target() && !this->virtualEntity_.target()->isLeaf());
+        } while (this->virtualEntity_.getTarget() && !this->virtualEntity_.getTarget()->isLeaf());
     }
 
 private:
@@ -61,15 +66,23 @@ private:
         const int oldLevel = this->virtualEntity_.level();
 
         // Increment on this level
-        this->virtualEntity_.setToTarget(this->virtualEntity_.target()->succ_);
+        ++levelIterator_;
+        this->virtualEntity_.setToTarget(&(*levelIterator_));
 
         // If beyond the end of this level set to first of next level
-        if (!this->virtualEntity_.target() && oldLevel < grid_->maxLevel()) {
+        if (!this->virtualEntity_.getTarget() && oldLevel < grid_->maxLevel()) {
 
-            if (codim==0)
-                this->virtualEntity_.setToTarget((TargetType*)grid_->elements[oldLevel+1].begin());
-            else
-                this->virtualEntity_.setToTarget((TargetType*)grid_->vertices[oldLevel+1].begin());
+            if (codim==0) {
+                // cast is necessary to make the code compile.  If this branch is taken the
+                // cast is empty
+                levelIterator_ = *(typename std::list<TargetType>::const_iterator*)&grid_->elements_[oldLevel+1].begin();
+                this->virtualEntity_.setToTarget((TargetType*)&*grid_->elements_[oldLevel+1].begin());
+            } else {
+                // cast is necessary to make the code compile.  If this branch is taken the
+                // cast is empty
+                levelIterator_ = *(typename std::list<TargetType>::const_iterator*)&grid_->vertices_[oldLevel+1].begin();
+                this->virtualEntity_.setToTarget((TargetType*)&*grid_->vertices_[oldLevel+1].begin());
+            }
 
         }
 
@@ -79,6 +92,9 @@ private:
     //   Data members
     // /////////////////////////////////////
     const GridImp* grid_;
+
+    //! \todo Please doc me !
+    typename std::list<TargetType>::const_iterator levelIterator_;
 };
 
 

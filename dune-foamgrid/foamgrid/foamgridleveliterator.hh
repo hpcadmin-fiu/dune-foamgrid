@@ -2,7 +2,7 @@
 #define DUNE_FOAMGRID_LEVELITERATOR_HH
 
 /** \file
-* \brief The FoamGridLevelIterator class and its specializations
+* \brief The FoamGridLevelIterator class
 */
 
 namespace Dune {

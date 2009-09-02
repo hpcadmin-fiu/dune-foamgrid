@@ -41,6 +41,10 @@ class FoamGridEntityPointer
     FoamGridEntityPointer (const typename std::list<TargetType>::const_iterator& it)
         : virtualEntity_(&(*it))
     {}
+
+    FoamGridEntityPointer (const TargetType* target)
+        : virtualEntity_(target)
+    {}
         
         //! equality
         bool equals(const FoamGridEntityPointer<codim,GridImp>& i) const {

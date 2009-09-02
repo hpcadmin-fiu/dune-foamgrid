@@ -116,18 +116,15 @@ class FoamGridEntity :
     
         
         //! Constructor for an entity in a given grid level
-        FoamGridEntity(const GridImp* identityGrid, const HostGridEntityPointer& hostEntity) :
-            hostEntity_(hostEntity),
-            identityGrid_(identityGrid),
+    FoamGridEntity(const FoamGridEntityImp<dim-codim,GridImp::dimensionworld>* target) :
+            target_(target),
             geo_(0),
             geoInFather_(0)
         {}
         
-    
         //! \todo Please doc me !
         FoamGridEntity(const FoamGridEntity& original) :
-            hostEntity_(original.hostEntity_),
-            identityGrid_(original.identityGrid_),
+            target_(original.target_),
             geo_(0),
             geoInFather_(0)
         {}
@@ -164,8 +161,7 @@ class FoamGridEntity :
                     delete geoInFather_;
                     geoInFather_ = 0;
                 }
-                identityGrid_ = original.identityGrid_;
-                hostEntity_ = original.hostEntity_;
+                target_ = original.target_;
             }
             return *this;
         }
@@ -173,14 +169,14 @@ class FoamGridEntity :
     
         //! level of this element
         int level () const {
-            return hostEntity_->level();
+            return target_->level();
         }
     
         
         /** \brief The partition type for parallel computing
         */
         PartitionType partitionType () const {
-            return hostEntity_->partitionType();
+            return target_->partitionType();
         }
     
         
@@ -188,7 +184,7 @@ class FoamGridEntity :
         * with codimension cc.
         */
         template<int cc> int count () const{
-            return hostEntity_->template count<cc>();
+            return target_->template count<cc>();
         }
         
         
@@ -196,13 +192,13 @@ class FoamGridEntity :
         const Geometry& geometry () const
         {
             if (geo_==0)
-                geo_ = new MakeableInterfaceObject<Geometry>(hostEntity_->geometry());
+                geo_ = new MakeableInterfaceObject<Geometry>(target_->geometry());
             return *geo_;
         }
     
-        
-        HostGridEntityPointer hostEntity_;
+    FoamGridEntityImp<dim-codim,GridImp::dimensionworld>* target_;
 
+        
     private:
     
         //! \todo Please doc me !
@@ -218,11 +214,9 @@ class FoamGridEntity :
                 delete geoInFather_;
                 geoInFather_ = 0;
             }
-            hostEntity_ = target;
+            target_ = target;
         }
     
-        
-        const GridImp* identityGrid_;
         
         //! the current geometry
     mutable MakeableInterfaceObject<Geometry> *geo_;
@@ -351,13 +345,31 @@ class FoamGridEntity<0,dim,GridImp> :
             return (cc==0) ? 1 : 3;
         }
         
-    /** \brief Return index of sub entity with codim = cc and local number i
+    /** \brief Return level index of sub entity with codim = cc and local number i
      */
     int subLevelIndex (int i,unsigned int codim) const {
         assert(i==0 || i==2);
         return (codim==0)
             ? target_->levelIndex_
             : target_->vertex_[i]->levelIndex_;
+    }
+
+    /** \brief Return leaf index of sub entity with codim = cc and local number i
+     */
+    int subLeafIndex (int i,unsigned int codim) const {
+        assert(i==0 || i==2);
+        return (codim==0)
+            ? target_->leafIndex_
+            : target_->vertex_[i]->leafIndex_;
+    }
+
+    /** \brief Return index of sub entity with codim = cc and local number i
+     */
+    int subId (int i,unsigned int codim) const {
+        assert(i==0 || i==2);
+        return (codim==0)
+            ? target_->id_
+            : target_->vertex_[i]->id_;
     }
     
         

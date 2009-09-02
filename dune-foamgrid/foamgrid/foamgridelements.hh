@@ -1,16 +1,20 @@
 #ifndef DUNE_FOAMGRID_ELEMENTS_HH
 #define DUNE_FOAMGRID_ELEMENTS_HH
 
+#include <dune-foamgrid/foamgrid/foamgridvertex.hh>
+#include <dune-foamgrid/foamgrid/foamgridedge.hh>
+
 namespace Dune {
 
-    class FoamGridElement
+    template <int dimworld>
+    class FoamGridEntityImp<2,dimworld>
     {
     public:
 
         /** \brief The different ways to mark an element for grid changes */
         enum MarkState { DO_NOTHING , COARSEN , REFINE };
 
-        FoamGridElement(int level, unsigned int id) 
+        FoamGridEntityImp(int level, unsigned int id) 
             : id_(id), level_(level), 
               markState_(DO_NOTHING), isNew_(false)
         {
@@ -21,11 +25,17 @@ namespace Dune {
             DUNE_THROW(NotImplemented, "isLeaf()");
         }
 
-        array<FoamGridElement*, 4> sons_;
+        unsigned int corners() const {
+            return 3;
+        }
 
-        FoamGridElement* father_;
+        array<FoamGridEntityImp<2,dimworld>*, 4> sons_;
 
-        FoamGridVertex* vertex_[3];
+        FoamGridEntityImp<2,dimworld>* father_;
+
+        FoamGridEntityImp<1,dimworld>* edges_[3];
+
+        FoamGridEntityImp<0,dimworld>* vertex_[3];
         
         //! element number 
         unsigned int levelIndex_;
@@ -46,7 +56,7 @@ namespace Dune {
         
     };
 
-
+    typedef FoamGridEntityImp<2,3> FoamGridElement;
 
 }
 

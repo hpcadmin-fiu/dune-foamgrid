@@ -46,10 +46,10 @@ struct FoamGridFamily
         FoamGridEntity,
         FoamGridEntityPointer,
         FoamGridLevelIterator,
-        FoamGridLeafIntersectionIterator,  // leaf  intersection
-        FoamGridLevelIntersectionIterator, // level  intersection
-        FoamGridLeafIntersectionIterator,  // leaf  intersection iterator
-        FoamGridLevelIntersectionIterator, // level  intersection iterator
+        FoamGridLeafIntersection,
+        FoamGridLevelIntersection,
+        FoamGridLeafIntersectionIterator,
+        FoamGridLevelIntersectionIterator,
         FoamGridHierarchicIterator,
         FoamGridLeafIterator,
         FoamGridLevelIndexSet< const FoamGrid >,
@@ -171,28 +171,28 @@ class FoamGrid :
         //! Iterator to first leaf entity of given codim
         template<int codim>
         typename Traits::template Codim<codim>::LeafIterator leafbegin() const {
-            return FoamGridLeafIterator<codim,All_Partition, const FoamGrid >(this);
+            return FoamGridLeafIterator<codim,All_Partition, const FoamGrid >(*this);
         }
         
     
         //! one past the end of the sequence of leaf entities
         template<int codim>
         typename Traits::template Codim<codim>::LeafIterator leafend() const {
-            return FoamGridLeafIterator<codim,All_Partition, const FoamGrid >(this, true);
+            return FoamGridLeafIterator<codim,All_Partition, const FoamGrid >();
         }
         
     
         //! Iterator to first leaf entity of given codim
         template<int codim, PartitionIteratorType PiType>
         typename Traits::template Codim<codim>::template Partition<PiType>::LeafIterator leafbegin() const {
-            return FoamGridLeafIterator<codim,PiType, const FoamGrid >(this);
+            return FoamGridLeafIterator<codim,PiType, const FoamGrid >(*this);
         }
         
         
         //! one past the end of the sequence of leaf entities
         template<int codim, PartitionIteratorType PiType>
         typename Traits::template Codim<codim>::template Partition<PiType>::LeafIterator leafend() const {
-            return FoamGridLeafIterator<codim,PiType, const FoamGrid >(this, true);
+            return FoamGridLeafIterator<codim,PiType, const FoamGrid >();
         }
         
 

@@ -19,8 +19,9 @@ namespace Dune {
 */
 template<class GridImp>
 class FoamGridLeafIntersectionIterator
+    : public FoamGridLevelIntersectionIterator<GridImp>
 {
-    
+    #if 0
     enum {dim=GridImp::dimension};
     
     enum {dimworld=GridImp::dimensionworld};
@@ -28,16 +29,11 @@ class FoamGridLeafIntersectionIterator
     // The type used to store coordinates
     typedef typename GridImp::ctype ctype;
     
-    typedef typename GridImp::HostGridType::template Codim<0>::Entity::LeafIntersectionIterator HostLeafIntersectionIterator;
-    
+#endif
 public:
     
-    typedef typename GridImp::template Codim<0>::EntityPointer EntityPointer;
-    typedef typename GridImp::template Codim<1>::Geometry Geometry;
-    typedef typename GridImp::template Codim<1>::LocalGeometry LocalGeometry;
-    typedef typename GridImp::template Codim<0>::Entity Entity;
-    typedef Dune::Intersection<const GridImp, Dune::FoamGridLeafIntersectionIterator> Intersection;
-    
+    typedef Dune::Intersection<const GridImp, Dune::FoamGridLeafIntersection> Intersection;
+#if 0
     FoamGridLeafIntersectionIterator(const GridImp* identityGrid,
                                          const HostLeafIntersectionIterator& hostIterator)
         : selfLocal_(NULL), neighborLocal_(NULL), intersectionGlobal_(NULL),
@@ -74,12 +70,13 @@ public:
             neighborLocal_ = NULL;
         }
     }
-
+#endif
     //! \brief dereferencing
     const Intersection & dereference() const {
         return reinterpret_cast<const Intersection&>(*this);
     }
     
+#if 0
 private:
         //**********************************************************
         //  private methods
@@ -97,6 +94,7 @@ private:
     const GridImp* identityGrid_;
 
     HostLeafIntersectionIterator hostIterator_;
+#endif
 };
 
 
@@ -124,28 +122,26 @@ class FoamGridLevelIntersectionIterator
 
 public:
 
-    typedef typename GridImp::template Codim<1>::Geometry Geometry;
-    typedef typename GridImp::template Codim<1>::LocalGeometry LocalGeometry;
-    typedef typename GridImp::template Codim<0>::EntityPointer EntityPointer;
-    typedef typename GridImp::template Codim<0>::Entity Entity;
     typedef Dune::Intersection<const GridImp, Dune::FoamGridLevelIntersection> Intersection;
 
   //! equality
   bool equals(const FoamGridLevelIntersectionIterator<GridImp>& other) const {
-      return (center_ == other.center_) && (neighbor_ == other.neighbor_);
+      return (GridImp::getRealImplementation(intersection_).center_   == GridImp::getRealImplementation(other.intersection_).center_) 
+          && (GridImp::getRealImplementation(intersection_).neighbor_ == GridImp::getRealImplementation(other.intersection_).neighbor_);
   }
 
     //! prefix increment
     void increment() {
-        neighbor_++;
+        GridImp::getRealImplementation(intersection_).neighbor_++;
     }
 
     //! \brief dereferencing
     const Intersection & dereference() const
     {
-        return reinterpret_cast<const Intersection&>(*this);
+        return reinterpret_cast<const Intersection&>(intersection_);
     }
 
+#if 0
     FoamGridElement* target() const {
         const bool isValid = center_ && neighbor_>=0 && neighbor_<2;
 
@@ -157,6 +153,7 @@ public:
             return center_->succ_;
 
     }
+#endif
 
 private:
   //**********************************************************
@@ -165,7 +162,7 @@ private:
 
     /** \brief The actual intersection
     */
-    mutable MakeableInterfaceObject<FoamGridLevelIntersection<GridImp> > intersection_;
+    mutable MakeableInterfaceObject<Intersection> intersection_;
 
 };
 

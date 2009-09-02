@@ -3,18 +3,21 @@
 
 namespace Dune {
 
-    class FoamGridVertex
-    {
-        enum {dimworld = 3};
+    template <int dim, int dimworld>
+    class FoamGridEntityImp
+    {};
 
+    template <int dimworld>
+    class FoamGridEntityImp<0,dimworld>
+    {
     public:
         
-        FoamGridVertex(int level, const Dune::FieldVector<double,dimworld>& pos) 
+        FoamGridEntityImp(int level, const Dune::FieldVector<double,dimworld>& pos) 
             : pos_(pos), level_(level), 
               son_(NULL)
         {}
         
-        FoamGridVertex(int level, const FieldVector<double, dimworld>& pos, unsigned int id) 
+        FoamGridEntityImp(int level, const FieldVector<double, dimworld>& pos, unsigned int id) 
             : pos_(pos), id_(id), level_(level), 
               son_(NULL) 
         {}
@@ -37,11 +40,12 @@ namespace Dune {
         int level_;
         
         //! Son vertex on the next finer grid
-        FoamGridVertex* son_;
+        FoamGridEntityImp<0,dimworld>* son_;
         
     };
 
-
+    /** \todo Only here for a transition */
+    typedef FoamGridEntityImp<0,3> FoamGridVertex;
 
 }
 

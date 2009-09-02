@@ -135,7 +135,7 @@ public:
         template<int codim>
         int index (const typename remove_const<GridImp>::type::template Codim<codim>::Entity& e) const
         {
-            return grid_.getRealImplementation(e).leafIndex(); 
+            return grid_->getRealImplementation(e).target_->leafIndex_; 
         }
         
         
@@ -148,7 +148,7 @@ public:
                   int i, 
                   int codim) const
     {
-        return grid_.getRealImplementation(e).subLeafIndex(i,codim);
+        return grid_->getRealImplementation(e).subLeafIndex(i,codim);
     }
         
         
@@ -351,7 +351,7 @@ class FoamGridLocalIdSet :
         */
     IdType subId (const typename remove_const<GridImp>::type::template Codim<0>::Entity& e, int i, int codim) const
         {
-            return grid_.getRealImplementation(e).subId(i,codim);
+            return grid_->getRealImplementation(e).subId(i,codim);
         }
         
         
