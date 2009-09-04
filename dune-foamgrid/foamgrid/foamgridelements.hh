@@ -22,7 +22,8 @@ namespace Dune {
         }
 
         bool isLeaf() const {
-            DUNE_THROW(NotImplemented, "isLeaf()");
+            // The sons are either all NULL or all != NULL
+            return sons_[0] == NULL;
         }
 
         unsigned int corners() const {
