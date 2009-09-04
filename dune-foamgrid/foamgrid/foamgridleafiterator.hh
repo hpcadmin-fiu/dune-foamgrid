@@ -15,11 +15,8 @@ template<int codim, PartitionIteratorType pitype, class GridImp>
 class FoamGridLeafIterator :
     public Dune::FoamGridEntityPointer <codim,GridImp>
 {
-    enum {dim = GridImp::dimension};
-
-    //friend class OneDGridEntity<codim,dim,GridImp>;
-
-    typedef typename SelectType<codim==0, FoamGridElement, FoamGridVertex>::Type TargetType;
+    enum {dim      = GridImp::dimension};
+    enum {dimworld = GridImp::dimensionworld};
 
 public:
 
@@ -33,9 +30,9 @@ public:
         
         if (codim==0)
             // The &* turns an iterator into a plain pointer
-            this->virtualEntity_.setToTarget((TargetType*)&*grid_->elements_[fullRefineLevel].begin());
+            this->virtualEntity_.setToTarget((FoamGridEntityImp<dim-codim,dimworld>*)&*grid_->elements_[fullRefineLevel].begin());
         else
-            this->virtualEntity_.setToTarget((TargetType*)&*grid_->vertices_[fullRefineLevel].begin());
+            this->virtualEntity_.setToTarget((FoamGridEntityImp<dim-codim,dimworld>*)&*grid_->vertices_[fullRefineLevel].begin());
 
         if (!this->virtualEntity_.getTarget()->isLeaf())
             increment();
@@ -75,13 +72,13 @@ private:
             if (codim==0) {
                 // cast is necessary to make the code compile.  If this branch is taken the
                 // cast is empty
-                levelIterator_ = *(typename std::list<TargetType>::const_iterator*)&grid_->elements_[oldLevel+1].begin();
-                this->virtualEntity_.setToTarget((TargetType*)&*grid_->elements_[oldLevel+1].begin());
+                levelIterator_ = *(typename std::list<FoamGridEntityImp<dim-codim,dimworld>>::const_iterator*)&grid_->elements_[oldLevel+1].begin();
+                this->virtualEntity_.setToTarget((FoamGridEntityImp<dim-codim,dimworld>*)&*grid_->elements_[oldLevel+1].begin());
             } else {
                 // cast is necessary to make the code compile.  If this branch is taken the
                 // cast is empty
-                levelIterator_ = *(typename std::list<TargetType>::const_iterator*)&grid_->vertices_[oldLevel+1].begin();
-                this->virtualEntity_.setToTarget((TargetType*)&*grid_->vertices_[oldLevel+1].begin());
+                levelIterator_ = *(typename std::list<FoamGridEntityImp<dim-codim,dimworld>>::const_iterator*)&grid_->vertices_[oldLevel+1].begin();
+                this->virtualEntity_.setToTarget((FoamGridEntityImp<dim-codim,dimworld>*)&*grid_->vertices_[oldLevel+1].begin());
             }
 
         }
@@ -94,7 +91,7 @@ private:
     const GridImp* grid_;
 
     //! \todo Please doc me !
-    typename std::list<TargetType>::const_iterator levelIterator_;
+    typename std::list<FoamGridEntityImp<dim-codim,dimworld>>::const_iterator levelIterator_;
 };
 
 

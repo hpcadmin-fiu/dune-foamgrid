@@ -15,10 +15,8 @@ class FoamGridEntityPointer
 {
     private:
     
-    enum { dim = GridImp::dimension };
-    
-    typedef typename SelectType<codim==0, FoamGridElement, FoamGridVertex>::Type TargetType;
-
+    enum { dim      = GridImp::dimension };
+    enum { dimworld = GridImp::dimensionworld };
     
     public:
     
@@ -38,11 +36,11 @@ class FoamGridEntityPointer
         : virtualEntity_(entity.target_) 
     {}
 
-    FoamGridEntityPointer (const typename std::list<TargetType>::const_iterator& it)
+    FoamGridEntityPointer (const typename std::list<FoamGridEntityImp<dim-codim,dimworld> >::const_iterator& it)
         : virtualEntity_(&(*it))
     {}
 
-    FoamGridEntityPointer (const TargetType* target)
+    FoamGridEntityPointer (const FoamGridEntityImp<dim-codim,dimworld>* target)
         : virtualEntity_(target)
     {}
         

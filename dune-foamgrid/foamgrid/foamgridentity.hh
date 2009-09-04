@@ -38,25 +38,25 @@ template<int codim, int dim, class GridImp>
 class FoamGridMakeableEntity :
     public GridImp::template Codim<codim>::Entity
 {
+
+    enum {dimworld = GridImp::dimensionworld};
+
     public:
 
-    typedef typename SelectType<codim==0, FoamGridElement, FoamGridVertex>::Type TargetType;
-                                 
-    
         //! \todo Please doc me !
-        FoamGridMakeableEntity(const TargetType* target) :
+    FoamGridMakeableEntity(const FoamGridEntityImp<dim-codim,dimworld>* target) :
             GridImp::template Codim<codim>::Entity (FoamGridEntity<codim, dim, const GridImp>(target))
         {}
         
         
         //! \todo Please doc me !
-        void setToTarget(const TargetType* target) {
+    void setToTarget(const FoamGridEntityImp<dim-codim,dimworld>* target) {
             this->realEntity.setToTarget(target);
         }
         
         
         //! \todo Please doc me !
-        const TargetType* getTarget() {
+    const FoamGridEntityImp<dim-codim,dimworld>* getTarget() {
             return this->realEntity.target_;
         }
     

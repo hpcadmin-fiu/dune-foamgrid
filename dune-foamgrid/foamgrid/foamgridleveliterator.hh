@@ -20,14 +20,13 @@ template<int codim, PartitionIteratorType pitype, class GridImp>
 class FoamGridLevelIterator :
     public Dune::FoamGridEntityPointer <codim,GridImp>
 {
-    private:
-
-    typedef typename SelectType<codim==0, FoamGridElement, FoamGridVertex>::Type TargetType;
+    enum {dim      = GridImp::dimension};
+    enum {dimworld = GridImp::dimensionworld};
 
     public:
         
         //! Constructor
-        explicit FoamGridLevelIterator(const typename std::list<TargetType>::const_iterator& it)
+    explicit FoamGridLevelIterator(const typename std::list<FoamGridEntityImp<dim-codim,dimworld> >::const_iterator& it)
             : FoamGridEntityPointer<codim,GridImp>(it),
               levelIterator_(it)
         {
@@ -44,7 +43,7 @@ class FoamGridLevelIterator :
     private:
     
         //! \todo Please doc me !
-    typename std::list<TargetType>::const_iterator levelIterator_;
+    typename std::list<FoamGridEntityImp<dim-codim,dimworld> >::const_iterator levelIterator_;
         
 };
 
