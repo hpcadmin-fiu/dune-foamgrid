@@ -42,7 +42,7 @@ namespace Dune {
         
     };
 
-    typedef FoamGridEntityImp<2,3> FoamGridElement;
+    typedef FoamGridEntityImp<1,3> FoamGridEdge;
 
 }
 
