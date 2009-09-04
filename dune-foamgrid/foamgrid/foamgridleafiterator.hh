@@ -28,11 +28,24 @@ public:
         /** \todo Can a make the fullRefineLevel work somehow? */
         const int fullRefineLevel = 0;
         
-        if (codim==0)
+        switch (codim) {
+
+        case 0:
             // The &* turns an iterator into a plain pointer
             this->virtualEntity_.setToTarget((FoamGridEntityImp<dim-codim,dimworld>*)&*grid_->elements_[fullRefineLevel].begin());
-        else
+            break;
+
+        case 1:
+            // The &* turns an iterator into a plain pointer
+            this->virtualEntity_.setToTarget((FoamGridEntityImp<dim-codim,dimworld>*)&*grid_->edges_[fullRefineLevel].begin());
+            break;
+
+        case 2:
             this->virtualEntity_.setToTarget((FoamGridEntityImp<dim-codim,dimworld>*)&*grid_->vertices_[fullRefineLevel].begin());
+            break;
+        default:
+            DUNE_THROW(GridError, "Nonexisting codimension requested!");
+        }
 
         if (!this->virtualEntity_.getTarget()->isLeaf())
             increment();
