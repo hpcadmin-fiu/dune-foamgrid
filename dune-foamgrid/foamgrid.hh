@@ -35,12 +35,12 @@ template<int codim>
 class FoamGridLevelIteratorFactory;
 
 
-template<int dim, int dimw>
+template<int dim, int dimworld>
 struct FoamGridFamily
 {
     typedef GridTraits<
         dim,   // dim
-        dimw,   // dimworld
+        dimworld,   // dimworld
         Dune::FoamGrid,
         FoamGridGeometry,
         FoamGridEntity,
