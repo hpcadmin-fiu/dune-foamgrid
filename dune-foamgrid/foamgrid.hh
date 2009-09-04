@@ -14,6 +14,7 @@
 
 // Implementation classes
 #include "foamgrid/foamgridvertex.hh"
+#include "foamgrid/foamgridedge.hh"
 #include "foamgrid/foamgridelements.hh"
 
 // The components of the FoamGrid interface
@@ -417,7 +418,7 @@ class FoamGrid :
     std::vector<std::list<FoamGridVertex> > vertices_;
         
     // Lists of edges on each level
-    //std::vector<std::list<FoamGridEdge> > edges_;
+    std::vector<std::list<FoamGridEdge> > edges_;
 
     // Lists of elements on each level
     std::vector<std::list<FoamGridElement> > elements_;
