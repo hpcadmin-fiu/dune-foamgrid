@@ -207,12 +207,8 @@ public:
         typename GridImp::Traits::template Codim<0>::LeafIterator eIt    = grid_->template leafbegin<0>();
         typename GridImp::Traits::template Codim<0>::LeafIterator eEndIt = grid_->template leafend<0>();
         
-        for (; eIt!=eEndIt; ++eIt) {
+        for (; eIt!=eEndIt; ++eIt)
             *const_cast<unsigned int*>(&(GridImp::getRealImplementation(*eIt).target_->leafIndex_)) = size_[dim]++;
-            std::cout << "size: " << size_[dim] << std::endl;
-            if (size_[dim]==10)
-                exit(0);
-        }
 
         // //////////////////////////////
         //   Init the edge indices
