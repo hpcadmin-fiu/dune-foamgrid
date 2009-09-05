@@ -10,9 +10,14 @@ namespace Dune {
     {
     public:
 
-        FoamGridEntityImp(int level, unsigned int id) 
+        FoamGridEntityImp(const FoamGridEntityImp<0,dimworld>* v0, 
+                          const FoamGridEntityImp<0,dimworld>* v1, 
+                          int level, unsigned int id) 
             : id_(id), level_(level)
-        {}
+        {
+            vertex_[0] = v0;
+            vertex_[1] = v1;
+        }
 
         bool isLeaf() const {
             DUNE_THROW(NotImplemented, "isLeaf()");
@@ -22,9 +27,9 @@ namespace Dune {
             return boundaryId_;
         }
 
-        std::vector<FoamGridEntityImp<2,dimworld>*> elements_;
+        std::vector<const FoamGridEntityImp<2,dimworld>*> elements_;
 
-        FoamGridEntityImp<0,dimworld>* vertex_[2];
+        const FoamGridEntityImp<0,dimworld>* vertex_[2];
 
         //! element number 
         unsigned int levelIndex_;
