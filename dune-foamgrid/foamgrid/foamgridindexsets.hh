@@ -14,6 +14,9 @@ namespace Dune {
     class FoamGridLevelIndexSet :
         public IndexSet<GridImp,FoamGridLevelIndexSet<GridImp> >
     {
+
+        enum {dim = GridImp::dimension};
+
     public:
         
         //! get index of an entity
@@ -68,7 +71,9 @@ namespace Dune {
             // ///////////////////////////////
             numElements_ = 0;
             std::list<FoamGridElement>::const_iterator eIt;
-            for (eIt = grid_->elements_[level_].begin(); eIt!=grid_->elements_[level_].end(); ++eIt)
+            for (eIt =  Dune::get<dim>(grid_->entityImps_[level_]).begin(); 
+                 eIt != Dune::get<dim>(grid_->entityImps_[level_]).end(); 
+                 ++eIt)
              /** \todo Remove this const cast */
                  *const_cast<unsigned int*>(&(eIt->levelIndex_)) = numElements_++;
             
@@ -78,7 +83,9 @@ namespace Dune {
             
             numVertices_ = 0;
             std::list<FoamGridVertex>::const_iterator vIt;
-            for (vIt = grid_->vertices_[level_].begin(); vIt!=grid_->vertices_[level_].end(); ++vIt)
+            for (vIt =  Dune::get<0>(grid_->entityImps_[level_]).begin(); 
+                 vIt != Dune::get<0>(grid_->entityImps_[level_]).end(); 
+                 ++vIt)
                 /** \todo Remove this const cast */
                 *const_cast<unsigned int*>(&(vIt->levelIndex_)) = numVertices_++;
             

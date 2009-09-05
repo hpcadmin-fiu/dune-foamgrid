@@ -28,24 +28,9 @@ public:
         /** \todo Can a make the fullRefineLevel work somehow? */
         const int fullRefineLevel = 0;
         
-        switch (codim) {
-
-        case 0:
-            // The &* turns an iterator into a plain pointer
-            this->virtualEntity_.setToTarget((FoamGridEntityImp<dim-codim,dimworld>*)&*grid_->elements_[fullRefineLevel].begin());
-            break;
-
-        case 1:
-            // The &* turns an iterator into a plain pointer
-            this->virtualEntity_.setToTarget((FoamGridEntityImp<dim-codim,dimworld>*)&*grid_->edges_[fullRefineLevel].begin());
-            break;
-
-        case 2:
-            this->virtualEntity_.setToTarget((FoamGridEntityImp<dim-codim,dimworld>*)&*grid_->vertices_[fullRefineLevel].begin());
-            break;
-        default:
-            DUNE_THROW(GridError, "Nonexisting codimension requested!");
-        }
+        const std::list<FoamGridEntityImp<dim-codim,dimworld> >& entities = Dune::get<dim-codim>(grid_->entityImps_[fullRefineLevel]);
+        // The &* turns an iterator into a plain pointer
+        this->virtualEntity_.setToTarget(&*entities.begin());
 
         if (!this->virtualEntity_.getTarget()->isLeaf())
             increment();
@@ -54,8 +39,7 @@ public:
   //! Constructor
     FoamGridLeafIterator() 
         : FoamGridEntityPointer <codim,GridImp>(NULL),
-          grid_(NULL),
-          levelIterator_(grid_->elements_[0].begin())
+          grid_(NULL)
     {}
 
     //! prefix increment
@@ -82,17 +66,9 @@ private:
         // If beyond the end of this level set to first of next level
         if (!this->virtualEntity_.getTarget() && oldLevel < grid_->maxLevel()) {
 
-            if (codim==0) {
-                // cast is necessary to make the code compile.  If this branch is taken the
-                // cast is empty
-                levelIterator_ = *(typename std::list<FoamGridEntityImp<dim-codim,dimworld>>::const_iterator*)&grid_->elements_[oldLevel+1].begin();
-                this->virtualEntity_.setToTarget((FoamGridEntityImp<dim-codim,dimworld>*)&*grid_->elements_[oldLevel+1].begin());
-            } else {
-                // cast is necessary to make the code compile.  If this branch is taken the
-                // cast is empty
-                levelIterator_ = *(typename std::list<FoamGridEntityImp<dim-codim,dimworld>>::const_iterator*)&grid_->vertices_[oldLevel+1].begin();
-                this->virtualEntity_.setToTarget((FoamGridEntityImp<dim-codim,dimworld>*)&*grid_->vertices_[oldLevel+1].begin());
-            }
+            const std::list<FoamGridEntityImp<dim-codim,dimworld> >& entities = Dune::get<dim-codim>(grid_->entityImps_[oldLevel+1]);
+            levelIterator_ = entities.begin();
+            this->virtualEntity_.setToTarget(&*entities.begin());
 
         }
 

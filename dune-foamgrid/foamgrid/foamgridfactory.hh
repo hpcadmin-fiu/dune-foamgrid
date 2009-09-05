@@ -28,6 +28,7 @@ namespace Dune {
 
         typedef std::map<FieldVector<ctype,1>, unsigned int >::iterator VertexIterator;
         
+        enum {dim = FoamGrid::dimension};
 
     public:
 
@@ -38,8 +39,7 @@ namespace Dune {
         {
             grid_ = new FoamGrid;
 
-            grid_->vertices_.resize(1);
-            grid_->elements_.resize(1);
+            grid_->entityImps_.resize(1);
         }
 
         /** \brief Constructor for a given grid object 
@@ -57,8 +57,7 @@ namespace Dune {
         {
             grid_ = grid;
 
-            grid_->vertices_.resize(1);
-            grid_->elements_.resize(1);
+            grid_->entityImps_.resize(1);
         }
         
         /** \brief Destructor */
@@ -69,8 +68,8 @@ namespace Dune {
 
         /** \brief Insert a vertex into the coarse grid */
         virtual void insertVertex(const FieldVector<ctype,3>& pos) {
-            grid_->vertices_[0].push_back(FoamGridVertex(0,pos));
-            vertexArray_.push_back(&*grid_->vertices_[0].rbegin());
+            Dune::get<0>(grid_->entityImps_[0]).push_back(FoamGridVertex(0,pos));
+            vertexArray_.push_back(&*Dune::get<0>(grid_->entityImps_[0]).rbegin());
         }
 
         /** \brief Insert an element into the coarse grid
@@ -87,7 +86,7 @@ namespace Dune {
             newElement.vertex_[1] = vertexArray_[vertices[1]];
             newElement.vertex_[2] = vertexArray_[vertices[2]];
 
-            grid_->elements_[0].push_back(newElement);
+            Dune::get<dim>(grid_->entityImps_[0]).push_back(newElement);
 
             
         }

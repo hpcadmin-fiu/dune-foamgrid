@@ -9,6 +9,8 @@
 #include <map>
 
 #include <dune/common/collectivecommunication.hh>
+#include <dune/common/tuples.hh>
+
 #include <dune/grid/common/capabilities.hh>
 #include <dune/grid/common/grid.hh>
 
@@ -145,28 +147,48 @@ class FoamGrid :
         //! Return maximum level defined in this grid. Levels are numbered
         //! 0 ... maxlevel with 0 the coarsest level.
         int maxLevel() const {
-            return vertices_.size()-1;;
+            return entityImps_.size()-1;;
         }
         
         
         //! Iterator to first entity of given codim on level
         template<int codim>
-        typename Traits::template Codim<codim>::LevelIterator lbegin (int level) const;
+        typename Traits::template Codim<codim>::LevelIterator lbegin (int level) const {
+            if (level<0 || level>maxLevel())
+                DUNE_THROW(Dune::GridError, "LevelIterator in nonexisting level " << level << " requested!");
+
+            return Dune::FoamGridLevelIterator<codim,All_Partition, const Dune::FoamGrid>(Dune::get<dimension-codim>(entityImps_[level]).begin());
+        }
     
         
         //! one past the end on this level
         template<int codim>
-        typename Traits::template Codim<codim>::LevelIterator lend (int level) const;
+        typename Traits::template Codim<codim>::LevelIterator lend (int level) const {
+            if (level<0 || level>maxLevel())
+                DUNE_THROW(GridError, "LevelIterator in nonexisting level " << level << " requested!");
+            
+            return Dune::FoamGridLevelIterator<codim,All_Partition, const Dune::FoamGrid>(Dune::get<dimension-codim>(entityImps_[level]).end());
+        }
         
         
         //! Iterator to first entity of given codim on level
         template<int codim, PartitionIteratorType PiType>
-        typename Traits::template Codim<codim>::template Partition<PiType>::LevelIterator lbegin (int level) const;
+        typename Traits::template Codim<codim>::template Partition<PiType>::LevelIterator lbegin (int level) const {
+            if (level<0 || level>maxLevel())
+                DUNE_THROW(Dune::GridError, "LevelIterator in nonexisting level " << level << " requested!");
+            
+            return Dune::FoamGridLevelIterator<codim,PiType, const Dune::FoamGrid>(Dune::get<dimension-codim>(entityImps_[level]).begin());
+        }
         
 
         //! one past the end on this level
         template<int codim, PartitionIteratorType PiType>
-        typename Traits::template Codim<codim>::template Partition<PiType>::LevelIterator lend (int level) const;
+        typename Traits::template Codim<codim>::template Partition<PiType>::LevelIterator lend (int level) const {
+            if (level<0 || level>maxLevel())
+                DUNE_THROW(GridError, "LevelIterator in nonexisting level " << level << " requested!");
+            
+            return Dune::FoamGridLevelIterator<codim,PiType, const Dune::FoamGrid>(Dune::get<dimension-codim>(entityImps_[level]).end());
+        }
         
     
         //! Iterator to first leaf entity of given codim
@@ -201,12 +223,13 @@ class FoamGrid :
          */
         int size (int level, int codim) const {
 
+            // Turn dynamic index into static index
             if (codim==0)
-                return elements_[level].size();
-//             if (codim==1)
-//                 return edges_[level].size();
+                return Dune::get<0>(entityImps_[level]).size();
+            if (codim==1)
+                return Dune::get<1>(entityImps_[level]).size();
             if (codim==2)
-                return vertices_[level].size();
+                return Dune::get<2>(entityImps_[level]).size();
 
             return 0;
         }
@@ -414,14 +437,10 @@ class FoamGrid :
         //! \todo Please doc me !
         CollectiveCommunication ccobj_;
 
-    // Lists of vertices on each level
-    std::vector<std::list<FoamGridVertex> > vertices_;
-        
-    // Lists of edges on each level
-    std::vector<std::list<FoamGridEdge> > edges_;
-
-    // Lists of elements on each level
-    std::vector<std::list<FoamGridElement> > elements_;
+    // Stores the lists of vertices, edges, elements for each level
+    std::vector<tuple<std::list<FoamGridVertex>,
+                      std::list<FoamGridEdge>,
+                      std::list<FoamGridElement> > > entityImps_;
 
         //! Our set of level indices
         std::vector<FoamGridLevelIndexSet<const FoamGrid>*> levelIndexSets_;
@@ -480,91 +499,7 @@ namespace Capabilities
     };
 }
 
-template <int codim>
-struct FoamGridLevelIteratorFactory {};
-
-template <>
-struct FoamGridLevelIteratorFactory<2>
-{
-    template <Dune::PartitionIteratorType PiType>
-    static Dune::FoamGridLevelIterator<1,PiType, const Dune::FoamGrid> 
-    lbegin(const Dune::FoamGrid* g, int level) {
-
-        return Dune::FoamGridLevelIterator<2,PiType, const Dune::FoamGrid>(const_cast<Dune::FoamGridVertex*>(g->vertices_[level].begin()));
-    }
-
-    template <Dune::PartitionIteratorType PiType>
-    static Dune::FoamGridLevelIterator<1,PiType, const Dune::FoamGrid> 
-    lend(const Dune::FoamGrid* g, int level) {
-
-        return Dune::FoamGridLevelIterator<2,PiType, const Dune::FoamGrid>(const_cast<Dune::FoamGridVertex*>(g->vertices_[level].end()));
-    }
-
-};
-
-template <>
-struct FoamGridLevelIteratorFactory<0>
-{
-    template <Dune::PartitionIteratorType PiType>
-    static Dune::FoamGridLevelIterator<0,PiType, const Dune::FoamGrid> 
-    lbegin(const Dune::FoamGrid* g, int level) {
-
-        return Dune::FoamGridLevelIterator<0,PiType, const Dune::FoamGrid>(g->elements_[level].begin());
-    }
-
-    template <Dune::PartitionIteratorType PiType>
-    static Dune::FoamGridLevelIterator<0,PiType, const Dune::FoamGrid> 
-    lend(const Dune::FoamGrid* g, int level) {
-
-        return Dune::FoamGridLevelIterator<0,PiType, const Dune::FoamGrid>(g->elements_[level].end());
-    }
-
-};
-
 } // namespace Dune
-
-
-
-
-template <int codim>
-typename Dune::FoamGrid::Traits::template Codim<codim>::LevelIterator
-Dune::FoamGrid::lbegin(int level) const
-{
-    if (level<0 || level>maxLevel())
-        DUNE_THROW(Dune::GridError, "LevelIterator in nonexisting level " << level << " requested!");
-
-    return FoamGridLevelIteratorFactory<codim>::template lbegin<All_Partition>(this, level);
-}
-
-template <int codim>
-typename Dune::FoamGrid::Traits::template Codim<codim>::LevelIterator
-Dune::FoamGrid::lend(int level) const
-{
-    if (level<0 || level>maxLevel())
-        DUNE_THROW(GridError, "LevelIterator in nonexisting level " << level << " requested!");
-    
-    return FoamGridLevelIteratorFactory<codim>::template lend<All_Partition>(this, level);
-}
-
-template <int codim, Dune::PartitionIteratorType PiType>
-typename Dune::FoamGrid::Traits::template Codim<codim>::template Partition<PiType>::LevelIterator
-Dune::FoamGrid::lbegin(int level) const
-{
-    if (level<0 || level>maxLevel())
-        DUNE_THROW(Dune::GridError, "LevelIterator in nonexisting level " << level << " requested!");
-
-    return FoamGridLevelIteratorFactory<codim>::template lbegin<PiType>(this, level);
-}
-
-template <int codim, Dune::PartitionIteratorType PiType>
-typename Dune::FoamGrid::Traits::template Codim<codim>::template Partition<PiType>::LevelIterator
-Dune::FoamGrid::lend(int level) const
-{
-    if (level<0 || level>maxLevel())
-        DUNE_THROW(GridError, "LevelIterator in nonexisting level " << level << " requested!");
-    
-    return FoamGridLevelIteratorFactory<codim>::template lend<PiType>(this, level);
-}
 
 
 #include <dune-foamgrid/foamgrid/foamgridfactory.hh>

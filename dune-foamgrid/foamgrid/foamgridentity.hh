@@ -103,13 +103,6 @@ class FoamGridEntity :
         
         typedef typename GridImp::ctype ctype;
         
-        // The codimension of this entitypointer wrt the host grid
-        enum {CodimInHostGrid = GridImp::HostGridType::dimension - GridImp::dimension + codim};
-
-        // EntityPointer to the equivalent entity in the host grid
-        typedef typename GridImp::HostGridType::Traits::template Codim<CodimInHostGrid>::EntityPointer HostGridEntityPointer;
-        
-
     public:
     
         typedef typename GridImp::template Codim<codim>::Geometry Geometry;
@@ -202,7 +195,7 @@ class FoamGridEntity :
     private:
     
         //! \todo Please doc me !
-        void setToTarget(const HostGridEntityPointer& target)
+        void setToTarget(const FoamGridEntityImp<dim-codim,GridImp::dimensionworld>* target)
         {
             if(geo_!=0)
             {
