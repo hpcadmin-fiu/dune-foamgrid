@@ -31,6 +31,7 @@ public:
         const std::list<FoamGridEntityImp<dim-codim,dimworld> >& entities = Dune::get<dim-codim>(grid_->entityImps_[fullRefineLevel]);
         // The &* turns an iterator into a plain pointer
         this->virtualEntity_.setToTarget(&*entities.begin());
+        levelIterator_ = entities.begin();
 
         if (!this->virtualEntity_.getTarget()->isLeaf())
             increment();
@@ -47,7 +48,9 @@ public:
         // Increment until you find a leaf entity
         do {
             globalIncrement();
-        } while (this->virtualEntity_.getTarget() && !this->virtualEntity_.getTarget()->isLeaf());
+
+        } while (levelIterator_!=Dune::get<dim-codim>(grid_->entityImps_[grid_->maxLevel()]).end() 
+                 && !this->virtualEntity_.getTarget()->isLeaf());
     }
 
 private:
@@ -62,9 +65,11 @@ private:
         // Increment on this level
         ++levelIterator_;
         this->virtualEntity_.setToTarget(&(*levelIterator_));
+        if (levelIterator_==Dune::get<dim-codim>(grid_->entityImps_[oldLevel]).end())
+            this->virtualEntity_.setToTarget(NULL);
 
         // If beyond the end of this level set to first of next level
-        if (!this->virtualEntity_.getTarget() && oldLevel < grid_->maxLevel()) {
+        if (levelIterator_==Dune::get<dim-codim>(grid_->entityImps_[oldLevel]).end() && oldLevel < grid_->maxLevel()) {
 
             const std::list<FoamGridEntityImp<dim-codim,dimworld> >& entities = Dune::get<dim-codim>(grid_->entityImps_[oldLevel+1]);
             levelIterator_ = entities.begin();
@@ -79,7 +84,10 @@ private:
     // /////////////////////////////////////
     const GridImp* grid_;
 
-    //! \todo Please doc me !
+    // This iterator derives from FoamGridEntityPointer, and that base class stores the value
+    // of the iterator, i.e. the 'pointer' to the entity.  However, that pointer can not be
+    // set to its successor in the level std::list, not even by magic.  Therefore we keep the
+    // same information redundantly in this iterator, which can be incremented.
     typename std::list<FoamGridEntityImp<dim-codim,dimworld>>::const_iterator levelIterator_;
 };
 
