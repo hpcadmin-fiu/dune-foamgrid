@@ -125,6 +125,12 @@ template<class GridImp>
 class FoamGridLeafIndexSet :
     public IndexSet<GridImp,FoamGridLeafIndexSet<GridImp> >
 {
+
+    // Grid dimension
+    enum {dim      = remove_const<GridImp>::type::dimension};
+    
+    // Grid dimension
+    enum {dimworld = remove_const<GridImp>::type::dimensionworld};
     
 public:
     
@@ -162,35 +168,14 @@ public:
     //! get number of entities of given type
     int size (GeometryType type) const
     {
-        if (type.isVertex()) {
-
-            return numVertices_;
-
-        } else if (type.isLine()) {
-
-            return numEdges_;
-
-        } else if (type.dim()==2)
-
-            return numElements_;
-
-        return 0;
+        return (type.dim() < 0 || type.dim() > dim) ? 0 : size_[type.dim()];
     }
         
         
         //! get number of entities of given codim
         int size (int codim) const
         {
-            if (codim==2)
-                return numVertices_;
-            
-            if (codim==1)
-                return numEdges_;
-          
-            if (codim==0)
-                return numElements_;
-
-            return 0;
+            return (codim < 0 || codim > dim) ? 0 : size_[dim - codim];
         }
         
         
@@ -212,33 +197,68 @@ public:
     /** Recompute the leaf numbering */
     void update(const GridImp& grid)
     {
-#if 0
+
+        dune_static_assert(dim==2, "LeafIndexSet::update() only works for 2d grids");
+
         // ///////////////////////////////
         //   Init the element indices
         // ///////////////////////////////
-        numElements_ = 0;
-        typename GridImp::Traits::template Codim<0>::LeafIterator eIt    = grid_.template leafbegin<0>();
-        typename GridImp::Traits::template Codim<0>::LeafIterator eEndIt = grid_.template leafend<0>();
+        size_[dim] = 0;
+        typename GridImp::Traits::template Codim<0>::LeafIterator eIt    = grid_->template leafbegin<0>();
+        typename GridImp::Traits::template Codim<0>::LeafIterator eEndIt = grid_->template leafend<0>();
         
-        for (; eIt!=eEndIt; ++eIt)
-            grid_.getRealImplementation(*eIt).target_->leafIndex_ = numElements_++;
+        for (; eIt!=eEndIt; ++eIt) {
+            *const_cast<unsigned int*>(&(GridImp::getRealImplementation(*eIt).target_->leafIndex_)) = size_[dim]++;
+            std::cout << "size: " << size_[dim] << std::endl;
+            if (size_[dim]==10)
+                exit(0);
+        }
+
+        // //////////////////////////////
+        //   Init the edge indices
+        // //////////////////////////////
+        
+        size_[1] = 0;
+        
+        for (int i=grid_->maxLevel(); i>=0; i--) {
+
+            typename GridImp::Traits::template Codim<1>::LevelIterator edIt    = grid_->template lbegin<1>(i);
+            typename GridImp::Traits::template Codim<1>::LevelIterator edEndIt = grid_->template lend<1>(i);
+        
+            for (; edIt!=edEndIt; ++edIt) {
+                
+                const FoamGridEntityImp<1,dimworld>* target = GridImp::getRealImplementation(*edIt).target_;
+
+                // Only implemented for 1-level grids
+                assert(target->isLeaf());
+                //if (target->isLeaf())
+                    *const_cast<unsigned int*>(&(target->leafIndex_)) = size_[0]++;
+//                 else
+//                     *const_cast<unsigned int*>(&(target->leafIndex_)) = target->son_->leafIndex_;
+
+            }
+
+        }
 
         // //////////////////////////////
         //   Init the vertex indices
         // //////////////////////////////
         
-        numVertices_ = 0;
+        size_[0] = 0;
         
-        for (int i=grid_.maxLevel(); i>=0; i--) {
+        for (int i=grid_->maxLevel(); i>=0; i--) {
 
-            std::list<FoamGridVertex>::const_iterator vIt;
-            for (vIt = grid_.vertices[i].begin(); vIt!=grid_.vertices[i].end(); ++vIt) {
+            typename GridImp::Traits::template Codim<dim>::LevelIterator vIt    = grid_->template lbegin<dim>(i);
+            typename GridImp::Traits::template Codim<dim>::LevelIterator vEndIt = grid_->template lend<dim>(i);
+        
+            for (; vIt!=vEndIt; ++vIt) {
                 
-                /** \todo Remove the const casts */
-                if (vIt->isLeaf())
-                    const_cast<OneDEntityImp<0>*>(vIt)->leafIndex_ = numVertices_++;
+                const FoamGridEntityImp<0,dimworld>* target = GridImp::getRealImplementation(*vIt).target_;
+
+                if (target->isLeaf())
+                    *const_cast<unsigned int*>(&(target->leafIndex_)) = size_[0]++;
                 else
-                    const_cast<OneDEntityImp<0>*>(vIt)->leafIndex_ = vIt->son_->leafIndex_;
+                    *const_cast<unsigned int*>(&(target->leafIndex_)) = target->son_->leafIndex_;
 
             }
 
@@ -247,31 +267,27 @@ public:
         // ///////////////////////////////////////////////
         //   Update the list of geometry types present
         // ///////////////////////////////////////////////
-        if (numElements_>0) {
-            myTypes_[0].resize(1);
-            myTypes_[0][0] = GeometryType(1);
-        } else
-            myTypes_[0].resize(0);
 
-        if (numVertices_>0) {
-            myTypes_[1].resize(1);
-            myTypes_[1][0] = GeometryType(0);
-        } else
-            myTypes_[1].resize(0);
-#endif
+        /** \todo This will not work for grids with more than one element type */
+        for (int i=0; i<=dim; i++) {
+
+            if (size_[dim-i]>0) {
+                myTypes_[i].resize(1);
+                myTypes_[i][0] = GeometryType(dim-i);
+            } else
+                myTypes_[i].resize(0);
+
         }
-   
+
+    }
         
         GridImp* grid_;
 
-        int numElements_;
+    // Number of entities per dimension
+    int size_[dim+1];
 
-        int numEdges_;
-
-        int numVertices_;
-
-        /** \brief The GeometryTypes present for each codim */
-        std::vector<GeometryType> myTypes_[3];
+    /** \brief The GeometryTypes present for each codim */
+    std::vector<GeometryType> myTypes_[dim+1];
 
 };
 
