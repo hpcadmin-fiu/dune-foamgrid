@@ -228,7 +228,7 @@ public:
                 // Only implemented for 1-level grids
                 assert(target->isLeaf());
                 //if (target->isLeaf())
-                    *const_cast<unsigned int*>(&(target->leafIndex_)) = size_[0]++;
+                    *const_cast<unsigned int*>(&(target->leafIndex_)) = size_[1]++;
 //                 else
 //                     *const_cast<unsigned int*>(&(target->leafIndex_)) = target->son_->leafIndex_;
 
