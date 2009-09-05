@@ -426,9 +426,9 @@ class FoamGrid :
         for (int i=0; i<=maxLevel(); i++)
             if (levelIndexSets_[i])
                 levelIndexSets_[i]->update(*this, i);
-        
-        //leafIndexSet_.update(*this);
-#warning leafIndexSet_.update NOT called            
+
+        // Update the leaf indices
+        leafIndexSet_.update(*this);
         
         // IdSets don't need updating
 
