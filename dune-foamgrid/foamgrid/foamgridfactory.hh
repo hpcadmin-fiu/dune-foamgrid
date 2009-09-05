@@ -109,18 +109,18 @@ namespace Dune {
             // For fast retrieval: a map from pairs of vertices to the edge that connects them
             std::map<std::pair<const FoamGridEntityImp<0,dimworld>*, const FoamGridEntityImp<0,dimworld>*>, FoamGridEntityImp<1,dimworld>*> edgeMap;
 
-            FoamGrid::Codim<0>::LevelIterator eIt    = grid_->lbegin<0>(0);
-            FoamGrid::Codim<0>::LevelIterator eEndIt = grid_->lend<0>(0);
+            std::list<FoamGridElement>::iterator eIt    = Dune::get<2>(grid_->entityImps_[0]).begin();
+            std::list<FoamGridElement>::iterator eEndIt = Dune::get<2>(grid_->entityImps_[0]).end();
 
             for (; eIt!=eEndIt; ++eIt) {
 
-                const FoamGridElement* element = FoamGrid::getRealImplementation(*eIt).target_;
+                FoamGridElement* element = &(*eIt);
 
                 const Dune::GenericReferenceElement<double,dim>& refElement
                     = Dune::GenericReferenceElements<double, dim>::general(eIt->type());
 
                 // Loop over all edges of this element
-                for (int i=0; i<eIt->count<1>(); ++i) {
+                for (int i=0; i<element->edges_.size(); ++i) {
 
                     // Get two vertices of the potential edge
                     const FoamGridVertex* v0 = element->vertex_[refElement.subEntity(i, 1, 0, 2)];
@@ -153,6 +153,10 @@ namespace Dune {
                         
                     }
 
+                    // make element know about the edge
+                    element->edges_[i] = existingEdge;
+
+                    // make edge know about the element
                     existingEdge->elements_.push_back(element);
 
                 }
