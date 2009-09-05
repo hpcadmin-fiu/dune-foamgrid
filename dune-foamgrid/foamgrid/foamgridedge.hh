@@ -19,8 +19,9 @@ namespace Dune {
             vertex_[1] = v1;
         }
 
+        /** \todo Implement this method! */
         bool isLeaf() const {
-            DUNE_THROW(NotImplemented, "isLeaf()");
+            return true;
         }
 
         unsigned int boundaryId() const {
