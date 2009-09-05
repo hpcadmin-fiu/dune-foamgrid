@@ -32,11 +32,11 @@ class FoamGridLevelIntersection
         typedef typename GridImp::template Codim<0>::Entity Entity;
         typedef Dune::Intersection<const GridImp, Dune::FoamGridLevelIntersectionIterator> Intersection;
 
-    FoamGridLevelIntersection(FoamGridElement* center, int nb)
+    FoamGridLevelIntersection(const FoamGridElement* center, int nb)
         : center_(center), neighbor_(nb),
-          geometryInInside_(FoamGridGeometry<0,1,GridImp>()),
-          geometryInOutside_(FoamGridGeometry<0,1,GridImp>()),
-          geometry_(FoamGridGeometry<0,1,GridImp>())
+          geometryInInside_(FoamGridGeometry<dim-1,dim,GridImp>()),
+          geometryInOutside_(FoamGridGeometry<dim-1,dim,GridImp>()),
+          geometry_(FoamGridGeometry<dim-1,dimworld,GridImp>())
     {}
 
         //! return EntityPointer to the Entity on the inside of this intersection
@@ -160,7 +160,7 @@ class FoamGridLevelIntersection
 
     private:
 
-    FoamGridElement* center_;
+    const FoamGridElement* center_;
  
     //! vector storing the outer normal 
     mutable FieldVector<typename GridImp::ctype, dimworld> outerNormal_;

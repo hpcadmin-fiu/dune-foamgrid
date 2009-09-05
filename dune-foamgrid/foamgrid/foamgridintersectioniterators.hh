@@ -19,6 +19,8 @@ namespace Dune {
 */
 template<class GridImp>
 class FoamGridLeafIntersectionIterator
+/** \todo Inherit from the level iterator because I am too lazy to implement
+    the actual leaf iterator and I don't need it yet. */
     : public FoamGridLevelIntersectionIterator<GridImp>
 {
     #if 0
@@ -32,6 +34,16 @@ class FoamGridLeafIntersectionIterator
 #endif
 public:
     
+    //! Constructor for a given grid entity and a given neighbor
+    FoamGridLeafIntersectionIterator(const FoamGridElement* center, int nb) 
+        : FoamGridLevelIntersectionIterator<GridImp>(center,nb)
+    {}
+
+    /** \brief Constructor creating the 'one-after-last'-iterator */
+    FoamGridLeafIntersectionIterator(const FoamGridElement* center) 
+        : FoamGridLevelIntersectionIterator<GridImp>(center,center->corners())
+    {}
+
     typedef Dune::Intersection<const GridImp, Dune::FoamGridLeafIntersection> Intersection;
 #if 0
     FoamGridLeafIntersectionIterator(const GridImp* identityGrid,
@@ -76,25 +88,6 @@ public:
         return reinterpret_cast<const Intersection&>(*this);
     }
     
-#if 0
-private:
-        //**********************************************************
-        //  private methods
-        //**********************************************************
-
-    //! pointer to element holding the selfLocal and selfGlobal information.
-    //! This element is created on demand.
-    mutable MakeableInterfaceObject<LocalGeometry>* selfLocal_;
-    mutable MakeableInterfaceObject<LocalGeometry>* neighborLocal_;
-    
-    //! pointer to element holding the neighbor_global and neighbor_local
-    //! information.
-    mutable MakeableInterfaceObject<Geometry>* intersectionGlobal_;
-
-    const GridImp* identityGrid_;
-
-    HostLeafIntersectionIterator hostIterator_;
-#endif
 };
 
 
@@ -108,16 +101,19 @@ class FoamGridLevelIntersectionIterator
     enum { dim=GridImp::dimension };
     enum { dimworld=GridImp::dimensionworld };
 
-    //friend class OneDGridEntity<0,dim,GridImp>;
+    // Only the codim-0 entity is allowed to call the constructors
+    friend class FoamGridEntity<0,dim,GridImp>;
 
+    /** \todo Make this private once FoamGridLeafIntersectionIterator doesn't derive from this class anymore */
+protected:
     //! Constructor for a given grid entity and a given neighbor
-    FoamGridLevelIntersectionIterator(FoamGridElement* center, int nb) 
-        : intersection_(center,nb)
+    FoamGridLevelIntersectionIterator(const FoamGridElement* center, int nb) 
+        : intersection_(FoamGridLevelIntersection<GridImp>(center,nb))
     {}
 
     /** \brief Constructor creating the 'one-after-last'-iterator */
-    FoamGridLevelIntersectionIterator(FoamGridElement* center) 
-        : intersection_(center,center->corners())
+    FoamGridLevelIntersectionIterator(const FoamGridElement* center) 
+        : intersection_(FoamGridLevelIntersection<GridImp>(center,center->corners()))
     {}
 
 public:

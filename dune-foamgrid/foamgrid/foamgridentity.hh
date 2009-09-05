@@ -189,7 +189,7 @@ class FoamGridEntity :
             return *geo_;
         }
     
-    FoamGridEntityImp<dim-codim,GridImp::dimensionworld>* target_;
+    const FoamGridEntityImp<dim-codim,GridImp::dimensionworld>* target_;
 
         
     private:
@@ -400,31 +400,25 @@ class FoamGridEntity<0,dim,GridImp> :
         
         //! First level intersection
         FoamGridLevelIntersectionIterator<GridImp> ilevelbegin () const{
-            assert(false);
-            //return FoamGridLevelIntersectionIterator<GridImp>(hostEntity_->ilevelbegin());
+            return FoamGridLevelIntersectionIterator<GridImp>(target_, 0);
         }
     
         
         //! Reference to one past the last neighbor
         FoamGridLevelIntersectionIterator<GridImp> ilevelend () const{
-            assert(false);
-            //return FoamGridLevelIntersectionIterator<GridImp>(hostEntity_->ilevelend());
+            return FoamGridLevelIntersectionIterator<GridImp>(target_);
         }
     
         
         //! First leaf intersection
         FoamGridLeafIntersectionIterator<GridImp> ileafbegin () const{
-            assert(false);
-//             return FoamGridLeafIntersectionIterator<GridImp>(identityGrid_,
-            //hostEntity_->ileafbegin());
+            return FoamGridLeafIntersectionIterator<GridImp>(target_, (isLeaf()) ? 0 : target_->edges_.size());
         }
     
         
         //! Reference to one past the last leaf intersection
         FoamGridLeafIntersectionIterator<GridImp> ileafend () const{
-            assert(false);
-//             return FoamGridLeafIntersectionIterator<GridImp>(identityGrid_,
-            //                                                   hostEntity_->ileafend());
+            return FoamGridLeafIntersectionIterator<GridImp>(target_);
         }
     
         
