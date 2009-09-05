@@ -81,7 +81,8 @@ namespace Dune {
 
             assert(type.isTriangle());
 
-            FoamGridElement newElement(0,0);
+            FoamGridElement newElement(0,   // level
+                                       0);  // id
             newElement.vertex_[0] = vertexArray_[vertices[0]];
             newElement.vertex_[1] = vertexArray_[vertices[1]];
             newElement.vertex_[2] = vertexArray_[vertices[2]];
@@ -100,6 +101,63 @@ namespace Dune {
             // You never know who may do this...
             if (grid_==NULL)
                 return NULL;
+
+            // ////////////////////////////////////////////////////
+            //   Create the edges
+            // ////////////////////////////////////////////////////
+
+            // For fast retrieval: a map from pairs of vertices to the edge that connects them
+            std::map<std::pair<const FoamGridEntityImp<0,dimworld>*, const FoamGridEntityImp<0,dimworld>*>, FoamGridEntityImp<1,dimworld>*> edgeMap;
+
+            FoamGrid::Codim<0>::LevelIterator eIt    = grid_->lbegin<0>(0);
+            FoamGrid::Codim<0>::LevelIterator eEndIt = grid_->lend<0>(0);
+
+            for (; eIt!=eEndIt; ++eIt) {
+
+                const FoamGridElement* element = FoamGrid::getRealImplementation(*eIt).target_;
+
+                const Dune::GenericReferenceElement<double,dim>& refElement
+                    = Dune::GenericReferenceElements<double, dim>::general(eIt->type());
+
+                // Loop over all edges of this element
+                for (int i=0; i<eIt->count<1>(); ++i) {
+
+                    // Get two vertices of the potential edge
+                    const FoamGridVertex* v0 = element->vertex_[refElement.subEntity(i, 1, 0, 2)];
+                    const FoamGridVertex* v1 = element->vertex_[refElement.subEntity(i, 1, 1, 2)];
+
+                    FoamGridEdge* existingEdge = NULL;
+                    std::map<std::pair<const FoamGridEntityImp<0,dimworld>*, const FoamGridEntityImp<0,dimworld>*>, FoamGridEntityImp<1,dimworld>*>::const_iterator e = edgeMap.find(std::make_pair(v0,v1));
+
+                    if (e != edgeMap.end()) {
+                        existingEdge = e->second;
+                    } else {
+                        e = edgeMap.find(std::make_pair(v1,v0));
+                        if (e != edgeMap.end())
+                            existingEdge = e->second;
+                    }
+
+                    if (existingEdge == NULL) {
+
+                        // The current edge has not been inserted already.  We do that now
+
+                        Dune::get<1>(grid_->entityImps_[0]).push_back(FoamGridEntityImp<1,dimworld>(v0,
+                                                                                                    v1,
+                                                                                                    0,   // level
+                                                                                                    0    // id
+                                                                                                    ));
+
+                        existingEdge = &*Dune::get<1>(grid_->entityImps_[0]).rbegin();
+                                                                   
+                        edgeMap.insert(std::make_pair(std::make_pair(v0,v1), existingEdge));
+                        
+                    }
+
+                    existingEdge->elements_.push_back(element);
+
+                }
+
+            }
 
             // Create the index sets
             grid_->setIndices();
