@@ -38,7 +38,7 @@ namespace Dune {
 
         FoamGridEntityImp<2,dimworld>* father_;
 
-        FoamGridEntityImp<1,dimworld>* edges_[3];
+        array<FoamGridEntityImp<1,dimworld>*, 3> edges_;
 
         FoamGridEntityImp<0,dimworld>* vertex_[3];
         
