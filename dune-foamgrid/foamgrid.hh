@@ -224,11 +224,11 @@ class FoamGrid :
         int size (int level, int codim) const {
 
             // Turn dynamic index into static index
-            if (codim==0)
+            if (codim==2)
                 return Dune::get<0>(entityImps_[level]).size();
             if (codim==1)
                 return Dune::get<1>(entityImps_[level]).size();
-            if (codim==2)
+            if (codim==0)
                 return Dune::get<2>(entityImps_[level]).size();
 
             return 0;
