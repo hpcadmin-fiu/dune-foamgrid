@@ -125,7 +125,9 @@ class FoamGrid :
         : leafIndexSet_(*this),
           globalIdSet_(*this),
           localIdSet_(*this)
-    {}
+    {
+        freeIdCounter_.assign(0);
+    }
         
         //! Desctructor
         ~FoamGrid()
@@ -445,14 +447,17 @@ class FoamGrid :
         //! Our set of level indices
         std::vector<FoamGridLevelIndexSet<const FoamGrid>*> levelIndexSets_;
         
-        //! \todo Please doc me !
+        //! The leaf index set
         FoamGridLeafIndexSet<const FoamGrid > leafIndexSet_;
     
-        //! \todo Please doc me !
+        //! The global id set
         FoamGridGlobalIdSet<const FoamGrid > globalIdSet_;
     
-        //! \todo Please doc me !
+        //! The local id set
         FoamGridLocalIdSet<const FoamGrid > localIdSet_;
+
+    /** \brief Counters that always provide the next free id for each dimension */
+    array<unsigned int, dimension+1> freeIdCounter_;
     
 }; // end Class FoamGrid
 

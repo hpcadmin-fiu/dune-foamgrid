@@ -68,7 +68,9 @@ namespace Dune {
 
         /** \brief Insert a vertex into the coarse grid */
         virtual void insertVertex(const FieldVector<ctype,3>& pos) {
-            Dune::get<0>(grid_->entityImps_[0]).push_back(FoamGridVertex(0,pos));
+            Dune::get<0>(grid_->entityImps_[0]).push_back(FoamGridVertex(0,   // level
+                                                                         pos,  // position
+                                                                         grid_->freeIdCounter_[0]++));
             vertexArray_.push_back(&*Dune::get<0>(grid_->entityImps_[0]).rbegin());
         }
 
@@ -82,7 +84,7 @@ namespace Dune {
             assert(type.isTriangle());
 
             FoamGridElement newElement(0,   // level
-                                       0);  // id
+                                       grid_->freeIdCounter_[dim]++);  // id
             newElement.vertex_[0] = vertexArray_[vertices[0]];
             newElement.vertex_[1] = vertexArray_[vertices[1]];
             newElement.vertex_[2] = vertexArray_[vertices[2]];
@@ -144,7 +146,7 @@ namespace Dune {
                         Dune::get<1>(grid_->entityImps_[0]).push_back(FoamGridEntityImp<1,dimworld>(v0,
                                                                                                     v1,
                                                                                                     0,   // level
-                                                                                                    0    // id
+                                                                                                    grid_->freeIdCounter_[1]++    // id
                                                                                                     ));
 
                         existingEdge = &*Dune::get<1>(grid_->entityImps_[0]).rbegin();
