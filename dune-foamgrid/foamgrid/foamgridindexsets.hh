@@ -269,7 +269,7 @@ public:
 
             if (size_[dim-i]>0) {
                 myTypes_[i].resize(1);
-                myTypes_[i][0] = GeometryType(dim-i);
+                myTypes_[i][0] = GeometryType(GeometryType::simplex, dim-i);
             } else
                 myTypes_[i].resize(0);
 
