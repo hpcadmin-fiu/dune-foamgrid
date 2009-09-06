@@ -301,13 +301,24 @@ class FoamGrid :
         * The parameter is currently ignored
         *
         * \return <ul>
-        * <li> true, if marking was succesfull </li>
+        * <li> true, if marking was successful </li>
         * <li> false, if marking was not possible </li>
         * </ul>
         */
         bool mark(int refCount, const Traits::Codim<0>::EntityPointer & e)
         {
-            return false;
+            if (not e->isLeaf())
+                return false;
+
+            /** \todo Why do I need those const_casts here? */
+            if (refCount>=1)
+                const_cast<FoamGridElement*>(getRealImplementation(*e).target_)->markState_ = FoamGridElement::REFINE;
+            else if (refCount<0)
+                const_cast<FoamGridElement*>(getRealImplementation(*e).target_)->markState_ = FoamGridElement::COARSEN;
+            else
+                const_cast<FoamGridElement*>(getRealImplementation(*e).target_)->markState_ = FoamGridElement::DO_NOTHING;
+
+            return true;
         }
         
         /** \brief Return refinement mark for entity
@@ -316,6 +327,11 @@ class FoamGrid :
         */
         int getMark(const Traits::Codim<0>::EntityPointer & e) const
         {
+            if (getRealImplementation(*e).target_->markState_ == FoamGridElement::REFINE)
+                return 1;
+            if (getRealImplementation(*e).target_->markState_ == FoamGridElement::COARSEN)
+                return -1;
+            
             return 0;
         }
 
