@@ -92,7 +92,7 @@ int main (int argc, char *argv[]) try
     GridType* grid = make2DHybridTestGrid<GridType>();
 
     gridcheck(*grid);
-    //checkIntersectionIterator(foamGrid);
+    checkIntersectionIterator(*grid);
 
 } 
 // //////////////////////////////////
