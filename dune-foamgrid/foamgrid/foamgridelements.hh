@@ -34,6 +34,11 @@ namespace Dune {
             return GeometryType(GeometryType::simplex, 2);
         }
 
+        /** \todo Implement me! */
+        unsigned int nSons() const {
+            return 0;
+        }
+
         array<FoamGridEntityImp<2,dimworld>*, 4> sons_;
 
         FoamGridEntityImp<2,dimworld>* father_;
