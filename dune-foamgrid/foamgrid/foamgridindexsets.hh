@@ -311,7 +311,7 @@ class FoamGridGlobalIdSet :
         template<int cd>
         IdType id (const typename remove_const<GridImp>::type::Traits::template Codim<cd>::Entity& e) const
         {
-            return grid_.getRealImplementation(e).globalId();
+            return grid_->getRealImplementation(e).globalId();
         }
     
         
@@ -359,7 +359,7 @@ class FoamGridLocalIdSet :
         IdType id (const typename remove_const<GridImp>::type::Traits::template Codim<cd>::Entity& e) const
         {
             // Return id of the host entity
-            return grid_.getRealImplementation(e).globalId();
+            return grid_->getRealImplementation(e).globalId();
         }
         
         
