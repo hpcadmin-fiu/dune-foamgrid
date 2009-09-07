@@ -122,7 +122,7 @@ namespace Dune {
                     = Dune::GenericReferenceElements<double, dim>::general(eIt->type());
 
                 // Loop over all edges of this element
-                for (int i=0; i<element->edges_.size(); ++i) {
+                for (size_t i=0; i<element->edges_.size(); ++i) {
 
                     // Get two vertices of the potential edge
                     const FoamGridVertex* v0 = element->vertex_[refElement.subEntity(i, 1, 0, 2)];
