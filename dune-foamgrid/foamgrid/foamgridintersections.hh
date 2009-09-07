@@ -95,6 +95,14 @@ class FoamGridLevelIntersection
 
             std::vector<FieldVector<double, dim> > coordinates(2);
 
+            // Get two vertices of the intersection
+            const Dune::GenericReferenceElement<double,dim>& refElement
+                = Dune::GenericReferenceElements<double, dim>::general(center_->type());
+
+            coordinates[0] = refElement.position(refElement.subEntity(neighbor_, 1, 0, dim),dim);
+            coordinates[1] = refElement.position(refElement.subEntity(neighbor_, 1, 1, dim),dim);
+
+            // set up geometry
             GridImp::getRealImplementation(geometryInInside_).setup(GeometryType(GeometryType::simplex,dim-1), coordinates);
 
             return geometryInInside_;
@@ -105,7 +113,9 @@ class FoamGridLevelIntersection
         const  LocalGeometry& geometryInOutside () const {
 
             std::vector<FieldVector<double, dim> > coordinates(2);
+            DUNE_THROW(NotImplemented, "geometryInOutside");
 
+            // set up geometry
             GridImp::getRealImplementation(geometryInOutside_).setup(GeometryType(GeometryType::simplex,dim-1), coordinates);
                 
             return geometryInOutside_;
@@ -117,6 +127,14 @@ class FoamGridLevelIntersection
 
             std::vector<FieldVector<double, dimworld> > coordinates(2);
 
+            // Get two vertices of the intersection
+            const Dune::GenericReferenceElement<double,dim>& refElement
+                = Dune::GenericReferenceElements<double, dim>::general(center_->type());
+
+            coordinates[0] = center_->vertex_[refElement.subEntity(neighbor_, 1, 0, dim)]->pos_;
+            coordinates[1] = center_->vertex_[refElement.subEntity(neighbor_, 1, 1, dim)]->pos_;
+
+            // set up geometry
             GridImp::getRealImplementation(geometry_).setup(GeometryType(GeometryType::simplex,dim-1), coordinates);
                 
             return geometry_;
