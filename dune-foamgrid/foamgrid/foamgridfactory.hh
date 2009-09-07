@@ -168,6 +168,24 @@ namespace Dune {
             // Create the index sets
             grid_->setIndices();
             
+
+            // ////////////////////////////////////////////////
+            //   Set the boundary ids
+            //  \todo It must be possible to set them by hand
+            // ////////////////////////////////////////////////
+
+            unsigned int boundaryIdCounter = 0;
+
+            for (std::list<FoamGridEdge>::iterator it = Dune::get<1>(grid_->entityImps_[0]).begin();
+                 it != Dune::get<1>(grid_->entityImps_[0]).end();
+                 ++it)
+                it->boundaryId_ = boundaryIdCounter++;
+
+
+            // ////////////////////////////////////////////////
+            //   Hand over the new grid
+            // ////////////////////////////////////////////////
+
             Dune::FoamGrid* tmp = grid_;
             grid_ = NULL;
             return tmp;
