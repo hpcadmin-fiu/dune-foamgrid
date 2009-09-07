@@ -322,7 +322,7 @@ class FoamGridGlobalIdSet :
         */
     IdType subId (const typename remove_const<GridImp>::type::Traits::template Codim<0>::Entity& e, int i, int codim) const
         {
-            return grid_.getRealImplementation(e).subId(i,codim);
+            return grid_->getRealImplementation(e).subId(i,codim);
         }
 
         
