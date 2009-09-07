@@ -150,7 +150,7 @@ class FoamGridLevelIntersection
 
         //! return unit outer normal
         FieldVector<ctype, dimworld> unitOuterNormal (const FieldVector<ctype, dim-1>& local) const {
-            FieldVector<ctype, dimworld> outerNormal = outerNormal(local);
+            FieldVector<ctype, dimworld> outerNormal = this->outerNormal(local);
             outerNormal /= outerNormal.two_norm();
             return outerNormal;
         }
