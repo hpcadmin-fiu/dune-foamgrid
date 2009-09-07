@@ -21,8 +21,8 @@ class FoamGridLeafIterator :
 public:
 
     FoamGridLeafIterator(const GridImp& grid) 
-        : grid_(&grid),
-          FoamGridEntityPointer <codim,GridImp>(NULL)
+        : FoamGridEntityPointer <codim,GridImp>(NULL),
+          grid_(&grid)
     {
 
         /** \todo Can a make the fullRefineLevel work somehow? */
