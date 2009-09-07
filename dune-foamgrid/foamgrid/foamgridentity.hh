@@ -480,7 +480,7 @@ class FoamGridEntity<0,dim,GridImp> :
         //! Returns iterator to one past the last son
         FoamGridHierarchicIterator<GridImp> hend (int maxLevel) const
         {
-            //return FoamGridHierarchicIterator<const GridImp>(identityGrid_, *this, maxLevel, true);
+            return FoamGridHierarchicIterator<const GridImp>(maxLevel);
         }
         
         
