@@ -7,6 +7,8 @@
 
 #include <dune/common/fmatrix.hh>
 #include <dune/common/typetraits.hh>
+#include <dune/grid/genericgeometry/geometry.hh>
+
 
 namespace Dune {
 
