@@ -21,30 +21,18 @@ template<class GridImp>
 class FoamGridHierarchicIterator :
         public Dune::FoamGridEntityPointer <0,GridImp>
 {
+    
+    friend class FoamGridEntity<0,GridImp::dimension,GridImp>;
+
     public:
         
         typedef typename GridImp::template Codim<0>::Entity Entity;
 
-#if 0    
-        //! the default Constructor
-        explicit FoamGridHierarchicIterator(const GridImp* identityGrid, const FoamGridElement& startEntity, int maxLevel) :
-            FoamGridEntityPointer<0,GridImp>(identityGrid, startEntity.hostEntity_->hbegin(maxLevel)),
-            identityGrid_(identityGrid),
-            hostGridHierarchicIterator_(startEntity.hostEntity_->hbegin(maxLevel)),
-            hostGridHierarchicEndIterator_(startEntity.hostEntity_->hend(maxLevel))
-        {
-            this->virtualEntity_.setToTarget(hostGridHierarchicIterator_);
-        }
-        
-        
-        //! \todo Please doc me !
-        explicit FoamGridHierarchicIterator(const GridImp* identityGrid, const FoamGridElement& startEntity, int maxLevel, bool endDummy) :
-            FoamGridEntityPointer<0,GridImp>(identityGrid, startEntity.hostEntity_->hend(maxLevel)),
-            identityGrid_(identityGrid),
-            hostGridHierarchicIterator_(startEntity.hostEntity_->hbegin(maxLevel)),
-            hostGridHierarchicEndIterator_(startEntity.hostEntity_->hend(maxLevel))
+    //! Constructor
+    FoamGridHierarchicIterator(int maxlevel) 
+        : FoamGridEntityPointer<0,GridImp>(NULL),
+          maxlevel_(maxlevel)
     {}
-    #endif
         
         //! \todo Please doc me !
         void increment()

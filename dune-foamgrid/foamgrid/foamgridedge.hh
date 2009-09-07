@@ -32,6 +32,21 @@ namespace Dune {
             return level_;
         }
 
+        GeometryType type() const {
+            return GeometryType(1);
+        }
+
+        /** \brief Number of corners (==2) */
+        unsigned int corners() const {
+            return 2;
+        }
+
+        FieldVector<double, dimworld> corner(int i) const {
+            return vertex_[i]->pos_;
+        }
+        
+
+
         std::vector<const FoamGridEntityImp<2,dimworld>*> elements_;
 
         const FoamGridEntityImp<0,dimworld>* vertex_[2];

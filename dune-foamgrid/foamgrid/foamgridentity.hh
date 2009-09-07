@@ -93,15 +93,14 @@ class FoamGridEntity :
     template <class GridImp_>
     friend class FoamGridGlobalIdSet;
 
-    template <class GridImp_, int EntityDim>
-    friend class IndexSetter;
-
     friend class FoamGridEntityPointer<codim,GridImp>;
 
     
     private:
         
         typedef typename GridImp::ctype ctype;
+
+    enum{dimworld = GridImp::dimensionworld};
         
     public:
     
@@ -185,7 +184,13 @@ class FoamGridEntity :
         const Geometry& geometry () const
         {
             if (geo_==0)
-                geo_ = new MakeableInterfaceObject<Geometry>(target_->geometry());
+                geo_ = new MakeableInterfaceObject<Geometry>(FoamGridGeometry<dim-codim,dimworld,GridImp>());
+
+            std::vector<FieldVector<double,dimworld> > coordinates(target_->corners());
+            for (size_t i=0; i<target_->corners(); i++)
+                coordinates[i] = target_->corner(i);
+
+            GridImp::getRealImplementation(*geo_).setup(target_->type(), coordinates);
             return *geo_;
         }
     
@@ -458,7 +463,17 @@ class FoamGridEntity<0,dim,GridImp> :
         */
         FoamGridHierarchicIterator<GridImp> hbegin (int maxLevel) const
         {
-            //return FoamGridHierarchicIterator<const GridImp>(identityGrid_, *this, maxLevel);
+            FoamGridHierarchicIterator<GridImp> it(maxLevel);
+
+            // Load sons of old target onto the iterator stack
+            if (level()<=maxLevel && !isLeaf())
+                for (size_t i=0; i<target_->nSons(); i++)
+                    it.elemStack.push(target_->sons_[i]);
+            
+            it.virtualEntity_.setToTarget((it.elemStack.empty()) 
+                                          ? NULL : it.elemStack.top());
+            
+            return it;
         }
     
         

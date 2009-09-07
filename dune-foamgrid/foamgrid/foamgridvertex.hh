@@ -25,6 +25,19 @@ namespace Dune {
         unsigned int level() const {
             return level_;
         }
+
+        GeometryType type() const {
+            return GeometryType(0);
+        }
+
+        /** \brief Number of corners (==1) */
+        unsigned int corners() const {
+            return 1;
+        }
+
+        FieldVector<double, dimworld> corner(int i) const {
+            return pos_;
+        }
         
         FieldVector<double, dimworld> pos_;
         
