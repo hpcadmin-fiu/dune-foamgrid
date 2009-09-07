@@ -43,7 +43,15 @@ namespace Dune {
         //! get number of entities of given codim, type and on this level
         int size (GeometryType type) const
         {
-            return grid_->size(level_,type);
+            if (type.isVertex())
+                return numVertices_;
+            if (type.isLine())
+                return numEdges_;
+            if (type.isTriangle())
+                return numTriangles_;
+            if (type.isQuadrilateral())
+                return numQuads_;
+            return 0;
         }
         
         
@@ -69,13 +77,25 @@ namespace Dune {
             // ///////////////////////////////
             //   Init the element indices
             // ///////////////////////////////
-            numElements_ = 0;
+            numTriangles_ = 0;
+            numQuads_ = 0;
             std::list<FoamGridElement>::const_iterator eIt;
             for (eIt =  Dune::get<dim>(grid_->entityImps_[level_]).begin(); 
                  eIt != Dune::get<dim>(grid_->entityImps_[level_]).end(); 
                  ++eIt)
              /** \todo Remove this const cast */
-                 *const_cast<unsigned int*>(&(eIt->levelIndex_)) = numElements_++;
+                *const_cast<unsigned int*>(&(eIt->levelIndex_)) = (eIt->type().isTriangle()) ? numTriangles_++ : numQuads_++;
+            
+            // ///////////////////////////////
+            //   Init the element indices
+            // ///////////////////////////////
+            numEdges_ = 0;
+            std::list<FoamGridEdge>::const_iterator edIt;
+            for (edIt =  Dune::get<1>(grid_->entityImps_[level_]).begin(); 
+                 edIt != Dune::get<1>(grid_->entityImps_[level_]).end(); 
+                 ++edIt)
+             /** \todo Remove this const cast */
+                 *const_cast<unsigned int*>(&(eIt->levelIndex_)) = numEdges_++;
             
             // //////////////////////////////
             //   Init the vertex indices
@@ -92,17 +112,21 @@ namespace Dune {
             // ///////////////////////////////////////////////
             //   Update the list of geometry types present
             // ///////////////////////////////////////////////
-            if (numElements_>0) {
-                myTypes_[0].resize(1);
-                myTypes_[0][0] = GeometryType(1);
-            } else
-                myTypes_[0].resize(0);
+            for (int i=0; i<=dim; i++)
+                myTypes_[i].resize(0);
+
+            if (numTriangles_>0)
+                myTypes_[0].push_back(GeometryType(GeometryType::simplex,2));
+
+            if (numQuads_>0)
+                myTypes_[0].push_back(GeometryType(GeometryType::cube,2));
+
+            if (numEdges_>0)
+                myTypes_[0].push_back(GeometryType(1));
+
+            if (numVertices_>0)
+                myTypes_[0].push_back(GeometryType(0));
             
-            if (numVertices_>0) {
-                myTypes_[1].resize(1);
-                myTypes_[1][0] = GeometryType(0);
-            } else
-                myTypes_[1].resize(0);
         }
         
         
@@ -110,14 +134,16 @@ namespace Dune {
         
         int level_;
 
-        int numElements_;
+        int numQuads_;
+
+        int numTriangles_;
 
         int numEdges_;
 
         int numVertices_;
 
         /** \brief The GeometryTypes present for each codim */
-        std::vector<GeometryType> myTypes_[3];
+        std::vector<GeometryType> myTypes_[dim+1];
     };
 
 
