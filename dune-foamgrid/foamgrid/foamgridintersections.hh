@@ -108,7 +108,7 @@ class FoamGridLevelIntersection
 
             GridImp::getRealImplementation(geometryInOutside_).setup(GeometryType(GeometryType::simplex,dim-1), coordinates);
                 
-            return *geometryInOutside_;
+            return geometryInOutside_;
         }
         
         //! intersection of codimension 1 of this neighbor with element where iteration started.
@@ -116,9 +116,6 @@ class FoamGridLevelIntersection
         const Geometry& geometry () const {
 
             std::vector<FieldVector<double, dimworld> > coordinates(2);
-
-//             if (geometry_ == NULL)
-//                 geometry_ = new MakeableInterfaceObject<Geometry>();
 
             GridImp::getRealImplementation(geometry_).setup(GeometryType(GeometryType::simplex,dim-1), coordinates);
                 
