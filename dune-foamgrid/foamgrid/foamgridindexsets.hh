@@ -23,7 +23,7 @@ namespace Dune {
         template<int codim>
         int index (const typename GridImp::Traits::template Codim<codim>::Entity& e) const
         {
-            return grid_->getRealImplementation(e).levelIndex();
+            return grid_->getRealImplementation(e).target_->levelIndex_;
         }
         
         
@@ -311,7 +311,7 @@ class FoamGridGlobalIdSet :
         template<int cd>
         IdType id (const typename remove_const<GridImp>::type::Traits::template Codim<cd>::Entity& e) const
         {
-            return grid_->getRealImplementation(e).globalId();
+            return grid_->getRealImplementation(e).target_->id_;
         }
     
         
@@ -359,7 +359,7 @@ class FoamGridLocalIdSet :
         IdType id (const typename remove_const<GridImp>::type::Traits::template Codim<cd>::Entity& e) const
         {
             // Return id of the host entity
-            return grid_->getRealImplementation(e).globalId();
+            return grid_->getRealImplementation(e).target_->id_;
         }
         
         
