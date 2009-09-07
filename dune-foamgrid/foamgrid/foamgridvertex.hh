@@ -21,6 +21,10 @@ namespace Dune {
         bool isLeaf() const {
             return son_==NULL;
         }
+
+        unsigned int level() const {
+            return level_;
+        }
         
         FieldVector<double, dimworld> pos_;
         

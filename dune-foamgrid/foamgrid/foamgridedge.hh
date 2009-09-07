@@ -28,6 +28,10 @@ namespace Dune {
             return boundaryId_;
         }
 
+        unsigned int level() const {
+            return level_;
+        }
+
         std::vector<const FoamGridEntityImp<2,dimworld>*> elements_;
 
         const FoamGridEntityImp<0,dimworld>* vertex_[2];
