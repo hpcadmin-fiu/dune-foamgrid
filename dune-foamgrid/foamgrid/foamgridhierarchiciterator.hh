@@ -24,10 +24,8 @@ class FoamGridHierarchicIterator :
     public:
         
         typedef typename GridImp::template Codim<0>::Entity Entity;
-    
-        typedef FoamGridEntity <0, GridImp::dimension, GridImp> FoamGridElement;
-        
-    
+
+#if 0    
         //! the default Constructor
         explicit FoamGridHierarchicIterator(const GridImp* identityGrid, const FoamGridElement& startEntity, int maxLevel) :
             FoamGridEntityPointer<0,GridImp>(identityGrid, startEntity.hostEntity_->hbegin(maxLevel)),
@@ -46,36 +44,42 @@ class FoamGridHierarchicIterator :
             hostGridHierarchicIterator_(startEntity.hostEntity_->hbegin(maxLevel)),
             hostGridHierarchicEndIterator_(startEntity.hostEntity_->hend(maxLevel))
     {}
-    
+    #endif
         
         //! \todo Please doc me !
         void increment()
         {
-            ++hostGridHierarchicIterator_;
-            this->virtualEntity_.setToTarget(hostGridHierarchicIterator_);
+            if (elemStack.empty())
+                return;
+            
+            const FoamGridElement* old_target = elemStack.top();
+            elemStack.pop();
+            
+            // Traverse the tree no deeper than maxlevel
+            if (old_target->level_ < maxlevel_) {
+                
+                // Load sons of old target onto the iterator stack
+                if (!old_target->isLeaf()) {
+                    
+                    for (int i=0; i<old_target->nSons(); i++)
+                        elemStack.push(old_target->sons_[i]);
+                    
+                }
+                
+            }
+            
+            this->virtualEntity_.setToTarget((elemStack.empty()) 
+                                             ? NULL : elemStack.top());
         }
 
         
-    private:
-    
-        // Type of the corresponding HierarchicIterator in the host grid
-        typedef typename GridImp::HostGridType::template Codim<0>::Entity::HierarchicIterator HostGridHierarchicIterator;
-    
-        enum {dim = GridImp::HostGridType::dimension};
+private:
         
-        
-        // The level index of the host entity that we are pointing to
-        //! \todo Please doc me !
-        unsigned int hostLevelIndex() const {
-            return identityGrid_->hostgrid_->levelIndexSet(hostGridHierarchicIterator_.level()).index(*hostGridHierarchicIterator_);
-        }
-    
-        
-        const GridImp* identityGrid_;
-        
-        HostGridHierarchicIterator hostGridHierarchicIterator_;
-        
-        HostGridHierarchicIterator hostGridHierarchicEndIterator_;
+    //! max level to go down 
+    int maxlevel_;
+
+    /** \brief For depth-first search */
+    std::stack<const FoamGridElement*> elemStack;
 };
 
 
