@@ -1,5 +1,5 @@
-#ifndef DUNE_IDENTITYGRIDENTITY_HH
-#define DUNE_IDENTITYGRIDENTITY_HH
+#ifndef DUNE_FOAMGRID_ENTITY_HH
+#define DUNE_FOAMGRID_ENTITY_HH
 
 /** \file
 * \brief The FoamGridEntity class

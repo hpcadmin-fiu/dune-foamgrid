@@ -1,5 +1,5 @@
-#ifndef DUNE_IDENTITYGRIDGEOMETRY_HH
-#define DUNE_IDENTITYGRIDGEOMETRY_HH
+#ifndef DUNE_FOAMGRID_GEOMETRY_HH
+#define DUNE_FOAMGRID_GEOMETRY_HH
 
 /** \file
 * \brief The FoamGridGeometry class and its specializations

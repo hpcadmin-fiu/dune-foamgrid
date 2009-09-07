@@ -1,5 +1,5 @@
-#ifndef DUNE_IDENTITYGRID_INDEXSETS_HH
-#define DUNE_IDENTITYGRID_INDEXSETS_HH
+#ifndef DUNE_FOAMGRID_INDEXSETS_HH
+#define DUNE_FOAMGRID_INDEXSETS_HH
 
 /** \file
 * \brief The index and id sets for the FoamGrid class
