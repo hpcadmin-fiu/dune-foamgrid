@@ -120,7 +120,17 @@ class FoamGridLevelIntersection
         const  LocalGeometry& geometryInOutside () const {
 
             std::vector<FieldVector<double, dim> > coordinates(2);
-            DUNE_THROW(NotImplemented, "geometryInOutside");
+
+
+            // Get two vertices of the intersection
+            const FoamGridElement* outside = center_->edges_[neighbor_]->otherElement(center_);
+            const Dune::GenericReferenceElement<double,dim>& refElement
+                = Dune::GenericReferenceElements<double, dim>::general(outside->type());
+
+            int idxInOutside = indexInOutside();
+            
+            coordinates[0] = refElement.position(refElement.subEntity(idxInOutside, 1, 0, dim),dim);
+            coordinates[1] = refElement.position(refElement.subEntity(idxInOutside, 1, 1, dim),dim);
 
             // set up geometry
             GridImp::getRealImplementation(geometryInOutside_).setup(type(), coordinates);
