@@ -125,10 +125,10 @@ namespace Dune {
                 myTypes_[0].push_back(GeometryType(GeometryType::cube,2));
 
             if (numEdges_>0)
-                myTypes_[0].push_back(GeometryType(1));
+                myTypes_[1].push_back(GeometryType(1));
 
             if (numVertices_>0)
-                myTypes_[0].push_back(GeometryType(0));
+                myTypes_[dim].push_back(GeometryType(0));
             
         }
         
