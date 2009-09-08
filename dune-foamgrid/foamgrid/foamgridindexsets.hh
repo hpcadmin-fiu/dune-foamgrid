@@ -61,11 +61,14 @@ namespace Dune {
             return myTypes_[codim];
         }
 
-        /** \brief Return true if the given entity is contained in the index set */
+        /** \brief Return true if the given entity is contained in the index set
+            
+        This checks only for the level.  We assume that e belongs to the correct grid
+        */
         template<class EntityType>
         bool contains (const EntityType& e) const
         {
-            DUNE_THROW(NotImplemented, "contains()");
+            return level_ == e.level();
         }
         
         /** \brief Set up the index set */
