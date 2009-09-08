@@ -218,7 +218,7 @@ public:
     template<class EntityType>
     bool contains (const EntityType& e) const
     {
-        DUNE_THROW(NotImplemented, "contains");
+        return GridImp::getRealImplementation(e).target_->isLeaf();
     }
 
 
