@@ -113,7 +113,7 @@ class FoamGridLevelIntersection
             coordinates[1] = refElement.position(refElement.subEntity(neighbor_, 1, 1, dim),dim);
 
             // set up geometry
-            GridImp::getRealImplementation(geometryInInside_).setup(GeometryType(GeometryType::simplex,dim-1), coordinates);
+            GridImp::getRealImplementation(geometryInInside_).setup(type(), coordinates);
 
             return geometryInInside_;
         }
@@ -126,7 +126,7 @@ class FoamGridLevelIntersection
             DUNE_THROW(NotImplemented, "geometryInOutside");
 
             // set up geometry
-            GridImp::getRealImplementation(geometryInOutside_).setup(GeometryType(GeometryType::simplex,dim-1), coordinates);
+            GridImp::getRealImplementation(geometryInOutside_).setup(type(), coordinates);
                 
             return geometryInOutside_;
         }
@@ -145,7 +145,7 @@ class FoamGridLevelIntersection
             coordinates[1] = center_->vertex_[refElement.subEntity(neighbor_, 1, 1, dim)]->pos_;
 
             // set up geometry
-            GridImp::getRealImplementation(geometry_).setup(GeometryType(GeometryType::simplex,dim-1), coordinates);
+            GridImp::getRealImplementation(geometry_).setup(type(), coordinates);
                 
             return geometry_;
         }
