@@ -98,7 +98,7 @@ namespace Dune {
                  edIt != Dune::get<1>(grid_->entityImps_[level_]).end(); 
                  ++edIt)
              /** \todo Remove this const cast */
-                 *const_cast<unsigned int*>(&(eIt->levelIndex_)) = numEdges_++;
+                 *const_cast<unsigned int*>(&(edIt->levelIndex_)) = numEdges_++;
             
             // //////////////////////////////
             //   Init the vertex indices
