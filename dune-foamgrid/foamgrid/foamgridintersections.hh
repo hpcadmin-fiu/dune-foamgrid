@@ -22,6 +22,16 @@ class FoamGridLevelIntersection
         // The type used to store coordinates
         typedef typename GridImp::ctype ctype;
 
+    /** \brief Needed for the computation of normals */
+    static Dune::FieldVector<ctype,3> crossProduct(const Dune::FieldVector<ctype,3>& a, const Dune::FieldVector<ctype,3>& b)
+    {
+        Dune::FieldVector<ctype,3> r;
+        r[0] = a[1]*b[2] - a[2]*b[1];
+        r[1] = a[2]*b[0] - a[0]*b[2];
+        r[2] = a[0]*b[1] - a[1]*b[0];
+        return r;
+    }
+
     friend class FoamGridLevelIntersectionIterator<GridImp>;
     
     public:
@@ -156,14 +166,46 @@ class FoamGridLevelIntersection
           
         //! return outer normal
         FieldVector<ctype, dimworld> outerNormal (const FieldVector<ctype, dim-1>& local) const {
-            DUNE_THROW(NotImplemented, "!");
-            return FieldVector<ctype, dimworld>(0);
+            // The intersection normal is a vector that is orthogonal to the element normal
+            // and to the intersection itself.
+            
+            // only works for triangles
+            assert(center_->type().isTriangle());
+
+            // Compute vertices
+            const Dune::GenericReferenceElement<double,dim>& refElement
+                = Dune::GenericReferenceElements<double, dim>::general(center_->type());
+
+            // edge vertices, oriented
+            int v0 = std::min(refElement.subEntity(neighbor_, 1, 0, dim), refElement.subEntity(neighbor_, 1, 1, dim));
+            int v1 = std::max(refElement.subEntity(neighbor_, 1, 0, dim), refElement.subEntity(neighbor_, 1, 1, dim));
+
+            // opposite vertex
+            int v2 = (v1+1)%3;
+
+            // Compute oriented edge
+            FieldVector<ctype, dimworld> edge = center_->vertex_[v1]->pos_ - center_->vertex_[v0]->pos_;
+
+            // compute triangle normal
+            FieldVector<ctype, dimworld> elementNormal = crossProduct(edge, 
+                                                                      center_->vertex_[v2]->pos_ - center_->vertex_[v0]->pos_);
+            
+
+            return crossProduct(edge, elementNormal);
         }
 
         //! return outer normal multiplied by the integration element
         FieldVector<ctype, dimworld> integrationOuterNormal (const FieldVector<ctype, dim-1>& local) const {
-            DUNE_THROW(NotImplemented, "!");
-            return FieldVector<ctype, dimworld>(0);
+
+            const Dune::GenericReferenceElement<double,dim>& refElement
+                = Dune::GenericReferenceElements<double, dim>::general(center_->type());
+
+            ctype edgeLength = (center_->vertex_[refElement.subEntity(neighbor_, 1, 0, dim)]->pos_
+                                - center_->vertex_[refElement.subEntity(neighbor_, 1, 1, dim)]->pos_).two_norm();
+
+            FieldVector<ctype, dimworld> normal = unitOuterNormal(local);
+            normal *= edgeLength;
+            return normal;
         }
 
         //! return unit outer normal
