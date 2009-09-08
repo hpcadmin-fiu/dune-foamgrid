@@ -59,11 +59,8 @@ class FoamGridLevelIntersection
         //! return EntityPointer to the Entity on the outside of this intersection
         //! (that is the neighboring Entity)
         EntityPointer outside() const {
-            assert(center_->edges_[neighbor_]->elements_.size()==2);
             // Return the 'other' element on the current edge
-            return (center_->edges_[neighbor_]->elements_[0]==center_)
-                ? FoamGridEntityPointer<0,GridImp> (center_->edges_[neighbor_]->elements_[1])
-                : FoamGridEntityPointer<0,GridImp> (center_->edges_[neighbor_]->elements_[0]);
+            return FoamGridEntityPointer<0,GridImp> (center_->edges_[neighbor_]->otherElement(center_));
         }
         
         
@@ -159,8 +156,12 @@ class FoamGridLevelIntersection
         
         //! local number of codim 1 entity in neighbor where intersection is contained
         int indexInOutside () const {
-            DUNE_THROW(NotImplemented, "!");
-            return 0;
+            assert(center_->edges_[neighbor_]->elements_.size()==2);
+            const FoamGridElement* other = center_->edges_[neighbor_]->otherElement(center_);
+            assert(other);
+            
+            return std::find(other->edges_.begin(), other->edges_.end(), center_->edges_[neighbor_]) 
+                - other->edges_.begin();
         }
         
           
