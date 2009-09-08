@@ -240,6 +240,9 @@ template<int dim, class GridImp>
 class FoamGridEntity<0,dim,GridImp> :
     public EntityDefaultImplementation<0,dim,GridImp, FoamGridEntity>
 {
+
+    enum {dimworld = GridImp::dimensionworld};
+
     public:
     
         typedef typename GridImp::template Codim<0>::Geometry Geometry;
@@ -396,10 +399,18 @@ class FoamGridEntity<0,dim,GridImp> :
         /** \brief Provide access to sub entity i of given codimension. Entities
         *  are numbered 0 ... count<cc>()-1
         */
-        template<int cc>
-        typename GridImp::template Codim<cc>::EntityPointer subEntity (int i) const{
-            assert(false);
-            //return FoamGridEntityPointer<cc,GridImp>(hostEntity_->template subEntity<cc>(i));
+        template<int codim>
+        typename GridImp::template Codim<codim>::EntityPointer subEntity (int i) const{
+            if (codim==0) {
+                // The cast is correct when this if clause is executed
+                return FoamGridEntityPointer<codim,GridImp>( (FoamGridEntityImp<dim-codim,dimworld>*)this->target_);
+            } else if (codim==1) {
+                // The cast is correct when this if clause is executed
+                return FoamGridEntityPointer<codim,GridImp>( (FoamGridEntityImp<dim-codim,dimworld>*)this->target_->edges_[i]);
+            } else if (codim==2) {
+                // The cast is correct when this if clause is executed
+                return FoamGridEntityPointer<codim,GridImp>( (FoamGridEntityImp<dim-codim,dimworld>*)this->target_->vertex_[i]);
+            }
         }
     
         
