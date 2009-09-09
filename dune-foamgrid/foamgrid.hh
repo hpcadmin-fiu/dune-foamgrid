@@ -91,6 +91,7 @@ class FoamGrid :
     friend class FoamGridHierarchicIterator<const FoamGrid >;
     friend class FoamGridLevelIntersectionIterator<const FoamGrid >;
     friend class FoamGridLeafIntersectionIterator<const FoamGrid >;
+    friend class FoamGridLevelIntersection<const FoamGrid >;
 
     template<int codim, PartitionIteratorType pitype, class GridImp_>
     friend class FoamGridLevelIterator;
