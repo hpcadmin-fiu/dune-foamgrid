@@ -123,7 +123,6 @@ class FoamGrid :
     /** \brief Constructor
      */
     FoamGrid() 
-        : leafIndexSet_(*this)
     {
         freeIdCounter_.assign(0);
     }
