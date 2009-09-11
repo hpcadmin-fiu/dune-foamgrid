@@ -123,9 +123,7 @@ class FoamGrid :
     /** \brief Constructor
      */
     FoamGrid() 
-        : leafIndexSet_(*this),
-          globalIdSet_(*this),
-          localIdSet_(*this)
+        : leafIndexSet_(*this)
     {
         freeIdCounter_.assign(0);
     }

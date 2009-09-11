@@ -325,9 +325,6 @@ class FoamGridGlobalIdSet :
 {
             
     public:
-        //! constructor stores reference to a grid
-        FoamGridGlobalIdSet (const GridImp& g) : grid_(&g) {}
-        
         //! define the type used for persistent indices
         typedef unsigned int IdType;
         
@@ -340,7 +337,7 @@ class FoamGridGlobalIdSet :
         template<int cd>
         IdType id (const typename remove_const<GridImp>::type::Traits::template Codim<cd>::Entity& e) const
         {
-            return grid_->getRealImplementation(e).target_->id_;
+            return GridImp::getRealImplementation(e).target_->id_;
         }
     
         
@@ -351,15 +348,13 @@ class FoamGridGlobalIdSet :
         */
     IdType subId (const typename remove_const<GridImp>::type::Traits::template Codim<0>::Entity& e, int i, int codim) const
         {
-            return grid_->getRealImplementation(e).subId(i,codim);
+            return GridImp::getRealImplementation(e).subId(i,codim);
         }
 
         
         /** \todo Should be private */
         void update() {}
 
-        
-        const GridImp* grid_;
 };
 
 
@@ -374,12 +369,7 @@ class FoamGridLocalIdSet :
         //! define the type used for persistent local ids
         typedef unsigned int IdType;
 
-        
-        //! constructor stores reference to a grid
-        FoamGridLocalIdSet (const GridImp& g) : grid_(&g) {}
-    
-        
-        //! get id of an entity
+    //! get id of an entity
         /*
             We use the remove_const to extract the Type from the mutable class,
             because the const class is not instantiated yet.
@@ -388,7 +378,7 @@ class FoamGridLocalIdSet :
         IdType id (const typename remove_const<GridImp>::type::Traits::template Codim<cd>::Entity& e) const
         {
             // Return id of the host entity
-            return grid_->getRealImplementation(e).target_->id_;
+            return GridImp::getRealImplementation(e).target_->id_;
         }
         
         
@@ -399,15 +389,13 @@ class FoamGridLocalIdSet :
         */
     IdType subId (const typename remove_const<GridImp>::type::template Codim<0>::Entity& e, int i, int codim) const
         {
-            return grid_->getRealImplementation(e).subId(i,codim);
+            return GridImp::getRealImplementation(e).subId(i,codim);
         }
         
         
         /** \todo Should be private */
         void update() {}
 
-        
-        const GridImp* grid_;
 };
 
 
