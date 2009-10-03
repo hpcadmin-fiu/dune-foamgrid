@@ -53,9 +53,6 @@ public:
           hostIterator_(hostIterator)
     {}
         
-    //! The Destructor
-    ~FoamGridLeafIntersectionIterator() {};
-    
     //! equality
     bool equals(const FoamGridLeafIntersectionIterator<GridImp>& other) const {
         return hostIterator_ == other.hostIterator_;
@@ -153,7 +150,7 @@ public:
 
 private:
   //**********************************************************
-  //  private methods 
+  //  private data
   //**********************************************************
 
     /** \brief The actual intersection
