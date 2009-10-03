@@ -8,6 +8,7 @@ namespace Dune {
 
     template <int dimworld>
     class FoamGridEntityImp<2,dimworld>
+        : public FoamGridEntityBase
     {
     public:
 
@@ -15,7 +16,7 @@ namespace Dune {
         enum MarkState { DO_NOTHING , COARSEN , REFINE };
 
         FoamGridEntityImp(int level, unsigned int id) 
-            : id_(id), level_(level), 
+            : FoamGridEntityBase(level,id),
               markState_(DO_NOTHING), isNew_(false)
         {
             sons_[0] = sons_[1] = NULL;
@@ -46,17 +47,6 @@ namespace Dune {
         array<FoamGridEntityImp<1,dimworld>*, 3> edges_;
 
         FoamGridEntityImp<0,dimworld>* vertex_[3];
-        
-        //! element number 
-        unsigned int levelIndex_;
-        
-        unsigned int leafIndex_;
-        
-        /** \brief Unique and persistent id for elements */
-        unsigned int id_;
-        
-        //! the level of the entity
-        int level_;
         
         /** \brief Stores requests for refinement and coarsening */
         MarkState markState_;

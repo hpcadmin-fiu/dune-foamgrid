@@ -7,13 +7,14 @@ namespace Dune {
 
     template <int dimworld>
     class FoamGridEntityImp<1,dimworld>
+        : public FoamGridEntityBase
     {
     public:
 
         FoamGridEntityImp(const FoamGridEntityImp<0,dimworld>* v0, 
                           const FoamGridEntityImp<0,dimworld>* v1, 
                           int level, unsigned int id) 
-            : id_(id), level_(level)
+            : FoamGridEntityBase(level,id)
         {
             vertex_[0] = v0;
             vertex_[1] = v1;
@@ -26,10 +27,6 @@ namespace Dune {
 
         unsigned int boundaryId() const {
             return boundaryId_;
-        }
-
-        unsigned int level() const {
-            return level_;
         }
 
         GeometryType type() const {
@@ -58,19 +55,8 @@ namespace Dune {
 
         const FoamGridEntityImp<0,dimworld>* vertex_[2];
 
-        //! element number 
-        unsigned int levelIndex_;
-        
-        unsigned int leafIndex_;
-        
-        /** \brief Unique and persistent id for elements */
-        unsigned int id_;
-
         /** \brief The boundary id.  Only used if this edge is a boundary edge */
         unsigned int boundaryId_;
-        
-        //! the level of the entity
-        int level_;
         
     };
 
