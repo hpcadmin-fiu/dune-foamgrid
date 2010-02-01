@@ -11,7 +11,6 @@ AM_CONFIG_HEADER([config.h])
 # this module depends on dune-common dune-grid
 # this implies checking for [dune-common], [dune-grid]
 DUNE_CHECK_ALL
-DUNE_SYMLINK
 
 # implicitly set the Dune-flags everywhere
 AC_SUBST(AM_CPPFLAGS, $DUNE_CPPFLAGS)
