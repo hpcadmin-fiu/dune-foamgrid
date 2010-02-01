@@ -5,7 +5,7 @@ EXTRA_DIST=dune.module
 
 DIST_SUBDIRS = doc src m4
 
-SUBDIRS = src m4
+SUBDIRS = dune src m4
 
 if BUILD_DOCS
 # TODO: set up documentation tree automatically

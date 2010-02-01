@@ -20,9 +20,10 @@ LIBS="$DUNE_LIBS"
 AC_CONFIG_FILES([
   Makefile
   src/Makefile
-  dune-foamgrid/Makefile
-  dune-foamgrid/foamgrid/Makefile
-  dune-foamgrid/test/Makefile
+  dune/Makefile
+  dune/foamgrid/Makefile
+  dune/foamgrid/foamgrid/Makefile
+  dune/foamgrid/test/Makefile
   doc/Makefile
   doc/doxygen/Makefile
   m4/Makefile
