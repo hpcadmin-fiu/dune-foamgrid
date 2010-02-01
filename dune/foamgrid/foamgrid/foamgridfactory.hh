@@ -12,7 +12,7 @@
 #include <dune/common/fvector.hh>
 
 #include <dune/grid/common/gridfactory.hh>
-#include <dune-foamgrid/foamgrid.hh>
+#include <dune/foamgrid/foamgrid.hh>
 
 namespace Dune {
 

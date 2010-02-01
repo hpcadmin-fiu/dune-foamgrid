@@ -1,7 +1,7 @@
 #ifndef DUNE_FOAMGRID_EDGE_HH
 #define DUNE_FOAMGRID_EDGE_HH
 
-#include <dune-foamgrid/foamgrid/foamgridvertex.hh>
+#include <dune/foamgrid/foamgrid/foamgridvertex.hh>
 
 namespace Dune {
 

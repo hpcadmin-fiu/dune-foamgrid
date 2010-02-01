@@ -4,7 +4,7 @@
 #include <dune/grid/test/checkintersectionit.cc>
 
 
-#include <dune-foamgrid/foamgrid.hh>
+#include <dune/foamgrid/foamgrid.hh>
 
 
 

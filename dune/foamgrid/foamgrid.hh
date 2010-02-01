@@ -521,6 +521,6 @@ namespace Capabilities
 } // namespace Dune
 
 
-#include <dune-foamgrid/foamgrid/foamgridfactory.hh>
+#include <dune/foamgrid/foamgrid/foamgridfactory.hh>
 
 #endif
