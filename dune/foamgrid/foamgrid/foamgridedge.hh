@@ -41,6 +41,10 @@ namespace Dune {
         FieldVector<double, dimworld> corner(int i) const {
             return vertex_[i]->pos_;
         }
+
+        PartitionType partitionType() const {
+            return InteriorEntity;
+        }
         
         // this is a helper method which only makes sense as long as
         // edges border at most two elements.

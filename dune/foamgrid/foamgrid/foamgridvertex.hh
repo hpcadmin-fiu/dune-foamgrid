@@ -59,6 +59,10 @@ namespace Dune {
         FieldVector<double, dimworld> corner(int i) const {
             return pos_;
         }
+
+        PartitionType partitionType() const {
+            return InteriorEntity;
+        }
         
         FieldVector<double, dimworld> pos_;
         
