@@ -94,6 +94,14 @@ namespace Dune {
             
         }
 
+        /** \brief Insert a boundary segment.
+
+        This is only needed if you want to control the numbering of the boundary segments
+        */
+        virtual void insertBoundarySegment(const std::vector<unsigned int>& vertices) {
+            DUNE_THROW(Dune::NotImplemented, "insertBoundarySegment not implemented yet!");
+        }
+
         /** \brief Finalize grid creation and hand over the grid
 
         The receiver takes responsibility of the memory allocated for the grid
