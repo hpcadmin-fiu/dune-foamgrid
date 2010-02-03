@@ -231,6 +231,13 @@ class FoamGridLevelIntersection
             return outerNormal;
         }
 
+        //! return unit outer normal at the intersection center
+        FieldVector<ctype, dimworld> centerUnitOuterNormal () const {
+            FieldVector<ctype, dimworld> outerNormal = this->outerNormal(FieldVector<ctype,1>(0.5));
+            outerNormal /= outerNormal.two_norm();
+            return outerNormal;
+        }
+
     private:
 
     const FoamGridElement* center_;
@@ -399,7 +406,14 @@ public:
             return hostIterator_->unitOuterNormal(local);
         }
         
-    
+    //! return unit outer normal at the intersection center
+    FieldVector<ctype, dimworld> centerUnitOuterNormal () const {
+        FieldVector<ctype, dimworld> outerNormal = this->outerNormal(FieldVector<ctype,1>(0.5));
+        outerNormal /= outerNormal.two_norm();
+        return outerNormal;
+    }
+
+
     private:
         //**********************************************************
         //  private methods
