@@ -78,8 +78,13 @@ class FoamGridLevelIntersection
     
     
     //! return information about the Boundary
-    int boundaryId () const {
-        return center_->edges_[neighbor_]->boundaryId();
+    int boundaryId () const DUNE_DEPRECATED {
+        return center_->edges_[neighbor_]->boundarySegmentIndex();
+    }
+        
+    //! return information about the Boundary
+    int boundarySegmentIndex () const {
+        return center_->edges_[neighbor_]->boundarySegmentIndex();
     }
         
     //! Return true if this is a conforming intersection
@@ -317,8 +322,13 @@ public:
         
         
         //! return information about the Boundary
-        int boundaryId () const {
-            return hostIterator_->boundaryId();
+        int boundarySegmentIndex () const {
+            return hostIterator_->boundarySegmentIndex();
+        }
+
+        //! return information about the Boundary
+        int boundaryId () const DUNE_DEPRECATED {
+            return hostIterator_->boundarySegmentIndex();
         }
 
     //! Return true if this is a conforming intersection

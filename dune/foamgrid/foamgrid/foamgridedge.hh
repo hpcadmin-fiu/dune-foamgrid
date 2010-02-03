@@ -25,7 +25,7 @@ namespace Dune {
             return true;
         }
 
-        unsigned int boundaryId() const {
+        unsigned int boundarySegmentIndex() const {
             return boundaryId_;
         }
 
