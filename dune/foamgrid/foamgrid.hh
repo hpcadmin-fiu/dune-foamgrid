@@ -6,7 +6,6 @@
 */
 
 #include <list>
-#include <map>
 
 #include <dune/common/collectivecommunication.hh>
 #include <dune/common/tuples.hh>
