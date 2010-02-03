@@ -443,6 +443,10 @@ class FoamGridEntity<0,dim,GridImp> :
             return target_->isLeaf();
         }
     
+    /** \brief Return true if this element has a father element */
+    bool hasFather() const {
+        return level()>0;
+    }
         
         //! Inter-level access to father element on coarser grid.
         //! Assumes that meshes are nested.
