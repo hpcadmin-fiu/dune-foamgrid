@@ -67,7 +67,7 @@ namespace Dune {
         }
 
         /** \brief Insert a vertex into the coarse grid */
-        virtual void insertVertex(const FieldVector<ctype,3>& pos) {
+        virtual void insertVertex(const FieldVector<ctype,dimworld>& pos) {
             Dune::get<0>(grid_->entityImps_[0]).push_back(FoamGridVertex(0,   // level
                                                                          pos,  // position
                                                                          grid_->freeIdCounter_[0]++));
