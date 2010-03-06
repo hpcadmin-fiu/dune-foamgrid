@@ -19,16 +19,16 @@ namespace Dune {
     /** \brief Specialization of the generic GridFactory for FoamGrid
         
     */
-    template <>
-    class GridFactory<FoamGrid> 
-        : public GridFactoryInterface<FoamGrid> {
+    template <int dimworld>
+    class GridFactory<FoamGrid<dimworld> > 
+        : public GridFactoryInterface<FoamGrid<dimworld> > {
 
         /** \brief Type used by the grid for coordinates */
-        typedef FoamGrid::ctype ctype;
+        typedef typename FoamGrid<dimworld>::ctype ctype;
 
-        typedef std::map<FieldVector<ctype,1>, unsigned int >::iterator VertexIterator;
+        typedef typename std::map<FieldVector<ctype,1>, unsigned int>::iterator VertexIterator;
         
-        enum {dim = FoamGrid::dimension};
+        enum {dim = FoamGrid<dimworld>::dimension};
 
     public:
 
@@ -37,7 +37,7 @@ namespace Dune {
             : factoryOwnsGrid_(true),
               vertexIndex_(0)
         {
-            grid_ = new FoamGrid;
+            grid_ = new FoamGrid<dimworld>;
 
             grid_->entityImps_.resize(1);
         }
@@ -51,7 +51,7 @@ namespace Dune {
         the pointer handed over to you by the method createGrid() is
         the one you supplied here.
          */
-        GridFactory(FoamGrid* grid)
+        GridFactory(FoamGrid<dimworld>* grid)
             : factoryOwnsGrid_(false),
               vertexIndex_(0)
         {
@@ -106,7 +106,7 @@ namespace Dune {
 
         The receiver takes responsibility of the memory allocated for the grid
         */
-        virtual FoamGrid* createGrid() {
+        virtual FoamGrid<dimworld>* createGrid() {
             // Prevent a crash when this method is called twice in a row
             // You never know who may do this...
             if (grid_==NULL)
@@ -137,7 +137,7 @@ namespace Dune {
                     const FoamGridVertex* v1 = element->vertex_[refElement.subEntity(i, 1, 1, 2)];
 
                     FoamGridEdge* existingEdge = NULL;
-                    std::map<std::pair<const FoamGridEntityImp<0,dimworld>*, const FoamGridEntityImp<0,dimworld>*>, FoamGridEntityImp<1,dimworld>*>::const_iterator e = edgeMap.find(std::make_pair(v0,v1));
+                    typename std::map<std::pair<const FoamGridEntityImp<0,dimworld>*, const FoamGridEntityImp<0,dimworld>*>, FoamGridEntityImp<1,dimworld>*>::const_iterator e = edgeMap.find(std::make_pair(v0,v1));
 
                     if (e != edgeMap.end()) {
                         existingEdge = e->second;
@@ -194,7 +194,7 @@ namespace Dune {
             //   Hand over the new grid
             // ////////////////////////////////////////////////
 
-            Dune::FoamGrid* tmp = grid_;
+            Dune::FoamGrid<dimworld>* tmp = grid_;
             grid_ = NULL;
             return tmp;
         }
@@ -205,7 +205,7 @@ namespace Dune {
         void createBegin();
 
         // Pointer to the grid being built
-        FoamGrid* grid_;
+        FoamGrid<dimworld>* grid_;
 
         // True if the factory allocated the grid itself, false if the
         // grid was handed over from the outside
