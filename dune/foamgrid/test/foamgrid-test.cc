@@ -2,7 +2,7 @@
 
 #include <dune/grid/test/gridcheck.cc>
 #include <dune/grid/test/checkintersectionit.cc>
-
+#include <dune/grid/../../doc/grids/gridfactory/hybridtestgrids.hh>
 
 #include <dune/foamgrid/foamgrid.hh>
 
@@ -11,7 +11,7 @@
 using namespace Dune;
 
 template <class GridType>
-GridType* make2DHybridTestGrid()
+GridType* make2Din3DHybridTestGrid()
 {
     dune_static_assert(GridType::dimension==2,
                        "Instantiate make2dHybridTestGrid only for 2d grids!");
@@ -107,11 +107,17 @@ GridType* make2DHybridTestGrid()
 
 int main (int argc, char *argv[]) try
 {
-    typedef FoamGrid GridType;
-    GridType* grid = make2DHybridTestGrid<GridType>();
+    // dimworld == 2
+    FoamGrid<2>* grid2d = make2DHybridTestGrid<FoamGrid<2> >();
 
-    gridcheck(*grid);
-    checkIntersectionIterator(*grid);
+    gridcheck(*grid2d);
+    checkIntersectionIterator(*grid2d);
+
+    // dimworld == 3
+    FoamGrid<3>* grid3d = make2Din3DHybridTestGrid<FoamGrid<3> >();
+
+    gridcheck(*grid3d);
+    checkIntersectionIterator(*grid3d);
 
 } 
 // //////////////////////////////////
