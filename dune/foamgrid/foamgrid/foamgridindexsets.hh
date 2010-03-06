@@ -113,7 +113,7 @@ namespace Dune {
             // //////////////////////////////
             
             numVertices_ = 0;
-            std::list<FoamGridVertex>::const_iterator vIt;
+            std::list<FoamGridEntityImp<0,3> >::const_iterator vIt;
             for (vIt =  Dune::get<0>(grid.entityImps_[level_]).begin(); 
                  vIt != Dune::get<0>(grid.entityImps_[level_]).end(); 
                  ++vIt)

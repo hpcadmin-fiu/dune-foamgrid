@@ -71,9 +71,6 @@ namespace Dune {
         
     };
 
-    /** \todo Only here for a transition */
-    typedef FoamGridEntityImp<0,3> FoamGridVertex;
-
 }
 
 #endif

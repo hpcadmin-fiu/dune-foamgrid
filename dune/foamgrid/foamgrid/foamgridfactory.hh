@@ -68,7 +68,7 @@ namespace Dune {
 
         /** \brief Insert a vertex into the coarse grid */
         virtual void insertVertex(const FieldVector<ctype,dimworld>& pos) {
-            Dune::get<0>(grid_->entityImps_[0]).push_back(FoamGridVertex(0,   // level
+            Dune::get<0>(grid_->entityImps_[0]).push_back(FoamGridEntityImp<0,dimworld> (0,   // level
                                                                          pos,  // position
                                                                          grid_->freeIdCounter_[0]++));
             vertexArray_.push_back(&*Dune::get<0>(grid_->entityImps_[0]).rbegin());
@@ -115,6 +115,9 @@ namespace Dune {
             // ////////////////////////////////////////////////////
             //   Create the edges
             // ////////////////////////////////////////////////////
+
+            // for convenience
+            typedef FoamGridEntityImp<0,dimworld> FoamGridVertex;
 
             // For fast retrieval: a map from pairs of vertices to the edge that connects them
             std::map<std::pair<const FoamGridEntityImp<0,dimworld>*, const FoamGridEntityImp<0,dimworld>*>, FoamGridEntityImp<1,dimworld>*> edgeMap;
@@ -214,7 +217,7 @@ namespace Dune {
         /** \brief Counter that creates the vertex indices */
         unsigned int vertexIndex_;
 
-        std::vector<FoamGridVertex*> vertexArray_;
+        std::vector<FoamGridEntityImp<0,dimworld>*> vertexArray_;
 
     };
 
