@@ -55,11 +55,6 @@ class FoamGridEntityPointer
             return virtualEntity_;
         }
 
-    //! Make this pointer as small as possible
-    void compactify () {
-        //virtualEntity_.getTarget().compactify();
-    }
-        
         //! ask for level of entity
         int level () const {
             return virtualEntity_.level();
