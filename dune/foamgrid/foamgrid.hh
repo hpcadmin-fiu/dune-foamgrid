@@ -502,13 +502,6 @@ namespace Capabilities
     
     //! \todo Please doc me !
     template<int dimworld>
-    struct hasHangingNodes< FoamGrid<dimworld> >
-    {
-        static const bool v = false;
-    };
-
-    //! \todo Please doc me !
-    template<int dimworld>
     struct isLevelwiseConforming< FoamGrid<dimworld> >
     {
         static const bool v = true;
