@@ -5,8 +5,6 @@
 * \brief The FoamGridEntity class
 */
 
-#include <dune/grid/common/referenceelements.hh>
-
 
 namespace Dune {
 
