@@ -26,6 +26,7 @@ AC_CONFIG_FILES([
   dune/foamgrid/test/Makefile
   doc/Makefile
   doc/doxygen/Makefile
+  doc/doxygen/Doxyfile
   m4/Makefile
   dune-foamgrid.pc
 ])
