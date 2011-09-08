@@ -30,14 +30,20 @@ namespace Dune {
             return GridImp::getRealImplementation(e).target_->levelIndex_;
         }
         
-        
-        //! get index of subEntity of a codim 0 entity
-        int subIndex (const typename GridImp::Traits::template Codim<0>::Entity& e, int i, int codim) const
+        //! get index of subentity of an entity
+        template<int cc>
+        int subIndex (const typename GridImp::Traits::template Codim<cc>::Entity& e, 
+                      int i,
+                      unsigned int codim) const
         {
-            return GridImp::getRealImplementation(e).subLevelIndex(i,codim);
+            if( cc == 0 )
+                return GridImp::getRealImplementation(e).subLevelIndex(i,codim);
+            else {
+                DUNE_THROW(Dune::NotImplemented, "!");
+                //return GridImp::getRealImplementation(e).levelIndex(); 
+            }
         }
-        
-        
+
         //! get number of entities of given codim, type and on this level
         int size (int codim) const {
             switch (codim) {
@@ -183,20 +189,20 @@ public:
             return GridImp::getRealImplementation(e).target_->leafIndex_; 
         }
         
-        
-        //! get index of subEntity of a codim 0 entity
-        /*
-            We use the RemoveConst to extract the Type from the mutable class,
-            because the const class is not instantiated yet.
-        */
-    int subIndex (const typename remove_const<GridImp>::type::Traits::template Codim<0>::Entity& e, 
-                  int i, 
-                  int codim) const
-    {
-        return GridImp::getRealImplementation(e).subLeafIndex(i,codim);
-    }
-        
-        
+        //! get index of subentity of an entity
+        template<int cc>
+        int subIndex (const typename remove_const<GridImp>::type::Traits::template Codim<cc>::Entity& e, 
+                      int i,
+                      unsigned int codim) const
+        {
+            if( cc == 0 )
+                return GridImp::getRealImplementation(e).subLeafIndex(i,codim);
+            else {
+                DUNE_THROW(Dune::NotImplemented, "!");
+                //return GridImp::getRealImplementation(e).leafIndex(); 
+            }
+        }
+
     //! get number of entities of given type
     int size (GeometryType type) const
     {
