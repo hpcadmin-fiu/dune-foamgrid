@@ -42,7 +42,7 @@ class FoamGridLevelIntersection
         typedef typename GridImp::template Codim<0>::Entity Entity;
         typedef Dune::Intersection<const GridImp, Dune::FoamGridLevelIntersectionIterator> Intersection;
 
-    FoamGridLevelIntersection(const FoamGridElement* center, int nb)
+    FoamGridLevelIntersection(const FoamGridEntityImp<2,dimworld>* center, int nb)
         : center_(center), neighbor_(nb),
           geometryInInside_(FoamGridGeometry<dim-1,dim,GridImp>()),
           geometryInOutside_(FoamGridGeometry<dim-1,dim,GridImp>()),
@@ -128,7 +128,7 @@ class FoamGridLevelIntersection
 
 
             // Get two vertices of the intersection
-            const FoamGridElement* outside = center_->edges_[neighbor_]->otherElement(center_);
+            const FoamGridEntityImp<2,dimworld>* outside = center_->edges_[neighbor_]->otherElement(center_);
             const Dune::GenericReferenceElement<double,dim>& refElement
                 = Dune::GenericReferenceElements<double, dim>::general(outside->type());
 
@@ -172,7 +172,7 @@ class FoamGridLevelIntersection
         //! local number of codim 1 entity in neighbor where intersection is contained
         int indexInOutside () const {
             assert(center_->edges_[neighbor_]->elements_.size()==2);
-            const FoamGridElement* other = center_->edges_[neighbor_]->otherElement(center_);
+            const FoamGridEntityImp<2,dimworld>* other = center_->edges_[neighbor_]->otherElement(center_);
             assert(other);
             
             return std::find(other->edges_.begin(), other->edges_.end(), center_->edges_[neighbor_]) 
@@ -240,7 +240,7 @@ class FoamGridLevelIntersection
 
     private:
 
-    const FoamGridElement* center_;
+    const FoamGridEntityImp<2,dimworld>* center_;
  
     //! vector storing the outer normal 
     mutable FieldVector<typename GridImp::ctype, dimworld> outerNormal_;

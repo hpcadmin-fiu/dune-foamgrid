@@ -21,6 +21,7 @@ template<class GridImp>
 class FoamGridHierarchicIterator :
         public Dune::FoamGridEntityPointer <0,GridImp>
 {
+    enum {dimworld = GridImp::dimensionworld};
     
     friend class FoamGridEntity<0,GridImp::dimension,GridImp>;
 
@@ -40,7 +41,7 @@ class FoamGridHierarchicIterator :
             if (elemStack.empty())
                 return;
             
-            const FoamGridElement* old_target = elemStack.top();
+            const FoamGridEntityImp<2,dimworld>* old_target = elemStack.top();
             elemStack.pop();
             
             // Traverse the tree no deeper than maxlevel
@@ -67,7 +68,7 @@ private:
     int maxlevel_;
 
     /** \brief For depth-first search */
-    std::stack<const FoamGridElement*> elemStack;
+    std::stack<const FoamGridEntityImp<2,dimworld>*> elemStack;
 };
 
 

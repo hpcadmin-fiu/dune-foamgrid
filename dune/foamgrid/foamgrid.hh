@@ -314,11 +314,11 @@ class FoamGrid :
 
             /** \todo Why do I need those const_casts here? */
             if (refCount>=1)
-                const_cast<FoamGridElement*>(getRealImplementation(*e).target_)->markState_ = FoamGridElement::REFINE;
+                const_cast<FoamGridEntityImp<2,dimworld>*>(getRealImplementation(*e).target_)->markState_ = FoamGridEntityImp<2,dimworld>::REFINE;
             else if (refCount<0)
-                const_cast<FoamGridElement*>(getRealImplementation(*e).target_)->markState_ = FoamGridElement::COARSEN;
+                const_cast<FoamGridEntityImp<2,dimworld>*>(getRealImplementation(*e).target_)->markState_ = FoamGridEntityImp<2,dimworld>::COARSEN;
             else
-                const_cast<FoamGridElement*>(getRealImplementation(*e).target_)->markState_ = FoamGridElement::DO_NOTHING;
+                const_cast<FoamGridEntityImp<2,dimworld>*>(getRealImplementation(*e).target_)->markState_ = FoamGridEntityImp<2,dimworld>::DO_NOTHING;
 
             return true;
         }
@@ -329,9 +329,9 @@ class FoamGrid :
         */
         int getMark(const typename Traits::template Codim<0>::EntityPointer & e) const
         {
-            if (getRealImplementation(*e).target_->markState_ == FoamGridElement::REFINE)
+            if (getRealImplementation(*e).target_->markState_ == FoamGridEntityImp<2,dimworld>::REFINE)
                 return 1;
-            if (getRealImplementation(*e).target_->markState_ == FoamGridElement::COARSEN)
+            if (getRealImplementation(*e).target_->markState_ == FoamGridEntityImp<2,dimworld>::COARSEN)
                 return -1;
             
             return 0;

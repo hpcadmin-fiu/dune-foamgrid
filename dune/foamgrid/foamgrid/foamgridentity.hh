@@ -258,7 +258,7 @@ class FoamGridEntity<0,dim,GridImp> :
         
         
         //! Constructor for an entity in a given grid level
-        FoamGridEntity(const FoamGridElement* hostEntity) :
+        FoamGridEntity(const FoamGridEntityImp<2,dimworld>* hostEntity) :
             geo_(0),
             geoInFather_(0),
             target_(hostEntity)
@@ -503,7 +503,7 @@ class FoamGridEntity<0,dim,GridImp> :
     
         
         //! \todo Please doc me !
-        void setToTarget(const FoamGridElement* target)
+        void setToTarget(const FoamGridEntityImp<2,dimworld>* target)
         {
             if(geo_!=0)
             {
@@ -524,7 +524,7 @@ class FoamGridEntity<0,dim,GridImp> :
         //! \todo Please doc me !
         mutable MakeableInterfaceObject<LocalGeometry> *geoInFather_;
 
-    const FoamGridElement* target_;
+    const FoamGridEntityImp<2,dimworld>* target_;
         
     private:
     

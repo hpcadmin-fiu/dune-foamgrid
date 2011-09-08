@@ -15,7 +15,11 @@ namespace Dune {
         public IndexSet<GridImp,FoamGridLevelIndexSet<GridImp> >
     {
 
+        /** \brief Dimension of the grid */
         enum {dim = GridImp::dimension};
+
+        /** \brief Dimension of the space that the grid is embedded in */
+        enum {dimworld = GridImp::dimensionworld};
 
     public:
         
@@ -90,7 +94,7 @@ namespace Dune {
             // ///////////////////////////////
             numTriangles_ = 0;
             numQuads_ = 0;
-            std::list<FoamGridElement>::const_iterator eIt;
+            typename std::list<FoamGridEntityImp<2,dimworld> >::const_iterator eIt;
             for (eIt =  Dune::get<dim>(grid.entityImps_[level_]).begin(); 
                  eIt != Dune::get<dim>(grid.entityImps_[level_]).end(); 
                  ++eIt)
@@ -101,7 +105,7 @@ namespace Dune {
             //   Init the element indices
             // ///////////////////////////////
             numEdges_ = 0;
-            std::list<FoamGridEdge>::const_iterator edIt;
+            typename std::list<FoamGridEntityImp<1,dimworld> >::const_iterator edIt;
             for (edIt =  Dune::get<1>(grid.entityImps_[level_]).begin(); 
                  edIt != Dune::get<1>(grid.entityImps_[level_]).end(); 
                  ++edIt)
@@ -113,7 +117,7 @@ namespace Dune {
             // //////////////////////////////
             
             numVertices_ = 0;
-            std::list<FoamGridEntityImp<0,3> >::const_iterator vIt;
+            typename std::list<FoamGridEntityImp<0,dimworld> >::const_iterator vIt;
             for (vIt =  Dune::get<0>(grid.entityImps_[level_]).begin(); 
                  vIt != Dune::get<0>(grid.entityImps_[level_]).end(); 
                  ++vIt)

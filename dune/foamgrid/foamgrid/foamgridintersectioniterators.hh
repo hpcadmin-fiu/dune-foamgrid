@@ -23,11 +23,13 @@ class FoamGridLeafIntersectionIterator
     the actual leaf iterator and I don't need it yet. */
     : public FoamGridLevelIntersectionIterator<GridImp>
 {
-    #if 0
+#if 0
     enum {dim=GridImp::dimension};
+#endif
     
     enum {dimworld=GridImp::dimensionworld};
     
+    #if 0
     // The type used to store coordinates
     typedef typename GridImp::ctype ctype;
     
@@ -35,12 +37,12 @@ class FoamGridLeafIntersectionIterator
 public:
     
     //! Constructor for a given grid entity and a given neighbor
-    FoamGridLeafIntersectionIterator(const FoamGridElement* center, int nb) 
+    FoamGridLeafIntersectionIterator(const FoamGridEntityImp<2,dimworld>* center, int nb) 
         : FoamGridLevelIntersectionIterator<GridImp>(center,nb)
     {}
 
     /** \brief Constructor creating the 'one-after-last'-iterator */
-    FoamGridLeafIntersectionIterator(const FoamGridElement* center) 
+    FoamGridLeafIntersectionIterator(const FoamGridEntityImp<2,dimworld>* center) 
         : FoamGridLevelIntersectionIterator<GridImp>(center,center->corners())
     {}
 
@@ -104,12 +106,12 @@ class FoamGridLevelIntersectionIterator
     /** \todo Make this private once FoamGridLeafIntersectionIterator doesn't derive from this class anymore */
 protected:
     //! Constructor for a given grid entity and a given neighbor
-    FoamGridLevelIntersectionIterator(const FoamGridElement* center, int nb) 
+    FoamGridLevelIntersectionIterator(const FoamGridEntityImp<2,dimworld>* center, int nb) 
         : intersection_(FoamGridLevelIntersection<GridImp>(center,nb))
     {}
 
     /** \brief Constructor creating the 'one-after-last'-iterator */
-    FoamGridLevelIntersectionIterator(const FoamGridElement* center) 
+    FoamGridLevelIntersectionIterator(const FoamGridEntityImp<2,dimworld>* center) 
         : intersection_(FoamGridLevelIntersection<GridImp>(center,center->corners()))
     {}
 

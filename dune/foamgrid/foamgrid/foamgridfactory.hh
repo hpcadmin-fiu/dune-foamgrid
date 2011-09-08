@@ -83,7 +83,7 @@ namespace Dune {
 
             assert(type.isTriangle());
 
-            FoamGridElement newElement(0,   // level
+            FoamGridEntityImp<2,dimworld> newElement(0,   // level
                                        grid_->freeIdCounter_[dim]++);  // id
             newElement.vertex_[0] = vertexArray_[vertices[0]];
             newElement.vertex_[1] = vertexArray_[vertices[1]];
@@ -122,12 +122,12 @@ namespace Dune {
             // For fast retrieval: a map from pairs of vertices to the edge that connects them
             std::map<std::pair<const FoamGridEntityImp<0,dimworld>*, const FoamGridEntityImp<0,dimworld>*>, FoamGridEntityImp<1,dimworld>*> edgeMap;
 
-            std::list<FoamGridElement>::iterator eIt    = Dune::get<2>(grid_->entityImps_[0]).begin();
-            std::list<FoamGridElement>::iterator eEndIt = Dune::get<2>(grid_->entityImps_[0]).end();
+            typename std::list<FoamGridEntityImp<2,dimworld> >::iterator eIt    = Dune::get<2>(grid_->entityImps_[0]).begin();
+            typename std::list<FoamGridEntityImp<2,dimworld> >::iterator eEndIt = Dune::get<2>(grid_->entityImps_[0]).end();
 
             for (; eIt!=eEndIt; ++eIt) {
 
-                FoamGridElement* element = &(*eIt);
+                FoamGridEntityImp<2,dimworld>* element = &(*eIt);
 
                 const Dune::GenericReferenceElement<double,dim>& refElement
                     = Dune::GenericReferenceElements<double, dim>::general(eIt->type());
@@ -139,7 +139,7 @@ namespace Dune {
                     const FoamGridVertex* v0 = element->vertex_[refElement.subEntity(i, 1, 0, 2)];
                     const FoamGridVertex* v1 = element->vertex_[refElement.subEntity(i, 1, 1, 2)];
 
-                    FoamGridEdge* existingEdge = NULL;
+                    FoamGridEntityImp<1,dimworld>* existingEdge = NULL;
                     typename std::map<std::pair<const FoamGridEntityImp<0,dimworld>*, const FoamGridEntityImp<0,dimworld>*>, FoamGridEntityImp<1,dimworld>*>::const_iterator e = edgeMap.find(std::make_pair(v0,v1));
 
                     if (e != edgeMap.end()) {
@@ -187,7 +187,7 @@ namespace Dune {
 
             unsigned int boundaryIdCounter = 0;
 
-            for (std::list<FoamGridEdge>::iterator it = Dune::get<1>(grid_->entityImps_[0]).begin();
+            for (typename std::list<FoamGridEntityImp<1,dimworld> >::iterator it = Dune::get<1>(grid_->entityImps_[0]).begin();
                  it != Dune::get<1>(grid_->entityImps_[0]).end();
                  ++it)
                 it->boundaryId_ = boundaryIdCounter++;
