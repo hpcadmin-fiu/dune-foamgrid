@@ -61,16 +61,9 @@ class FoamGridMakeableEntity :
 };
 
 
-//**********************************************************************
-//
-// --FoamGridEntity
-// --Entity
-//
 /** \brief The implementation of entities in a FoamGrid
 *   \ingroup FoamGrid
 *
-*  A Grid is a container of grid entities. An entity is parametrized by the codimension.
-*  An entity of codimension c in dimension d is a d-c dimensional object.
 *
 */
 template<int codim, int dim, class GridImp>
@@ -112,33 +105,12 @@ class FoamGridEntity :
             geoInFather_(0)
         {}
         
-        //! \todo Please doc me !
+        /** \brief Copy constructor */
         FoamGridEntity(const FoamGridEntity& original) :
             target_(original.target_),
             geo_(0),
             geoInFather_(0)
         {}
-    
-        
-        //! \todo Please doc me !
-        FoamGridEntity& operator=(const FoamGridEntity& original)
-        {
-            if (this != &original)
-            {
-                if (geo_!=0)
-                {
-                    delete geo_;
-                    geo_ = 0;
-                }
-                if (geoInFather_!=0)
-                {
-                    delete geoInFather_;
-                    geoInFather_ = 0;
-                }
-                target_ = original.target_;
-            }
-            return *this;
-        }
     
     
         //! level of this element
@@ -198,12 +170,7 @@ class FoamGridEntity :
 
 
 
-//***********************
-//
-//  --FoamGridEntity
-//
-//***********************
-/** \brief Specialization for codim-0-entities.
+/** \brief Specialization for codim-0-entities, i.e., elements.
 * \ingroup FoamGrid
 *
 * This class embodies the topological parts of elements of the grid.
