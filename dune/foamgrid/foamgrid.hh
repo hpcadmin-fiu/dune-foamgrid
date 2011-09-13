@@ -128,7 +128,7 @@ class FoamGrid :
      */
     FoamGrid() 
     {
-        freeIdCounter_.assign(0);
+        std::fill(freeIdCounter_.begin(), freeIdCounter_.end(), 0);
     }
         
         //! Desctructor
