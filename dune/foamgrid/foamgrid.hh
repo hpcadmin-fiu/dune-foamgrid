@@ -38,11 +38,11 @@ template<int codim>
 class FoamGridLevelIteratorFactory;
 
 
-template<int dim, int dimworld>
+template<int dimworld>
 struct FoamGridFamily
 {
     typedef GridTraits<
-        dim,   // dim
+        2,   // dim
         dimworld,   // dimworld
         Dune::FoamGrid<dimworld>,
         FoamGridGeometry,
@@ -79,7 +79,7 @@ struct FoamGridFamily
 */
 template <int dimworld>
 class FoamGrid :
-        public GridDefaultImplementation  <2, dimworld, double, FoamGridFamily<2,dimworld> >
+        public GridDefaultImplementation  <2, dimworld, double, FoamGridFamily<dimworld> >
 {
     
     friend class FoamGridLevelIteratorFactory <0>;
@@ -116,10 +116,10 @@ class FoamGrid :
     //**********************************************************
     
     //! type of the used GridFamily for this grid
-    typedef FoamGridFamily<2,dimworld>  GridFamily;
+    typedef FoamGridFamily<dimworld>  GridFamily;
     
     //! the Traits
-    typedef typename FoamGridFamily<2,dimworld>::Traits Traits;
+    typedef typename FoamGridFamily<dimworld>::Traits Traits;
     
     //! The type used to store coordinates, inherited from the HostGrid
     typedef double ctype;
