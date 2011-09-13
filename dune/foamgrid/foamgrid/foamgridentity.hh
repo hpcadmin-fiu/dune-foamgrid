@@ -120,22 +120,6 @@ class FoamGridEntity :
         {}
     
         
-        //! Destructor
-        ~FoamGridEntity()
-        {
-            if (geo_!=0)
-            {
-                delete geo_;
-                geo_ = 0;
-            }
-            if (geoInFather_!=0)
-            {
-                delete geoInFather_;
-                geoInFather_ = 0;
-            }
-        }
-        
-        
         //! \todo Please doc me !
         FoamGridEntity& operator=(const FoamGridEntity& original)
         {
@@ -181,8 +165,8 @@ class FoamGridEntity :
         //! geometry of this entity
         const Geometry& geometry () const
         {
-            if (geo_==0)
-                geo_ = new MakeableInterfaceObject<Geometry>(FoamGridGeometry<dim-codim,dimworld,GridImp>());
+            if (geo_.get()==0)
+                geo_ = std::auto_ptr<MakeableInterfaceObject<Geometry> >(new MakeableInterfaceObject<Geometry>(FoamGridGeometry<dim-codim,dimworld,GridImp>()));
 
             std::vector<FieldVector<double,dimworld> > coordinates(target_->corners());
             for (size_t i=0; i<target_->corners(); i++)
@@ -200,23 +184,15 @@ class FoamGridEntity :
         //! \todo Please doc me !
         void setToTarget(const FoamGridEntityImp<dim-codim,GridImp::dimensionworld>* target)
         {
-            if(geo_!=0)
-            {
-                delete geo_;
-                geo_ = 0;
-            }
-            if (geoInFather_!=0)
-            {
-                delete geoInFather_;
-                geoInFather_ = 0;
-            }
+            geo_.reset();
+            geoInFather_.reset();
             target_ = target;
         }
     
         
         //! the current geometry
-    mutable MakeableInterfaceObject<Geometry> *geo_;
-    mutable MakeableInterfaceObject<Geometry> *geoInFather_;
+    mutable std::auto_ptr<MakeableInterfaceObject<Geometry> > geo_;
+    mutable std::auto_ptr<MakeableInterfaceObject<Geometry> > geoInFather_;
 };
 
 
@@ -259,51 +235,25 @@ class FoamGridEntity<0,dim,GridImp> :
         
         //! Constructor for an entity in a given grid level
         FoamGridEntity(const FoamGridEntityImp<2,dimworld>* hostEntity) :
-            geo_(0),
             geoInFather_(0),
             target_(hostEntity)
         {}
         
         
-        //! \todo Please doc me !
+        /** \brief Copy constructor */
         FoamGridEntity(const FoamGridEntity& original) :
-            geo_(0),
             geoInFather_(0),
             target_(original.target_)
         {}
     
-        
-        //! Destructor
-        ~FoamGridEntity()
-        {
-            if (geo_!=0)
-            {
-                delete geo_;
-                geo_ = 0;
-            }
-            if (geoInFather_!=0)
-            {
-                delete geoInFather_;
-                geoInFather_ = 0;
-            }
-        }
-        
         
         //! \todo Please doc me !
         FoamGridEntity& operator=(const FoamGridEntity& original)
         {
             if (this != &original)
             {
-                if (geo_!=0)
-                {
-                    delete geo_;
-                    geo_ = 0;
-                }
-                if (geoInFather_!=0)
-                {
-                    delete geoInFather_;
-                    geoInFather_ = 0;
-                }
+                geo_.reset();
+                geoInFather_.reset();
                 target_ = original.target_;
             }
             return *this;
@@ -326,10 +276,10 @@ class FoamGridEntity<0,dim,GridImp> :
         //! Geometry of this entity
         const Geometry& geometry () const
         {
-            if (geo_==0)
-                geo_ = new MakeableInterfaceObject<Geometry>(FoamGridGeometry<dim,GridImp::dimensionworld,GridImp>());
+            if (not geo_.get())  // allocate on first use only
+                geo_ = std::auto_ptr<MakeableInterfaceObject<Geometry> >(new MakeableInterfaceObject<Geometry>(FoamGridGeometry<dim,dimworld,GridImp>()));
 
-            std::vector<FieldVector<double, GridImp::dimensionworld> > coordinates(target_->corners());
+            std::vector<FieldVector<double, dimworld> > coordinates(target_->corners());
             for (size_t i=0; i<target_->corners(); i++)
                 coordinates[i] = target_->vertex_[i]->pos_;
 
@@ -502,27 +452,19 @@ class FoamGridEntity<0,dim,GridImp> :
         // /////////////////////////////////////////
     
         
-        //! \todo Please doc me !
+        /** \brief Make this class point to a new FoamGridEntityImp object */
         void setToTarget(const FoamGridEntityImp<2,dimworld>* target)
         {
-            if(geo_!=0)
-            {
-                delete geo_;
-                geo_ = 0;
-            }
-            if (geoInFather_!=0)
-            {
-                delete geoInFather_;
-                geoInFather_ = 0;
-            }
+            geo_.reset();
+            geoInFather_.reset();
             target_ = target;
         }
         
         //! the current geometry
-        mutable MakeableInterfaceObject<Geometry> *geo_;
+        mutable std::auto_ptr<MakeableInterfaceObject<Geometry> > geo_;
         
-        //! \todo Please doc me !
-        mutable MakeableInterfaceObject<LocalGeometry> *geoInFather_;
+        /** \brief The geometry of this element as embedded in its father (if there is one) */
+        mutable std::auto_ptr<MakeableInterfaceObject<LocalGeometry> > geoInFather_;
 
     const FoamGridEntityImp<2,dimworld>* target_;
         
