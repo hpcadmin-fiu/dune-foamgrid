@@ -100,16 +100,12 @@ class FoamGridEntity :
         
         //! Constructor for an entity in a given grid level
     FoamGridEntity(const FoamGridEntityImp<dim-codim,GridImp::dimensionworld>* target) :
-            target_(target),
-            geo_(0),
-            geoInFather_(0)
+            target_(target)
         {}
         
         /** \brief Copy constructor */
         FoamGridEntity(const FoamGridEntity& original) :
-            target_(original.target_),
-            geo_(0),
-            geoInFather_(0)
+            target_(original.target_)
         {}
     
     
@@ -157,14 +153,12 @@ class FoamGridEntity :
         void setToTarget(const FoamGridEntityImp<dim-codim,GridImp::dimensionworld>* target)
         {
             geo_.reset();
-            geoInFather_.reset();
             target_ = target;
         }
     
         
         //! the current geometry
     mutable std::auto_ptr<MakeableInterfaceObject<Geometry> > geo_;
-    mutable std::auto_ptr<MakeableInterfaceObject<Geometry> > geoInFather_;
 };
 
 
