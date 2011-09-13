@@ -34,9 +34,6 @@ namespace Dune {
 template <int dimworld>
 class FoamGrid;
 
-template<int codim>                        
-class FoamGridLevelIteratorFactory;
-
 
 /** \brief Encapsulates loads of types exported by FoamGrid */
 template<int dimworld>
@@ -77,9 +74,6 @@ class FoamGrid :
         public GridDefaultImplementation  <2, dimworld, double, FoamGridFamily<dimworld> >
 {
     
-    friend class FoamGridLevelIteratorFactory <0>;
-    friend class FoamGridLevelIteratorFactory <2>;
-
     friend class FoamGridLevelIndexSet<const FoamGrid >;
     friend class FoamGridLeafIndexSet<const FoamGrid >;
     friend class FoamGridGlobalIdSet<const FoamGrid >;
