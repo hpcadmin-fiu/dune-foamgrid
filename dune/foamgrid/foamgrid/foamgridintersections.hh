@@ -22,16 +22,6 @@ class FoamGridLevelIntersection
         // The type used to store coordinates
         typedef typename GridImp::ctype ctype;
 
-    /** \brief Needed for the computation of normals */
-    static Dune::FieldVector<ctype,3> crossProduct(const Dune::FieldVector<ctype,3>& a, const Dune::FieldVector<ctype,3>& b)
-    {
-        Dune::FieldVector<ctype,3> r;
-        r[0] = a[1]*b[2] - a[2]*b[1];
-        r[1] = a[2]*b[0] - a[0]*b[2];
-        r[2] = a[0]*b[1] - a[1]*b[0];
-        return r;
-    }
-
     friend class FoamGridLevelIntersectionIterator<GridImp>;
     
     public:
@@ -202,12 +192,13 @@ class FoamGridLevelIntersection
             // Compute oriented edge
             FieldVector<ctype, dimworld> edge = center_->vertex_[v1]->pos_ - center_->vertex_[v0]->pos_;
 
-            // compute triangle normal
-            FieldVector<ctype, dimworld> elementNormal = crossProduct(edge, 
-                                                                      center_->vertex_[v2]->pos_ - center_->vertex_[v0]->pos_);
-            
-
-            return crossProduct(edge, elementNormal);
+            // compute triangle edge normal
+            FieldVector<ctype, dimworld> scaledEdge = edge;
+            edge *= edge*(center_->vertex_[v2]->pos_ - center_->vertex_[v0]->pos_);
+            FieldVector<ctype, dimworld> normal = center_->vertex_[v2]->pos_ - center_->vertex_[v0]->pos_;
+            normal -= scaledEdge;
+            normal *= -1;
+            return normal;
         }
 
         //! return outer normal multiplied by the integration element
