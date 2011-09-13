@@ -29,8 +29,6 @@ class FoamGridEntityPointer
 
         typedef typename GridImp::template Codim<codim>::Entity Entity;
         
-        typedef FoamGridEntityPointer<codim,GridImp> Base;
-    
     //! Constructor from a FoamGrid entity
     FoamGridEntityPointer (const FoamGridEntity<codim,dim,GridImp>& entity)
         : virtualEntity_(entity.target_) 
