@@ -1,5 +1,6 @@
 #include <config.h>
 
+#include <dune/grid/io/file/gmshreader.hh>
 #include <dune/grid/test/gridcheck.cc>
 #include <dune/grid/test/checkintersectionit.cc>
 #include <dune/grid/../../doc/grids/gridfactory/hybridtestgrids.hh>
@@ -108,8 +109,13 @@ GridType* make2Din3DHybridTestGrid()
 int main (int argc, char *argv[]) try
 {
     // dimworld == 2
-    FoamGrid<2>* grid2d = make2DHybridTestGrid<FoamGrid<2> >();
+    //FoamGrid<2>* grid2d = make2DHybridTestGrid<FoamGrid<2> >();
+    // path to gmsh test files
+    const std::string path = std::string(DUNE_GRID_EXAMPLE_GRIDS_PATH) + "gmsh/";
 
+    std::auto_ptr<FoamGrid<2> > grid2d( GmshReader<FoamGrid<2> >::read( path + "curved2d.msh", false, false ) );
+
+        
     gridcheck(*grid2d);
     checkIntersectionIterator(*grid2d);
 
