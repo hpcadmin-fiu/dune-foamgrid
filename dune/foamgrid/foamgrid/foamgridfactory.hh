@@ -102,6 +102,17 @@ namespace Dune {
             DUNE_THROW(Dune::NotImplemented, "insertBoundarySegment not implemented yet!");
         }
 
+        /** \brief Insert a boundary segment (== a line) and the boundary segment geometry
+         * 
+            This influences the ordering of the boundary segments.
+            Currently, the BoundarySegment object does not actually have any effect.
+        */
+        virtual void insertBoundarySegment(const std::vector<unsigned int>& vertices,
+                                           const shared_ptr<BoundarySegment<2> > boundarySegment)
+        {
+            insertBoundarySegment(vertices);
+        }
+
         /** \brief Finalize grid creation and hand over the grid
 
         The receiver takes responsibility of the memory allocated for the grid
