@@ -38,6 +38,7 @@ template<int codim>
 class FoamGridLevelIteratorFactory;
 
 
+/** \brief Encapsulates loads of types exported by FoamGrid */
 template<int dimworld>
 struct FoamGridFamily
 {
@@ -67,15 +68,9 @@ struct FoamGridFamily
 
 
 
-
-//**********************************************************************
-//
-// --FoamGrid
-//
-//**********************************************************************
-
-/** \brief [<em> provides \ref Dune::Grid </em>]
-*
+/** \brief An implementation of the Dune grid interface: a 2d simplicial grid in an n-dimensional world
+ * 
+* \tparam dimworld Dimension of the world space
 */
 template <int dimworld>
 class FoamGrid :
@@ -118,20 +113,20 @@ class FoamGrid :
     //! type of the used GridFamily for this grid
     typedef FoamGridFamily<dimworld>  GridFamily;
     
-    //! the Traits
+    //! Exports various types belonging to this grid class
     typedef typename FoamGridFamily<dimworld>::Traits Traits;
     
-    //! The type used to store coordinates, inherited from the HostGrid
+    //! The type used to store coordinates
     typedef double ctype;
     
-    /** \brief Constructor
+    /** \brief Constructor, constructs an empty grid
      */
     FoamGrid() 
     {
         std::fill(freeIdCounter_.begin(), freeIdCounter_.end(), 0);
     }
         
-        //! Desctructor
+        //! Destructor
         ~FoamGrid()
         {
             // Delete level index sets
@@ -330,7 +325,7 @@ class FoamGrid :
             return 0;
         }
 
-        //! \todo Please doc me !
+        //! \brief Book-keeping routine to be called before adaptation
         bool preAdapt() {
             DUNE_THROW(NotImplemented, "preAdapt");
         }
@@ -348,6 +343,9 @@ class FoamGrid :
         }
         
         /*@}*/
+        
+        /** @name Methods for parallel computations */
+        /*@{*/
         
         /** \brief Size of the overlap on the leaf level */
         unsigned int overlapSize(int codim) const {
@@ -417,6 +415,8 @@ class FoamGrid :
             return ccobj_;
         }
 #endif   
+        /*@}*/
+        
         
         // **********************************************************
         // End of Interface Methods
@@ -477,7 +477,10 @@ class FoamGrid :
 
 namespace Capabilities
 {
-    //! \todo Please doc me !
+    /** \brief True if the grid implements entities of a given codim.
+      * 
+      * FoamGrid implements all codimensions, hence this is always true
+      */
     template<int dimworld,int codim>
     struct hasEntity< FoamGrid<dimworld>, codim>
     {
@@ -485,7 +488,8 @@ namespace Capabilities
     };
     
     
-    //! \todo Please doc me !
+    /** \brief True if the grid can be run on a distributed machine
+      */
     template <int dimworld>
     struct isParallel< FoamGrid<dimworld> >
     {
@@ -511,6 +515,9 @@ namespace Capabilities
 } // namespace Dune
 
 
+// The factory should be present whenever the user includes foamgrid.hh.
+// However since the factory needs to know the grid the include directive
+// comes here at the end.
 #include <dune/foamgrid/foamgrid/foamgridfactory.hh>
 
 #endif
