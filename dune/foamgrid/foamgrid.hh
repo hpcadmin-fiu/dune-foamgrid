@@ -239,6 +239,12 @@ class FoamGrid :
             return leafIndexSet().size(type);
         }
         
+        /** \brief The number of boundary edges on the coarsest level */
+        size_t numBoundarySegments() const
+        {
+            DUNE_THROW(Dune::NotImplemented, "numBoundarySegments");
+            return 0;
+        }
         
         /** \brief Access to the GlobalIdSet */
         const typename Traits::GlobalIdSet& globalIdSet() const{
