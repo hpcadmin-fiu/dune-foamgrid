@@ -5,9 +5,17 @@
 * \brief The FoamGridLeafIntersection and FoamGridLevelIntersection classes
 */
 
+#include <dune/grid/common/intersection.hh>
+
+#include <dune/foamgrid/foamgrid/foamgridintersectioniterators.hh>
+#include <dune/foamgrid/foamgrid/foamgridvertex.hh>
+#include <dune/foamgrid/foamgrid/foamgridgeometry.hh>
+#include <dune/foamgrid/foamgrid/foamgridentitypointer.hh>
+
 namespace Dune {
 
-
+template <class GridImp>
+class FoamGridLevelIntersectionIterator;
 
 
 //! \todo Please doc me !

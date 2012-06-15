@@ -5,6 +5,10 @@
 * \brief The FoamGridHierarchicIterator class
 */
 
+#include <stack>
+
+#include <dune/foamgrid/foamgrid/foamgridentitypointer.hh>
+
 namespace Dune {
 
 

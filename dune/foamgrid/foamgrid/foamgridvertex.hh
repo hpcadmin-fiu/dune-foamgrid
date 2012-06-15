@@ -1,6 +1,11 @@
 #ifndef DUNE_FOAMGRID_VERTEX_HH
 #define DUNE_FOAMGRID_VERTEX_HH
 
+#include <dune/common/fvector.hh>
+#include <dune/geometry/type.hh>
+#include <dune/grid/common/gridenums.hh>
+
+
 namespace Dune {
 
     /** \brief Base class for FoamGrid entity implementation classes */

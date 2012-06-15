@@ -2,12 +2,17 @@
 #define DUNE_FOAMGRID_INTERSECTIONITERATORS_HH
 
 #include <dune/foamgrid/foamgrid/foamgridintersections.hh>
+#include <dune/foamgrid/foamgrid/foamgridvertex.hh>
 
 /** \file
 * \brief The FoamGridLeafIntersectionIterator and FoamGridLevelIntersectionIterator classes
 */
 
 namespace Dune {
+    
+template<class GridImp>
+class FoamGridLevelIntersectionIterator;
+
 
 /** \brief Iterator over all element neighbors
 * \ingroup FoamGrid

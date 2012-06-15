@@ -6,6 +6,11 @@
 */
 
 #include <vector>
+#include <list>
+
+#include <dune/grid/common/indexidset.hh>
+
+#include <dune/foamgrid/foamgrid/foamgridvertex.hh>  // for FoamGridEntityImp
 
 namespace Dune {
 

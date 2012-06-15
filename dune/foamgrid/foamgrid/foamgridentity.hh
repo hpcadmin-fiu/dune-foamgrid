@@ -5,6 +5,13 @@
 * \brief The FoamGridEntity class
 */
 
+#include <memory>
+
+#include <dune/grid/common/gridenums.hh>
+#include <dune/grid/common/grid.hh>
+
+#include <dune/foamgrid/foamgrid/foamgridvertex.hh>
+#include <dune/foamgrid/foamgrid/foamgridgeometry.hh>
 
 namespace Dune {
 
