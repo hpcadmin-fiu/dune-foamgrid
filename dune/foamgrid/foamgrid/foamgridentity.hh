@@ -103,6 +103,10 @@ class FoamGridEntity :
     public:
     
         typedef typename GridImp::template Codim<codim>::Geometry Geometry;
+
+        //! The type of the EntitySeed interface class
+        typedef typename GridImp::template Codim<codim>::EntitySeed EntitySeed;
+
     
         
         //! Constructor for an entity in a given grid level
@@ -121,7 +125,6 @@ class FoamGridEntity :
         {
             if (this != &original)
             {
-                geo_.reset();
                 target_ = original.target_;
             }
             return *this;
@@ -159,6 +162,12 @@ class FoamGridEntity :
             return Geometry(FoamGridGeometry<dim-codim,dimworld,GridImp>(target_->type(), coordinates));
         }
     
+        //! Create EntitySeed
+        EntitySeed seed () const
+        {
+            return EntitySeed(target_);
+        }
+
     const FoamGridEntityImp<dim-codim,GridImp::dimensionworld>* target_;
 
         
@@ -167,13 +176,9 @@ class FoamGridEntity :
         //! \todo Please doc me !
         void setToTarget(const FoamGridEntityImp<dim-codim,GridImp::dimensionworld>* target)
         {
-            geo_.reset();
             target_ = target;
         }
     
-        
-        //! the current geometry
-    mutable std::auto_ptr<MakeableInterfaceObject<Geometry> > geo_;
 };
 
 
@@ -208,17 +213,18 @@ class FoamGridEntity<0,dim,GridImp> :
         //! Iterator over descendants of the entity
         typedef FoamGridHierarchicIterator<GridImp> HierarchicIterator;
         
+        //! The type of the EntitySeed interface class
+        typedef typename GridImp::template Codim<0>::EntitySeed EntitySeed;
+        
         
         //! Constructor for an entity in a given grid level
         FoamGridEntity(const FoamGridEntityImp<2,dimworld>* hostEntity) :
-            geoInFather_(0),
             target_(hostEntity)
         {}
         
         
         /** \brief Copy constructor */
         FoamGridEntity(const FoamGridEntity& original) :
-            geoInFather_(0),
             target_(original.target_)
         {}
     
@@ -228,8 +234,6 @@ class FoamGridEntity<0,dim,GridImp> :
         {
             if (this != &original)
             {
-                geo_.reset();
-                geoInFather_.reset();
                 target_ = original.target_;
             }
             return *this;
@@ -259,6 +263,12 @@ class FoamGridEntity<0,dim,GridImp> :
             return Geometry(FoamGridGeometry<dim,dimworld,GridImp>(target_->type(), coordinates));
         }
     
+        //! Create EntitySeed
+        EntitySeed seed () const
+        {
+            return EntitySeed(target_);
+        }
+
         
         /** \brief Return the number of subEntities of codimension cc.
         */
@@ -384,11 +394,11 @@ class FoamGridEntity<0,dim,GridImp> :
         * implementation of numerical algorithms is only done for simple discretizations.
         * Assumes that meshes are nested.
         */
-        const LocalGeometry& geometryInFather () const {
+        LocalGeometry geometryInFather () const {
             DUNE_THROW(NotImplemented, "geometryInFather");
 //             if (geoInFather_==0)
 //                 geoInFather_ = new MakeableInterfaceObject<LocalGeometry>(hostEntity_->geometryInFather());
-            return *geoInFather_;
+//            return *geoInFather_;
         }
     
         
@@ -427,18 +437,10 @@ class FoamGridEntity<0,dim,GridImp> :
         /** \brief Make this class point to a new FoamGridEntityImp object */
         void setToTarget(const FoamGridEntityImp<2,dimworld>* target)
         {
-            geo_.reset();
-            geoInFather_.reset();
             target_ = target;
         }
         
-        //! the current geometry
-        mutable std::auto_ptr<MakeableInterfaceObject<Geometry> > geo_;
-        
-        /** \brief The geometry of this element as embedded in its father (if there is one) */
-        mutable std::auto_ptr<MakeableInterfaceObject<LocalGeometry> > geoInFather_;
-
-    const FoamGridEntityImp<2,dimworld>* target_;
+        const FoamGridEntityImp<2,dimworld>* target_;
         
     private:
     
