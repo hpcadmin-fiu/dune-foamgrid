@@ -24,6 +24,7 @@
 #include "foamgrid/foamgridgeometry.hh"
 #include "foamgrid/foamgridentity.hh"
 #include "foamgrid/foamgridentitypointer.hh"
+#include "foamgrid/foamgridentityseed.hh"
 #include "foamgrid/foamgridintersectioniterators.hh"
 #include "foamgrid/foamgridleveliterator.hh"
 #include "foamgrid/foamgridleafiterator.hh"
@@ -61,7 +62,10 @@ struct FoamGridFamily
         unsigned int,   // global id type
         FoamGridLocalIdSet< const FoamGrid<dimworld> >,
         unsigned int,   // local id type
-        CollectiveCommunication<Dune::FoamGrid<dimworld> >
+        CollectiveCommunication<Dune::FoamGrid<dimworld> > ,
+        DefaultLevelGridViewTraits,
+        DefaultLeafGridViewTraits,
+        FoamGridEntitySeed
             > Traits;
 };
 
@@ -275,6 +279,17 @@ class FoamGrid :
             return leafIndexSet_;
         }
         
+        /** \brief Create EntityPointer from EnitySeed */
+        template < class EntitySeed >
+        typename Traits::template Codim<EntitySeed::codimension>::EntityPointer
+            entityPointer(const EntitySeed& seed) const
+        {
+            typedef FoamGridEntityPointer<EntitySeed::codimension, const FoamGrid> EntityPointerImpl;
+            typedef typename Traits::template Codim<EntitySeed::codimension>::EntityPointer EntityPointer;
+
+            return EntityPointer(EntityPointerImpl(seed.getImplementationPointer()));
+        }
+
         
         /** @name Grid Refinement Methods */
         /*@{*/
