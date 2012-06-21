@@ -41,10 +41,7 @@ class FoamGridLevelIntersection
         typedef Dune::Intersection<const GridImp, Dune::FoamGridLevelIntersectionIterator> Intersection;
 
     FoamGridLevelIntersection(const FoamGridEntityImp<2,dimworld>* center, int nb)
-        : center_(center), neighbor_(nb),
-          geometryInInside_(FoamGridGeometry<dim-1,dim,GridImp>()),
-          geometryInOutside_(FoamGridGeometry<dim-1,dim,GridImp>()),
-          geometry_(FoamGridGeometry<dim-1,dimworld,GridImp>())
+        : center_(center), neighbor_(nb)
     {}
 
         //! return EntityPointer to the Entity on the inside of this intersection
@@ -101,7 +98,7 @@ class FoamGridLevelIntersection
         //! iteration started.
         //! Here returned element is in LOCAL coordinates of the element
         //! where iteration started.
-        const LocalGeometry& geometryInInside () const {
+        LocalGeometry geometryInInside () const {
 
             std::vector<FieldVector<double, dim> > coordinates(2);
 
@@ -112,18 +109,14 @@ class FoamGridLevelIntersection
             coordinates[0] = refElement.position(refElement.subEntity(neighbor_, 1, 0, dim),dim);
             coordinates[1] = refElement.position(refElement.subEntity(neighbor_, 1, 1, dim),dim);
 
-            // set up geometry
-            GridImp::getRealImplementation(geometryInInside_).setup(type(), coordinates);
-
-            return geometryInInside_;
+            return LocalGeometry(FoamGridGeometry<dim-1, dim, GridImp>(type(), coordinates));
         }
         
         //! intersection of codimension 1 of this neighbor with element where iteration started.
         //! Here returned element is in LOCAL coordinates of neighbor
-        const  LocalGeometry& geometryInOutside () const {
+        LocalGeometry geometryInOutside () const {
 
             std::vector<FieldVector<double, dim> > coordinates(2);
-
 
             // Get two vertices of the intersection
             const FoamGridEntityImp<2,dimworld>* outside = center_->edges_[neighbor_]->otherElement(center_);
@@ -135,15 +128,12 @@ class FoamGridLevelIntersection
             coordinates[0] = refElement.position(refElement.subEntity(idxInOutside, 1, 0, dim),dim);
             coordinates[1] = refElement.position(refElement.subEntity(idxInOutside, 1, 1, dim),dim);
 
-            // set up geometry
-            GridImp::getRealImplementation(geometryInOutside_).setup(type(), coordinates);
-                
-            return geometryInOutside_;
+            return LocalGeometry(FoamGridGeometry<dim-1, dim, GridImp>(type(), coordinates));
         }
         
         //! intersection of codimension 1 of this neighbor with element where iteration started.
         //! Here returned element is in GLOBAL coordinates of the element where iteration started.
-        const Geometry& geometry () const {
+        Geometry geometry () const {
 
             std::vector<FieldVector<double, dimworld> > coordinates(2);
 
@@ -154,10 +144,7 @@ class FoamGridLevelIntersection
             coordinates[0] = center_->vertex_[refElement.subEntity(neighbor_, 1, 0, dim)]->pos_;
             coordinates[1] = center_->vertex_[refElement.subEntity(neighbor_, 1, 1, dim)]->pos_;
 
-            // set up geometry
-            GridImp::getRealImplementation(geometry_).setup(type(), coordinates);
-                
-            return geometry_;
+            return Geometry(FoamGridGeometry<dim-1, dimworld, GridImp>(type(), coordinates));
         }
         
         
@@ -246,17 +233,6 @@ class FoamGridLevelIntersection
 
     /** \brief Count on which neighbor we are lookin' at.  */
     int neighbor_;
-
-    /** \brief The geometry that's being returned when intersectionSelfLocal() is called
-    */
-    mutable MakeableInterfaceObject<LocalGeometry> geometryInInside_;
-
-    /** \brief The geometry that's being returned when intersectionNeighborLocal() is called
-    */
-    mutable MakeableInterfaceObject<LocalGeometry> geometryInOutside_;
-    
-    //! The geometry that's being returned when intersectionSelfGlobal() is called
-    mutable MakeableInterfaceObject<Geometry> geometry_;
 };
 
 
