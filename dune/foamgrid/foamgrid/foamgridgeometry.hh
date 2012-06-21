@@ -44,15 +44,6 @@ class FoamGridGeometry :
         Base(type, coordinates)
     {}
 
-
-    /** \brief Constructor with a geometry type and a set of corners */
-    void setup(const GeometryType& type, const std::vector<FieldVector<typename GridImp::ctype,coorddim> >& coordinates)
-    {
-        // set up base class
-        // Yes, a strange way, but the only way, as BasicGeometry doesn't have a setup method
-        Base::operator=(Base(type,coordinates));
-    }
-
 };
 
 
