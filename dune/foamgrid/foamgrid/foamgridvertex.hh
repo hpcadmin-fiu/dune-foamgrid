@@ -32,6 +32,12 @@ namespace Dune {
         
     };
 
+    /**
+     * \brief The actual entity implementation
+     *
+     * \tparam dim The dimension of this entity
+     * \tparam dimworld The world diemnsion
+     */
     template <int dim, int dimworld>
     class FoamGridEntityImp
     {};
