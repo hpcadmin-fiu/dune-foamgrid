@@ -150,17 +150,13 @@ class FoamGridEntity :
         
         
         //! geometry of this entity
-        const Geometry& geometry () const
+        Geometry geometry () const
         {
-            if (geo_.get()==0)
-                geo_ = std::auto_ptr<MakeableInterfaceObject<Geometry> >(new MakeableInterfaceObject<Geometry>(FoamGridGeometry<dim-codim,dimworld,GridImp>()));
-
             std::vector<FieldVector<double,dimworld> > coordinates(target_->corners());
             for (size_t i=0; i<target_->corners(); i++)
                 coordinates[i] = target_->corner(i);
 
-            GridImp::getRealImplementation(*geo_).setup(target_->type(), coordinates);
-            return *geo_;
+            return Geometry(FoamGridGeometry<dim-codim,dimworld,GridImp>(target_->type(), coordinates));
         }
     
     const FoamGridEntityImp<dim-codim,GridImp::dimensionworld>* target_;
@@ -254,17 +250,13 @@ class FoamGridEntity<0,dim,GridImp> :
     
         
         //! Geometry of this entity
-        const Geometry& geometry () const
+        Geometry geometry () const
         {
-            if (not geo_.get())  // allocate on first use only
-                geo_ = std::auto_ptr<MakeableInterfaceObject<Geometry> >(new MakeableInterfaceObject<Geometry>(FoamGridGeometry<dim,dimworld,GridImp>()));
-
             std::vector<FieldVector<double, dimworld> > coordinates(target_->corners());
             for (size_t i=0; i<target_->corners(); i++)
                 coordinates[i] = target_->vertex_[i]->pos_;
 
-            GridImp::getRealImplementation(*geo_).setup(target_->type(), coordinates);
-            return *geo_;
+            return Geometry(FoamGridGeometry<dim,dimworld,GridImp>(target_->type(), coordinates));
         }
     
         
