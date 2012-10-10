@@ -55,7 +55,7 @@ public:
 #if 0
     FoamGridLeafIntersectionIterator(const GridImp* identityGrid,
                                          const HostLeafIntersectionIterator& hostIterator)
-        : selfLocal_(NULL), neighborLocal_(NULL), intersectionGlobal_(NULL),
+        : selfLocal_(nullptr), neighborLocal_(nullptr), intersectionGlobal_(nullptr),
           identityGrid_(identityGrid), 
           hostIterator_(hostIterator)
     {}
@@ -71,19 +71,19 @@ public:
         ++hostIterator_;
 
         // Delete intersection geometry objects, if present
-        if (intersectionGlobal_ != NULL) {
+        if (intersectionGlobal_ != nullptr) {
             delete intersectionGlobal_;
-            intersectionGlobal_ = NULL;
+            intersectionGlobal_ = nullptr;
         }
         
-        if (selfLocal_ != NULL) {
+        if (selfLocal_ != nullptr) {
             delete selfLocal_;
-            selfLocal_ = NULL;
+            selfLocal_ = nullptr;
         }
         
-        if (neighborLocal_ != NULL) {
+        if (neighborLocal_ != nullptr) {
             delete neighborLocal_;
-            neighborLocal_ = NULL;
+            neighborLocal_ = nullptr;
         }
     }
 #endif

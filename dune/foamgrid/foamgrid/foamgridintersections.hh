@@ -269,7 +269,7 @@ public:
 #if 0    
     FoamGridLeafIntersection(const GridImp* identityGrid,
                                          const HostLeafIntersectionIterator& hostIterator)
-        : selfLocal_(NULL), neighborLocal_(NULL), intersectionGlobal_(NULL),
+        : selfLocal_(nullptr), neighborLocal_(nullptr), intersectionGlobal_(nullptr),
           identityGrid_(identityGrid), 
           hostIterator_(hostIterator)
     {}
@@ -329,7 +329,7 @@ public:
         //! Here returned element is in LOCAL coordinates of the element
         //! where iteration started.
         const  LocalGeometry& geometryInInside () const {
-            if (selfLocal_ == NULL)
+            if (selfLocal_ == nullptr)
                 selfLocal_ = new MakeableInterfaceObject<LocalGeometry>(hostIterator_->intersectionSelfLocal());
                 
             return *selfLocal_;
@@ -338,7 +338,7 @@ public:
         //! intersection of codimension 1 of this neighbor with element where iteration started.
         //! Here returned element is in LOCAL coordinates of neighbor
         const  LocalGeometry& geometryInOutside () const {
-            if (neighborLocal_ == NULL)
+            if (neighborLocal_ == nullptr)
                 neighborLocal_ = new MakeableInterfaceObject<LocalGeometry>(hostIterator_->intersectionNeighborLocal());
                 
             return *neighborLocal_;
@@ -347,7 +347,7 @@ public:
         //! intersection of codimension 1 of this neighbor with element where iteration started.
         //! Here returned element is in GLOBAL coordinates of the element where iteration started.
         const  Geometry& geometry () const {
-            if (intersectionGlobal_ == NULL)
+            if (intersectionGlobal_ == nullptr)
                 intersectionGlobal_ = new MakeableInterfaceObject<Geometry>(hostIterator_->intersectionGlobal());
                 
             return *intersectionGlobal_;

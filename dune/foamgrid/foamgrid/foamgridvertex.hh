@@ -50,12 +50,12 @@ namespace Dune {
         
         FoamGridEntityImp(int level, const FieldVector<double, dimworld>& pos, unsigned int id) 
             : FoamGridEntityBase(level, id),
-              pos_(pos), son_(NULL) 
+              pos_(pos), son_(nullptr) 
         {}
         
         //private: 
         bool isLeaf() const {
-            return son_==NULL;
+            return son_==nullptr;
         }
 
         GeometryType type() const {

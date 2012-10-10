@@ -416,7 +416,7 @@ class FoamGridEntity<0,dim,GridImp> :
                     it.elemStack.push(target_->sons_[i]);
             
             it.virtualEntity_.setToTarget((it.elemStack.empty()) 
-                                          ? NULL : it.elemStack.top());
+                                          ? nullptr : it.elemStack.top());
             
             return it;
         }

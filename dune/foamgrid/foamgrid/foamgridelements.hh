@@ -19,12 +19,12 @@ namespace Dune {
             : FoamGridEntityBase(level,id),
               markState_(DO_NOTHING), isNew_(false)
         {
-            sons_[0] = sons_[1] = NULL;
+            sons_[0] = sons_[1] = nullptr;
         }
 
         bool isLeaf() const {
-            // The sons are either all NULL or all != NULL
-            return sons_[0] == NULL;
+            // The sons are either all nullptr or all != nullptr
+            return sons_[0] == nullptr;
         }
 
         unsigned int corners() const {

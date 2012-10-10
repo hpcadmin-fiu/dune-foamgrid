@@ -35,7 +35,7 @@ class FoamGridHierarchicIterator :
 
     //! Constructor
     FoamGridHierarchicIterator(int maxlevel) 
-        : FoamGridEntityPointer<0,GridImp>(NULL),
+        : FoamGridEntityPointer<0,GridImp>(nullptr),
           maxlevel_(maxlevel)
     {}
         
@@ -62,7 +62,7 @@ class FoamGridHierarchicIterator :
             }
             
             this->virtualEntity_.setToTarget((elemStack.empty()) 
-                                             ? NULL : elemStack.top());
+                                             ? nullptr : elemStack.top());
         }
 
         
