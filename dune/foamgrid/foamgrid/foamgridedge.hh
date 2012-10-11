@@ -1,3 +1,6 @@
+// -*- tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set et ts=8 sw=4 sts=4:
+
 #ifndef DUNE_FOAMGRID_EDGE_HH
 #define DUNE_FOAMGRID_EDGE_HH
 
@@ -17,10 +20,11 @@ namespace Dune {
         FoamGridEntityImp(const FoamGridEntityImp<0,dimworld>* v0, 
                           const FoamGridEntityImp<0,dimworld>* v1, 
                           int level, unsigned int id) 
-            : FoamGridEntityBase(level,id)
+            : FoamGridEntityBase(level,id), nSons_(0)
         {
             vertex_[0] = v0;
             vertex_[1] = v1;
+            sons_[0] =sons_[1] = nullptr;
         }
 
         /** \todo Implement this method! */
@@ -64,6 +68,12 @@ namespace Dune {
 
         /** \brief The boundary id.  Only used if this edge is a boundary edge */
         unsigned int boundaryId_;
+
+        /** \brief links to refinements of this edge */
+        array<FoamGridEntityImp<1,dimworld>*,2> sons_;
+
+        /** \brief The number of refined edges (0 or 2). */
+        unsigned int nSons_;
         
     };
 

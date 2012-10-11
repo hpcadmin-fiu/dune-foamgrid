@@ -3,7 +3,7 @@
 
 #include <dune/foamgrid/foamgrid/foamgridvertex.hh>
 #include <dune/foamgrid/foamgrid/foamgridedge.hh>
-
+#include <dune/common/nullptr.hh>
 namespace Dune {
 
     template <int dimworld>
@@ -17,9 +17,10 @@ namespace Dune {
 
         FoamGridEntityImp(int level, unsigned int id) 
             : FoamGridEntityBase(level,id),
+              nSons_(0),
               markState_(DO_NOTHING), isNew_(false)
         {
-            sons_[0] = sons_[1] = nullptr;
+          sons_[0]= sons_[1] = sons_[2] = sons_[3] = nullptr;
         }
 
         bool isLeaf() const {
@@ -37,8 +38,10 @@ namespace Dune {
 
         /** \todo Implement me! */
         unsigned int nSons() const {
-            return 0;
+            return nSons_;
         }
+      
+        unsigned int nSons_;      
 
         array<FoamGridEntityImp<2,dimworld>*, 4> sons_;
 
