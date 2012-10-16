@@ -1,3 +1,5 @@
+// -*- tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set ts=8 sw=4 et sts=4:
 #ifndef DUNE_FOAMGRID_ELEMENTS_HH
 #define DUNE_FOAMGRID_ELEMENTS_HH
 
@@ -17,10 +19,11 @@ namespace Dune {
 
         FoamGridEntityImp(int level, unsigned int id) 
             : FoamGridEntityBase(level,id),
-              nSons_(0),
+              nSons_(0), refinementIndex_(-1),
               markState_(DO_NOTHING), isNew_(false)
         {
           sons_[0]= sons_[1] = sons_[2] = sons_[3] = nullptr;
+          father_ = nullptr;
         }
 
         bool isLeaf() const {
@@ -41,7 +44,16 @@ namespace Dune {
             return nSons_;
         }
       
-        unsigned int nSons_;      
+        unsigned int nSons_;
+      
+        /**
+         * \brief index of the refined element in the father
+         *
+         * For red refinement this is either the index of corner,
+         * that is also a corner in the father element, within the father
+         * or 3 if no corner is also a corner in the father.
+         */
+        int refinementIndex_;
 
         array<FoamGridEntityImp<2,dimworld>*, 4> sons_;
 

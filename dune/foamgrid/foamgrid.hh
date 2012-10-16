@@ -22,6 +22,7 @@
 
 // The components of the FoamGrid interface
 #include "foamgrid/foamgridgeometry.hh"
+#include "foamgrid/foamgridlocalgeometry.hh"
 #include "foamgrid/foamgridentity.hh"
 #include "foamgrid/foamgridentitypointer.hh"
 #include "foamgrid/foamgridentityseed.hh"
@@ -65,7 +66,8 @@ struct FoamGridFamily
         CollectiveCommunication<Dune::FoamGrid<dimworld> > ,
         DefaultLevelGridViewTraits,
         DefaultLeafGridViewTraits,
-        FoamGridEntitySeed
+        FoamGridEntitySeed,
+        FoamGridLocalGeometry
             > Traits;
 };
 
@@ -659,6 +661,7 @@ class FoamGrid :
         newElement.vertex_[0]=nextLevelVertices[0];
         newElement.vertex_[0]=nextLevelVertices[3];
         newElement.vertex_[0]=nextLevelVertices[4];
+        newElement.refinementIndex_=0;
         nextLevelElements[0]=&newElement;
         
         // Next the one that contains vertex 1 of the father.
@@ -673,6 +676,7 @@ class FoamGrid :
         newElement.vertex_[0]=nextLevelVertices[1];
         newElement.vertex_[0]=nextLevelVertices[5];
         newElement.vertex_[0]=nextLevelVertices[3];
+        newElement.refinementIndex_=1;
         nextLevelElements[1]=&newElement;
 
         // Last the one that contains vertex 2 of the father.
@@ -687,6 +691,7 @@ class FoamGrid :
         newElement.vertex_[0]=nextLevelVertices[2];
         newElement.vertex_[0]=nextLevelVertices[4];
         newElement.vertex_[0]=nextLevelVertices[5];
+        newElement.refinementIndex_=2;
         nextLevelElements[2]=&newElement;
 
         // create the triangle in the center
@@ -701,6 +706,7 @@ class FoamGrid :
         newElement.vertex_[0]=nextLevelVertices[3];
         newElement.vertex_[0]=nextLevelVertices[5];
         newElement.vertex_[0]=nextLevelVertices[4];
+        newElement.refinementIndex_=3;
         nextLevelElements[3]=&newElement;
 
         // Now that all the triangle are created, we can update the elements attached

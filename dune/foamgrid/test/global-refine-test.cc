@@ -7,7 +7,7 @@
 #include <dune/grid/../../doc/grids/gridfactory/hybridtestgrids.hh>
 
 #include <dune/foamgrid/foamgrid.hh>
-
+#include <dune/grid/test/checkgeometryinfather.cc>
 
 int main (int argc, char *argv[]) try
 {
@@ -19,13 +19,14 @@ int main (int argc, char *argv[]) try
     std::auto_ptr<FoamGrid<2> > grid2d( GmshReader<FoamGrid<2> >::read( path + "curved2d.msh", false, false ) );
 
     grid2d->globalRefine(1);
-    
+    checkGeometryInFather(*grid2d);
 
     // dimworld == 3
     FoamGrid<3>* grid3d = make2Din3DHybridTestGrid<FoamGrid<3> >();
 
     grid3d->globalRefine(1);
-
+    checkGeometryInFather(*grid3d);
+    
 } 
 // //////////////////////////////////
 //   Error handler

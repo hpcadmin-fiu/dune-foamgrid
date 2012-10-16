@@ -1,3 +1,5 @@
+// -*- tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set ts=8 sw=4 et sts=4:
 #ifndef DUNE_FOAMGRID_ENTITY_HH
 #define DUNE_FOAMGRID_ENTITY_HH
 
@@ -395,10 +397,45 @@ class FoamGridEntity<0,dim,GridImp> :
         * Assumes that meshes are nested.
         */
         LocalGeometry geometryInFather () const {
-            DUNE_THROW(NotImplemented, "geometryInFather");
-//             if (geoInFather_==0)
-//                 geoInFather_ = new MakeableInterfaceObject<LocalGeometry>(hostEntity_->geometryInFather());
-//            return *geoInFather_;
+            FoamGridEntityImp<2,dimworld>* father = target_->father_;
+            // Check whether there really is a father
+            if(father==nullptr)
+                DUNE_THROW(GridError, "There is no father Element.");
+            
+            // Sanity check
+            if(target_->type().isTriangle()){
+                // Lookup the coordinates within the father
+                // As in the refinement routine the children
+                // are number as follows:
+                // First come the ones located in the corner
+                // ascending with the corner index.
+                // Their first corner (origin in the reference simplex) 
+                // is always the corner that is also a corner of the father. 
+                // For the element with all corners on the edge midpoints of
+                // the father, the corner are numbered according to the edge indices
+                // of the father.
+                double mapping[4][3][2] ={
+                    { {0.0,0.0}, {0.5,0.0}, {0.0,0.5} }, 
+                    { {1.0,0.0}, {0.5,0.5}, {0.5,0.0} }, 
+                    { {0.0,1.0}, {0.0,0.5}, {0.5,0.5} },
+                    { {0.5,0.0}, {0.5,0.5}, {0.0,0.5} }  
+                };
+                            
+                std::vector<FieldVector<typename GridImp::ctype,GridImp::dimension> >
+                    coordinates(3);
+                
+                for(int corner=0; corner <3; ++corner)
+                    for(int entry=0; entry <2; ++entry)
+                        coordinates[corner][entry]=
+                            mapping[target_->refinementIndex_][corner][entry];
+            
+                // return LocalGeomety by value
+                return LocalGeometry(FoamGridLocalGeometry<2,2,GridImp>(target_->type(), 
+                                                                        coordinates));
+            }else{              
+                DUNE_THROW(NotImplemented, "geometryInFather only supported for triangles!");
+            }
+            
         }
     
         
