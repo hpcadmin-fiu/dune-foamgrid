@@ -562,6 +562,7 @@ class FoamGrid :
                                                              freeIdCounter_[0]++));
                 FoamGridEntityImp<0,dimworld>& midVertex = 
                     Dune::get<0>(entityImps_[nextLevel]).back();
+                nextLevelVertices[vertexIndex++]=&midVertex;
 
                 // sanity check for DUNE numbering
                 std::cout<<"edge "<<edgeIndex/2<<": "<<"("<<(*edge)->vertex_[0]->son_<<","<<(*edge)->vertex_[1]->son_<<") with father ("<<(*edge)->vertex_[0]<<","<<(*edge)->vertex_[1]<<")"<<std::endl;
@@ -608,7 +609,13 @@ class FoamGrid :
                 }else{
                     nextLevelEdges[edgeIndex++]=(*edge)->sons_[1];
                     nextLevelEdges[edgeIndex++]=(*edge)->sons_[0];
-                }           
+                }
+                if((*edge)->sons_[0]->vertex_[0]!=(*edge)->vertex_[0] &&
+                   (*edge)->sons_[0]->vertex_[0]!=(*edge)->vertex_[1])
+                    //vertex 0 is the midpoint
+                    nextLevelVertices[vertexIndex++]=const_cast<FoamGridEntityImp<0,dimworld>*>((*edge)->sons_[0]->vertex_[0]);
+                else
+                    nextLevelVertices[vertexIndex++]=const_cast<FoamGridEntityImp<0,dimworld>*>((*edge)->sons_[0]->vertex_[1]);
             }
         }
         assert(edgeIndex==6);

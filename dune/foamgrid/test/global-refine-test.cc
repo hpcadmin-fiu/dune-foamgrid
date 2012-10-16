@@ -18,15 +18,13 @@ int main (int argc, char *argv[]) try
 
     std::auto_ptr<FoamGrid<2> > grid2d( GmshReader<FoamGrid<2> >::read( path + "curved2d.msh", false, false ) );
 
-        
-    gridcheck(*grid2d);
-    checkIntersectionIterator(*grid2d);
+    grid2d->globalRefine(1);
+    
 
     // dimworld == 3
     FoamGrid<3>* grid3d = make2Din3DHybridTestGrid<FoamGrid<3> >();
 
-    gridcheck(*grid3d);
-    checkIntersectionIterator(*grid3d);
+    grid3d->globalRefine(1);
 
 } 
 // //////////////////////////////////
