@@ -20,11 +20,12 @@ int main (int argc, char *argv[]) try
 
     grid2d->globalRefine(1);
     checkGeometryInFather(*grid2d);
-
+    gridcheck(*grid2d);
     // dimworld == 3
     FoamGrid<3>* grid3d = make2Din3DHybridTestGrid<FoamGrid<3> >();
 
     grid3d->globalRefine(1);
+    gridcheck(*grid3d);
     checkGeometryInFather(*grid3d);
     
 } 

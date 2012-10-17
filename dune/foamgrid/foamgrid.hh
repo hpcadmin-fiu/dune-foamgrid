@@ -66,8 +66,8 @@ struct FoamGridFamily
         CollectiveCommunication<Dune::FoamGrid<dimworld> > ,
         DefaultLevelGridViewTraits,
         DefaultLeafGridViewTraits,
-        FoamGridEntitySeed,
-        FoamGridLocalGeometry
+        FoamGridEntitySeed /*,
+                             FoamGridLocalGeometry*/
             > Traits;
 };
 
@@ -354,7 +354,6 @@ class FoamGrid :
             // Update the leaf indices
             leafIndexSet_.update(*this);
 
-            DUNE_THROW(NotImplemented, "globalRefine!");
         }
         
         /** \brief Mark entity for refinement
@@ -527,6 +526,7 @@ class FoamGrid :
                                Dune::get<0>(entityImps_[nextLevel]).back();
                 element.vertex_[c]->son_=&newVertex;                
             }
+            check_for_duplicates(nextLevelVertices, element.vertex_[c]->son_, vertexIndex);
             nextLevelVertices[vertexIndex++]=element.vertex_[c]->son_;
         }
         
@@ -564,6 +564,7 @@ class FoamGrid :
                                                              freeIdCounter_[0]++));
                 FoamGridEntityImp<0,dimworld>& midVertex = 
                     Dune::get<0>(entityImps_[nextLevel]).back();
+                check_for_duplicates(nextLevelVertices, &midVertex, vertexIndex);
                 nextLevelVertices[vertexIndex++]=&midVertex;
 
                 // sanity check for DUNE numbering
@@ -604,20 +605,25 @@ class FoamGrid :
             }else{
                 // Edges do already exist. Just add its sons to nextLevelEdges
                 // but make sure that the one containing vertex edgeIndex comes first
-                if((*edge)->sons_[0]->vertex_[0] == nextLevelVertices[edgeVertexMapping[edgeIndex/2].first] ||
-                   (*edge)->sons_[0]->vertex_[1] == nextLevelVertices[edgeVertexMapping[edgeIndex/2].first]){
+                if((*edge)->sons_[0]->vertex_[0]->id_ == 
+                   nextLevelVertices[edgeVertexMapping[edgeIndex/2].first]->id_ ||
+                   (*edge)->sons_[0]->vertex_[1]->id_ == 
+                   nextLevelVertices[edgeVertexMapping[edgeIndex/2].first]->id_){
                     nextLevelEdges[edgeIndex++]=(*edge)->sons_[0];
                     nextLevelEdges[edgeIndex++]=(*edge)->sons_[1];
                 }else{
                     nextLevelEdges[edgeIndex++]=(*edge)->sons_[1];
                     nextLevelEdges[edgeIndex++]=(*edge)->sons_[0];
                 }
-                if((*edge)->sons_[0]->vertex_[0]!=(*edge)->vertex_[0] &&
-                   (*edge)->sons_[0]->vertex_[0]!=(*edge)->vertex_[1])
+                if((*edge)->sons_[0]->vertex_[0]->id_!=(*edge)->vertex_[0]->id_ &&
+                   (*edge)->sons_[0]->vertex_[0]->id_!=(*edge)->vertex_[1]->id_){
                     //vertex 0 is the midpoint
+                    check_for_duplicates(nextLevelVertices, (*edge)->sons_[0]->vertex_[0], vertexIndex);
                     nextLevelVertices[vertexIndex++]=const_cast<FoamGridEntityImp<0,dimworld>*>((*edge)->sons_[0]->vertex_[0]);
-                else
+                }else{
+                    check_for_duplicates(nextLevelVertices, (*edge)->sons_[0]->vertex_[1], vertexIndex);
                     nextLevelVertices[vertexIndex++]=const_cast<FoamGridEntityImp<0,dimworld>*>((*edge)->sons_[0]->vertex_[1]);
+                }
             }
         }
         assert(edgeIndex==6);
@@ -651,63 +657,75 @@ class FoamGrid :
         // First the one that contains vertex 0 of the father.
         Dune::get<2>(entityImps_[nextLevel])
             .push_back(FoamGridEntityImp<2,dimworld>(nextLevel, freeIdCounter_[2]++));
-        FoamGridEntityImp<2,dimworld>& newElement = Dune::get<2>(entityImps_[nextLevel])
-            .back();
-        newElement.isNew_=true;
-        newElement.father_=&element;
-        newElement.edges_[0]=nextLevelEdges[0];
-        newElement.edges_[1]=nextLevelEdges[3];
-        newElement.edges_[2]=nextLevelEdges[6];
-        newElement.vertex_[0]=nextLevelVertices[0];
-        newElement.vertex_[0]=nextLevelVertices[3];
-        newElement.vertex_[0]=nextLevelVertices[4];
-        newElement.refinementIndex_=0;
-        nextLevelElements[0]=&newElement;
+            
+        FoamGridEntityImp<2,dimworld>* newElement = &(Dune::get<2>(entityImps_[nextLevel])
+                                                      .back());
+        newElement->isNew_=true;
+        newElement->father_=&element;
+        newElement->edges_[0]=nextLevelEdges[0];
+        newElement->edges_[1]=nextLevelEdges[3];
+        newElement->edges_[2]=nextLevelEdges[6];
+        newElement->vertex_[0]=nextLevelVertices[0];
+        newElement->vertex_[1]=nextLevelVertices[3];
+        newElement->vertex_[2]=nextLevelVertices[4];
+        newElement->refinementIndex_=0;
+        nextLevelElements[0]=newElement;
+        element.sons_[0]=newElement;
+        std::cout<<"Pushed element "<<newElement<<" refindex="<<newElement->refinementIndex_<<std::endl;
         
         // Next the one that contains vertex 1 of the father.
         Dune::get<2>(entityImps_[nextLevel])
             .push_back(FoamGridEntityImp<2,dimworld>(nextLevel, freeIdCounter_[2]++));
-        newElement = Dune::get<2>(entityImps_[nextLevel]).back();
-        newElement.isNew_=true;
-        newElement.father_=&element;
-        newElement.edges_[0]=nextLevelEdges[4];
-        newElement.edges_[1]=nextLevelEdges[1];
-        newElement.edges_[2]=nextLevelEdges[7];
-        newElement.vertex_[0]=nextLevelVertices[1];
-        newElement.vertex_[0]=nextLevelVertices[5];
-        newElement.vertex_[0]=nextLevelVertices[3];
-        newElement.refinementIndex_=1;
-        nextLevelElements[1]=&newElement;
+        newElement = &(Dune::get<2>(entityImps_[nextLevel]).back());
+        newElement->isNew_=true;
+        newElement->father_=&element;
+        newElement->edges_[0]=nextLevelEdges[4];
+        newElement->edges_[1]=nextLevelEdges[1];
+        newElement->edges_[2]=nextLevelEdges[7];
+        newElement->vertex_[0]=nextLevelVertices[1];
+        newElement->vertex_[1]=nextLevelVertices[5];
+        newElement->vertex_[2]=nextLevelVertices[3];
+        newElement->refinementIndex_=1;
+        nextLevelElements[1]=newElement;
+        element.sons_[1]=newElement;
+        std::cout<<"Pushed element "<<newElement<<" refindex="<<newElement->refinementIndex_<<std::endl;
+
 
         // Last the one that contains vertex 2 of the father.
         Dune::get<2>(entityImps_[nextLevel])
             .push_back(FoamGridEntityImp<2,dimworld>(nextLevel, freeIdCounter_[2]++));
-        newElement = Dune::get<2>(entityImps_[nextLevel]).back();
-        newElement.isNew_=true;
-        newElement.father_=&element;
-        newElement.edges_[0]=nextLevelEdges[2];
-        newElement.edges_[1]=nextLevelEdges[5];
-        newElement.edges_[2]=nextLevelEdges[8];
-        newElement.vertex_[0]=nextLevelVertices[2];
-        newElement.vertex_[0]=nextLevelVertices[4];
-        newElement.vertex_[0]=nextLevelVertices[5];
-        newElement.refinementIndex_=2;
-        nextLevelElements[2]=&newElement;
+        newElement = &(Dune::get<2>(entityImps_[nextLevel]).back());
+        newElement->isNew_=true;
+        newElement->father_=&element;
+        newElement->edges_[0]=nextLevelEdges[2];
+        newElement->edges_[1]=nextLevelEdges[5];
+        newElement->edges_[2]=nextLevelEdges[8];
+        newElement->vertex_[0]=nextLevelVertices[2];
+        newElement->vertex_[1]=nextLevelVertices[4];
+        newElement->vertex_[2]=nextLevelVertices[5];
+        newElement->refinementIndex_=2;
+        nextLevelElements[2]=newElement;
+        element.sons_[2]=newElement;
+        std::cout<<"Pushed element "<<newElement<<" refindex="<<newElement->refinementIndex_<<std::endl;
+
 
         // create the triangle in the center
         Dune::get<2>(entityImps_[nextLevel])
             .push_back(FoamGridEntityImp<2,dimworld>(nextLevel, freeIdCounter_[2]++));
-        newElement = Dune::get<2>(entityImps_[nextLevel]).back();
-        newElement.isNew_=true;
-        newElement.father_=&element;
-        newElement.edges_[0]=nextLevelEdges[7];
-        newElement.edges_[1]=nextLevelEdges[6];
-        newElement.edges_[2]=nextLevelEdges[8];
-        newElement.vertex_[0]=nextLevelVertices[3];
-        newElement.vertex_[0]=nextLevelVertices[5];
-        newElement.vertex_[0]=nextLevelVertices[4];
-        newElement.refinementIndex_=3;
-        nextLevelElements[3]=&newElement;
+        newElement = &(Dune::get<2>(entityImps_[nextLevel]).back());
+        newElement->isNew_=true;
+        newElement->father_=&element;
+        newElement->edges_[0]=nextLevelEdges[7];
+        newElement->edges_[1]=nextLevelEdges[6];
+        newElement->edges_[2]=nextLevelEdges[8];
+        newElement->vertex_[0]=nextLevelVertices[3];
+        newElement->vertex_[1]=nextLevelVertices[5];
+        newElement->vertex_[2]=nextLevelVertices[4];
+        newElement->refinementIndex_=3;
+        nextLevelElements[3]=newElement;
+        element.sons_[3]=newElement;
+        std::cout<<"Pushed element "<<newElement<<" refindex="<<newElement->refinementIndex_<<std::endl;
+
 
         // Now that all the triangle are created, we can update the elements attached
         // to the edges.
@@ -745,6 +763,15 @@ class FoamGrid :
         
     }
 
+    template<class C, class T>
+    void check_for_duplicates(C& cont, const T& elem, std::size_t vertexIndex)
+    {
+#ifndef NDEBUG
+        for(std::size_t i=0; i<vertexIndex; ++i)
+            assert(cont[i]!=elem);
+#endif
+    }
+    
         //! compute the grid indices and ids
     void setIndices()
     {

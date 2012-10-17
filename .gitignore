@@ -39,3 +39,4 @@ Makefile.in
 
 # /dune/foamgrid/test
 dune/foamgrid/test/global-refine-test
+dune/foamgrid/test/foamgrid-test

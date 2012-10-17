@@ -430,7 +430,7 @@ class FoamGridEntity<0,dim,GridImp> :
                             mapping[target_->refinementIndex_][corner][entry];
             
                 // return LocalGeomety by value
-                return LocalGeometry(FoamGridLocalGeometry<2,2,GridImp>(target_->type(), 
+                return LocalGeometry(FoamGridGeometry<2,2,GridImp>(target_->type(), 
                                                                         coordinates));
             }else{              
                 DUNE_THROW(NotImplemented, "geometryInFather only supported for triangles!");
