@@ -11,7 +11,7 @@
 
 #include <dune/common/collectivecommunication.hh>
 #include <dune/common/tuples.hh>
-
+#include <dune/common/stdstreams.hh>
 #include <dune/grid/common/capabilities.hh>
 #include <dune/grid/common/grid.hh>
 
@@ -340,7 +340,7 @@ class FoamGrid :
                 for(ElementIterator element=Dune::get<2>(*level).begin(); element != Dune::get<2>(*level).end(); ++element)
                     if(element->isLeaf()){
                         foundLeaf = true;
-                        std::cout<<"refining element "<< &(*element)<<std::endl;
+                        dverb<<"refining element "<< &(*element)<<std::endl;
                         if(element->type().isTriangle())
                             refineSimplexElement(*element, refCount);
                         else
@@ -515,7 +515,7 @@ class FoamGrid :
         std::size_t vertexIndex=0;
         // create copies of the vertices of the element
         for(unsigned int c=0; c<element.corners(); ++c){
-            std::cout<<"Processing vertex "<<element.vertex_[c]<<std::endl;
+            dverb<<"Processing vertex "<<element.vertex_[c]<<std::endl;
             if(element.vertex_[c]->son_==nullptr){
                 // Not refined yet
                 Dune::get<0>(entityImps_[nextLevel])
@@ -568,7 +568,7 @@ class FoamGrid :
                 nextLevelVertices[vertexIndex++]=&midVertex;
 
                 // sanity check for DUNE numbering
-                std::cout<<"edge "<<edgeIndex/2<<": "<<"("<<(*edge)->vertex_[0]->son_<<","<<(*edge)->vertex_[1]->son_<<") with father ("<<(*edge)->vertex_[0]<<","<<(*edge)->vertex_[1]<<")"<<std::endl;
+                dvverb<<"edge "<<edgeIndex/2<<": "<<"("<<(*edge)->vertex_[0]->son_<<","<<(*edge)->vertex_[1]->son_<<") with father ("<<(*edge)->vertex_[0]<<","<<(*edge)->vertex_[1]<<")"<<std::endl;
                 assert(v0->son_!=nullptr);
                 assert(v1->son_!=nullptr);
                 assert(v0->son_ == nextLevelVertices[edgeVertexMapping[edgeIndex/2].first] ||
@@ -671,7 +671,7 @@ class FoamGrid :
         newElement->refinementIndex_=0;
         nextLevelElements[0]=newElement;
         element.sons_[0]=newElement;
-        std::cout<<"Pushed element "<<newElement<<" refindex="<<newElement->refinementIndex_<<std::endl;
+        dvverb<<"Pushed element "<<newElement<<" refindex="<<newElement->refinementIndex_<<std::endl;
         
         // Next the one that contains vertex 1 of the father.
         Dune::get<2>(entityImps_[nextLevel])
@@ -688,7 +688,7 @@ class FoamGrid :
         newElement->refinementIndex_=1;
         nextLevelElements[1]=newElement;
         element.sons_[1]=newElement;
-        std::cout<<"Pushed element "<<newElement<<" refindex="<<newElement->refinementIndex_<<std::endl;
+        dvverb<<"Pushed element "<<newElement<<" refindex="<<newElement->refinementIndex_<<std::endl;
 
 
         // Last the one that contains vertex 2 of the father.
@@ -706,7 +706,7 @@ class FoamGrid :
         newElement->refinementIndex_=2;
         nextLevelElements[2]=newElement;
         element.sons_[2]=newElement;
-        std::cout<<"Pushed element "<<newElement<<" refindex="<<newElement->refinementIndex_<<std::endl;
+        dvverb<<"Pushed element "<<newElement<<" refindex="<<newElement->refinementIndex_<<std::endl;
 
 
         // create the triangle in the center
@@ -724,7 +724,7 @@ class FoamGrid :
         newElement->refinementIndex_=3;
         nextLevelElements[3]=newElement;
         element.sons_[3]=newElement;
-        std::cout<<"Pushed element "<<newElement<<" refindex="<<newElement->refinementIndex_<<std::endl;
+        dvverb<<"Pushed element "<<newElement<<" refindex="<<newElement->refinementIndex_<<std::endl;
 
 
         // Now that all the triangle are created, we can update the elements attached
