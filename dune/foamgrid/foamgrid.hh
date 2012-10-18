@@ -784,10 +784,10 @@ class FoamGrid :
         // to the edges.
         // The new neighbors of the edges lying on edges of the father element.
         std::size_t neighbors[6] = {0, 1, 2, 0, 1, 2};
-        std::cout<<" element "<<&element<<std::endl;
+        dvverb<<" element "<<&element<<std::endl;
         for(std::size_t i=0; i<6; ++i){            
             // Overwrite the father element by the newly created elements.
-            std::cout<<" neighbour "<<i<<": ";
+            dvverb<<" neighbour "<<i<<": ";
             overwriteFineLevelNeighbours(*nextLevelEdges[i], nextLevelElements[neighbors[i]],
                                          &element);
         }
@@ -801,17 +801,17 @@ class FoamGrid :
         nextLevelEdges[8]->elements_.push_back(nextLevelElements[2]);
 #ifndef NDEBUG
         for(std::size_t vidx=0; vidx<4; ++vidx){
-            std::cout<<std::endl<<" Element "<<nextLevelElements[vidx]<<": ";
+            dvverb<<std::endl<<" Element "<<nextLevelElements[vidx]<<": ";
             for(EdgeIterator edge=nextLevelElements[vidx]->edges_.begin(); 
                 edge != nextLevelElements[vidx]->edges_.end(); ++edge){
-                std::cout<<std::endl<<"   edge "<<*edge<<": ";
+                dvverb<<std::endl<<"   edge "<<*edge<<": ";
                 typedef typename std::vector<const FoamGridEntityImp<2,dimworld>*>::iterator
                     ElementIterator;
                 bool selfFound=false;
                 for(ElementIterator elem=(*edge)->elements_.begin(); 
                     elem != (*edge)->elements_.end();
                     ++elem){
-                    std::cout << *elem<<" ";
+                    dvverb << *elem<<" ";
                     if(*elem == nextLevelElements[vidx])
                         selfFound=true;
                 }
@@ -828,7 +828,7 @@ class FoamGrid :
                 ElementIterator;
             for(ElementIterator elem=nextLevelElements.begin();
                 elem != nextLevelElements.end(); ++elem){
-                std::cout<<std::endl<<"Refinining "<<(*elem)<<" (son of"<<&element<<") refCount="<<refCount<<" child="<<i++<<std::endl;
+                dvverb<<std::endl<<"Refinining "<<(*elem)<<" (son of"<<&element<<") refCount="<<refCount<<" child="<<i++<<std::endl;
                 refineSimplexElement(**elem, refCount);
             }
         }
@@ -854,7 +854,7 @@ class FoamGrid :
         for(ElementIterator elem=edge.elements_.begin(); 
             elem != edge.elements_.end();
             ++elem){
-            std::cout << *elem<<" ";
+            dvverb << *elem<<" ";
             if(*elem == father){
 #ifndef NDEBUG
                 fatherFound=true;
@@ -864,7 +864,7 @@ class FoamGrid :
         }
 
 #ifndef NDEBUG
-        std::cout<<std::endl;
+        dvverb<<std::endl;
         assert(fatherFound);
 #endif
         for(std::size_t i=0; i<edge.nSons_; ++i)

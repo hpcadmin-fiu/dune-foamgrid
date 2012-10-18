@@ -29,7 +29,7 @@ int main (int argc, char *argv[]) try
     }
 
     gridcheck(*grid2d);
-    grid2d->globalRefine(2);
+    grid2d->globalRefine(1);
     Dune::gridinfo(*grid2d);
     {
         Dune::VTKWriter<typename FoamGrid<2>::LeafGridView > 
@@ -37,7 +37,13 @@ int main (int argc, char *argv[]) try
         writer.write("refined1");
     }
     checkGeometryInFather(*grid2d);
-    grid2d->globalRefine(-1);    
+    grid2d->globalRefine(-1); 
+
+    {
+        Dune::VTKWriter<typename FoamGrid<2>::LeafGridView > 
+            writer(grid2d->leafView(), VTK::nonconforming);
+        writer.write("refined-0");
+    }   
     checkGeometryInFather(*grid2d);
     Dune::gridinfo(*grid2d);
     grid2d->globalRefine(2); 
@@ -49,6 +55,11 @@ int main (int argc, char *argv[]) try
     Dune::gridinfo(*grid2d);
     gridcheck(*grid2d);
     grid2d->globalRefine(3);
+    {
+        Dune::VTKWriter<typename FoamGrid<2>::LeafGridView > 
+            writer(grid2d->leafView(), VTK::nonconforming);
+        writer.write("refined5");
+    }   
     gridcheck(*grid2d);
     checkIntersectionIterator(*grid2d);
     
