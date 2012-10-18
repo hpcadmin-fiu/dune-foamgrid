@@ -1,3 +1,5 @@
+// -*- tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set ts=8 sw=4 et sts=4:
 #ifndef DUNE_FOAMGRID_INDEXSETS_HH
 #define DUNE_FOAMGRID_INDEXSETS_HH
 
@@ -268,12 +270,16 @@ public:
                 
                 const FoamGridEntityImp<1,dimworld>* target = GridImp::getRealImplementation(*edIt).target_;
 
-                // Only implemented for 1-level grids
-                assert(target->isLeaf());
-                //if (target->isLeaf())
+                if (target->isLeaf())
+                    // The is a real leaf edge.
                     *const_cast<unsigned int*>(&(target->leafIndex_)) = size_[1]++;
-//                 else
-//                     *const_cast<unsigned int*>(&(target->leafIndex_)) = target->son_->leafIndex_;
+                else{
+                    if(target->nSons_==1)
+                        // If there is green refinement an edge might only have
+                        // one son. In this case son and father are identical and
+                        // we inherit the leafIndex from the son.
+                        *const_cast<unsigned int*>(&(target->leafIndex_)) = target->sons_[0]->leafIndex_;
+                }
 
             }
 

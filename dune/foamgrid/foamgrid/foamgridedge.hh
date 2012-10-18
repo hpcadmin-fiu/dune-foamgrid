@@ -29,7 +29,7 @@ namespace Dune {
 
         /** \todo Implement this method! */
         bool isLeaf() const {
-            return true;
+            return nSons_<2;
         }
 
         unsigned int boundarySegmentIndex() const {

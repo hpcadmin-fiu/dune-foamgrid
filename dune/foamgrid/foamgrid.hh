@@ -124,6 +124,7 @@ class FoamGrid :
     /** \brief Constructor, constructs an empty grid
      */
     FoamGrid() 
+        : globalRefined(), numBoundarySegments_()
     {
         std::fill(freeIdCounter_.begin(), freeIdCounter_.end(), 0);
     }
@@ -250,8 +251,8 @@ class FoamGrid :
         /** \brief The number of boundary edges on the coarsest level */
         size_t numBoundarySegments() const
         {
-            DUNE_THROW(Dune::NotImplemented, "numBoundarySegments");
-            return 0;
+            //  DUNE_THROW(Dune::NotImplemented, "numBoundarySegments");
+            return numBoundarySegments_;
         }
         
         /** \brief Access to the GlobalIdSet */
@@ -301,9 +302,14 @@ class FoamGrid :
         */
         void globalRefine (int refCount)
         {
+            
+            if(maxLevel()+refCount<0)
+                DUNE_THROW(GridError, "Grid has only "<<maxLevel()<<" levels. Cannot do "
+                           <<" globalRefine("<<refCount<<")");
             // The leafiterator is simply successively visiting all levels from fine to coarse
             // and just checking whether the isLeaf flag is set. Using it to identify
-            // elements that need refinement, would produce and endless loop, as the newly added elements
+            // elements that need refinement, would produce and endless loop, as the newly 
+            // added elements
             // would later be identified as elements that still need refinement.
             std::size_t oldLevels =entityImps_.size();
             typedef typename 
@@ -323,37 +329,79 @@ class FoamGrid :
                                             std::list<FoamGridEntityImp<2,dimworld> > >());
                 levelIndexSets_.push_back(new FoamGridLevelIndexSet<const FoamGrid >());
             }
+            if(refCount < 0){
+                if(globalRefined+refCount<0)
+                    DUNE_THROW(GridError, "Globally coarsening adaptively refined grid levels"
+                               << "not implemented!");
+                for(int i=refCount; i<0; ++i){
+                    delete levelIndexSets_.back();
+                    levelIndexSets_.pop_back();
+                }
+                entityImps_.resize(oldLevels+refCount);
+
+                //To be able to create the leaf level we need to set
+                // the sons of the entities of maxlevel to null
+                typename std::list<FoamGridEntityImp<0,dimworld> >::iterator vIt    = 
+                    Dune::get<0>(entityImps_[maxLevel()]).begin();
+                typename std::list<FoamGridEntityImp<0,dimworld> >::iterator vEndIt = 
+                    Dune::get<0>(entityImps_[maxLevel()]).end();
+                for (; vIt!=vEndIt; ++vIt) {
+                    vIt->son_=nullptr;
+                }
+                typename std::list<FoamGridEntityImp<1,dimworld> >::iterator edIt    = 
+                    Dune::get<1>(entityImps_[maxLevel()]).begin();
+                typename std::list<FoamGridEntityImp<1,dimworld> >::iterator edEndIt = 
+                    Dune::get<1>(entityImps_[maxLevel()]).end();
+                for (; edIt!=edEndIt; ++edIt) {
+                    edIt->sons_[0]=nullptr;
+                    edIt->sons_[1]=nullptr;
+                    edIt->nSons_=0;
+                }
+                typename std::list<FoamGridEntityImp<2,dimworld> >::iterator elIt    = 
+                    Dune::get<2>(entityImps_[maxLevel()]).begin();
+                typename std::list<FoamGridEntityImp<2,dimworld> >::iterator elEndIt = 
+                    Dune::get<2>(entityImps_[maxLevel()]).end();
+                for (; elIt!=elEndIt; ++elIt) {
+                    elIt->sons_[0]=nullptr;
+                    elIt->sons_[1]=nullptr;
+                    elIt->sons_[2]=nullptr;
+                    elIt->sons_[3]=nullptr;
+                    elIt->nSons_=0;
+                }
+            }else{
+    
+                // sanity check whether the above asssumption really holds.
+                assert(&entityImps_[oldLevels-1]==&(*level));
             
+                // Do the actual refinement.
+                // We start with the finest level
+                std::size_t levelIndex;
+                for(levelIndex=oldLevels-1; level!=entityImps_.rend(); 
+                    ++level, --levelIndex){
                 
-            // sanity check whether the above asssumption really holds.
-            assert(&entityImps_[oldLevels-1]==&(*level));
-            
-            // Do the actual refinement.
-            // We start with the finest level
-            std::size_t levelIndex;
-            for(levelIndex=oldLevels-1; level!=entityImps_.rend(); 
-                ++level, --levelIndex){
-                
-                typedef typename std::list<FoamGridEntityImp<2,dimworld> >::iterator ElementIterator;
-                bool foundLeaf=false;
-                
-                for(ElementIterator element=Dune::get<2>(*level).begin(); element != Dune::get<2>(*level).end(); ++element)
-                    if(element->isLeaf()){
-                        foundLeaf = true;
-                        dverb<<"refining element "<< &(*element)<<std::endl;
-                        if(element->type().isTriangle())
-                            refineSimplexElement(*element, refCount);
-                        else
-                            DUNE_THROW(NotImplemented, "Refinement only supported for triangles!");
-                    }
-                if(!foundLeaf)
-                    break;
+                    typedef typename std::list<FoamGridEntityImp<2,dimworld> >::iterator ElementIterator;
+                    bool foundLeaf=false;
+                    
+                    for(ElementIterator element=Dune::get<2>(*level).begin(); element != Dune::get<2>(*level).end(); ++element)
+                        if(element->isLeaf()){
+                            foundLeaf = true;
+                            dverb<<"refining element "<< &(*element)<<std::endl;
+                            if(element->type().isTriangle())
+                                refineSimplexElement(*element, refCount);
+                            else
+                                DUNE_THROW(NotImplemented, "Refinement only supported for triangles!");
+                        }
+                    if(!foundLeaf)
+                        break;
+                }
+                for(levelIndex+=2;levelIndex!=entityImps_.size(); ++levelIndex)
+                    levelIndexSets_[levelIndex]->update(*this, levelIndex);
             }
-            for(levelIndex+=2;levelIndex!=entityImps_.size(); ++levelIndex)
-                levelIndexSets_[levelIndex]->update(*this, levelIndex);
+            
             // Update the leaf indices
             leafIndexSet_.update(*this);
 
+            globalRefined=std::max(globalRefined+refCount,0);
         }
         
         /** \brief Mark entity for refinement
@@ -406,6 +454,7 @@ class FoamGrid :
         bool adapt()
         {
             DUNE_THROW(NotImplemented, "adapt");
+            globalRefined=0;
         }
 
         /** \brief Clean up refinement markers */
@@ -493,7 +542,7 @@ class FoamGrid :
         
     private:
 
-    //! \brief refine on Element
+    //! \brief refine an Element
     //! \param elemet The element to refine
     //! \param refCount How many times to refine the element
     void refineSimplexElement(FoamGridEntityImp<2,dimworld>& element,
@@ -501,8 +550,6 @@ class FoamGrid :
     {
         if(refCount<0)
             DUNE_THROW(NotImplemented, "Coarsening not implemented yet");
-        if(refCount>1)
-            DUNE_THROW(NotImplemented, "Refinement with refCount>1 not implemented yet");
 
         // TODO: Currently we are assuming that only globalRefine is available
         // and therefore the next level is not yet present.
@@ -582,8 +629,11 @@ class FoamGrid :
                     .push_back(FoamGridEntityImp<1,dimworld>(nextLevelVertices[edgeVertexMapping[edgeIndex/2].first], &midVertex, 
                                                              nextLevel, freeIdCounter_[1]++));
                 (*edge)->sons_[0] = &Dune::get<1>(entityImps_[nextLevel]).back();
-
+                ++((*edge)->nSons_);
+                // Inherit the boundaryId
+                (*edge)->sons_[0]->boundaryId_=(*edge)->boundaryId_;
                 nextLevelEdges[edgeIndex++]= (*edge)->sons_[0];
+
                 // Initialize the elements_ vector of the new edge
                 // with that of the father. Later we will overwrite it
                 // with the correct values.
@@ -594,6 +644,9 @@ class FoamGrid :
                     .push_back(FoamGridEntityImp<1,dimworld>(&midVertex, nextLevelVertices[edgeVertexMapping[edgeIndex/2].second], 
                                                              nextLevel, freeIdCounter_[1]++));
                 (*edge)->sons_[1] = &Dune::get<1>(entityImps_[nextLevel]).back();
+                ++((*edge)->nSons_);
+                // Inherit the boundaryId
+                (*edge)->sons_[1]->boundaryId_=(*edge)->boundaryId_;
                 nextLevelEdges[edgeIndex++]= (*edge)->sons_[1];
                 
                 // Initialize the elements_ vector of the new edge
@@ -730,27 +783,13 @@ class FoamGrid :
         // Now that all the triangle are created, we can update the elements attached
         // to the edges.
         // The new neighbors of the edges lying on edges of the father element.
-        std::size_t neighbors[6] = {0, 1, 1, 2, 2, 0};
-
+        std::size_t neighbors[6] = {0, 1, 2, 0, 1, 2};
+        std::cout<<" element "<<&element<<std::endl;
         for(std::size_t i=0; i<6; ++i){            
             // Overwrite the father element by the newly created elements.
-            typedef typename std::vector<const FoamGridEntityImp<2,dimworld>*>::iterator
-                ElementIterator;
-#ifndef NDEBUG
-            bool fatherFound=false;
-#endif
-            for(ElementIterator elem=nextLevelEdges[i]->elements_.begin(); 
-                elem != nextLevelEdges[i]->elements_.end();
-                ++elem)
-                if(*elem == &element){
-#ifndef NDEBUG
-                    fatherFound=true;
-#endif
-                    *elem = nextLevelElements[neighbors[i]];
-                }
-#ifndef NDEBUG
-            assert(fatherFound);
-#endif
+            std::cout<<" neighbour "<<i<<": ";
+            overwriteFineLevelNeighbours(*nextLevelEdges[i], nextLevelElements[neighbors[i]],
+                                         &element);
         }
 
         // Update the neighbours of the inner edges
@@ -760,9 +799,78 @@ class FoamGrid :
         nextLevelEdges[7]->elements_.push_back(nextLevelElements[1]);
         nextLevelEdges[8]->elements_.push_back(nextLevelElements[3]);
         nextLevelEdges[8]->elements_.push_back(nextLevelElements[2]);
+#ifndef NDEBUG
+        for(std::size_t vidx=0; vidx<4; ++vidx){
+            std::cout<<std::endl<<" Element "<<nextLevelElements[vidx]<<": ";
+            for(EdgeIterator edge=nextLevelElements[vidx]->edges_.begin(); 
+                edge != nextLevelElements[vidx]->edges_.end(); ++edge){
+                std::cout<<std::endl<<"   edge "<<*edge<<": ";
+                typedef typename std::vector<const FoamGridEntityImp<2,dimworld>*>::iterator
+                    ElementIterator;
+                bool selfFound=false;
+                for(ElementIterator elem=(*edge)->elements_.begin(); 
+                    elem != (*edge)->elements_.end();
+                    ++elem){
+                    std::cout << *elem<<" ";
+                    if(*elem == nextLevelElements[vidx])
+                        selfFound=true;
+                }
+                assert(selfFound);
+            }
+        }
         
+#endif
+        element.nSons_=4;
+        
+        if((refCount--)>1){
+            int i=0;
+            typedef typename array<FoamGridEntityImp<2,dimworld>*, 4>::iterator
+                ElementIterator;
+            for(ElementIterator elem=nextLevelElements.begin();
+                elem != nextLevelElements.end(); ++elem){
+                std::cout<<std::endl<<"Refinining "<<(*elem)<<" (son of"<<&element<<") refCount="<<refCount<<" child="<<i++<<std::endl;
+                refineSimplexElement(**elem, refCount);
+            }
+        }
     }
 
+    /**
+     * \brief Overwrites the nighbours of this and descendant edges
+     *
+     * After returning all nieghbours the previously pointed to the 
+     * father will point to the son element
+     * \param edge The edge to start overwriting with.
+     * \param son The son element to substitute the father with.
+     * \param father Pointer to the father element that is to be subsitituted.
+     */
+    void overwriteFineLevelNeighbours(FoamGridEntityImp<1,dimworld>& edge,
+                                      FoamGridEntityImp<2,dimworld>* son,
+                                      FoamGridEntityImp<2,dimworld>* father){
+        typedef typename std::vector<const FoamGridEntityImp<2,dimworld>*>::iterator
+                ElementIterator;
+#ifndef NDEBUG
+        bool fatherFound=false;
+#endif            
+        for(ElementIterator elem=edge.elements_.begin(); 
+            elem != edge.elements_.end();
+            ++elem){
+            std::cout << *elem<<" ";
+            if(*elem == father){
+#ifndef NDEBUG
+                fatherFound=true;
+#endif
+                *elem = son;
+            }
+        }
+
+#ifndef NDEBUG
+        std::cout<<std::endl;
+        assert(fatherFound);
+#endif
+        for(std::size_t i=0; i<edge.nSons_; ++i)
+            overwriteFineLevelNeighbours(*edge.sons_[i], son, father);    
+    }
+    
     template<class C, class T>
     void check_for_duplicates(C& cont, const T& elem, std::size_t vertexIndex)
     {
@@ -817,7 +925,12 @@ class FoamGrid :
 
     /** \brief Counters that always provide the next free id for each dimension */
     array<unsigned int, dimension+1> freeIdCounter_;
-    
+
+    /** \brief How many times was the leaf level globally refined. */
+    int globalRefined;
+
+    /** \brief The number of boundary segements. */
+    std::size_t numBoundarySegments_;
 }; // end Class FoamGrid
 
 

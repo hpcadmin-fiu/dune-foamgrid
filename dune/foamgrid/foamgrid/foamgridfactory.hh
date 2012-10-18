@@ -1,3 +1,5 @@
+// -*- tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set ts=8 sw=4 et sts=4:
 #ifndef DUNE_FOAMGRID_FACTORY_HH
 #define DUNE_FOAMGRID_FACTORY_HH
 
@@ -201,7 +203,8 @@ namespace Dune {
             for (typename std::list<FoamGridEntityImp<1,dimworld> >::iterator it = Dune::get<1>(grid_->entityImps_[0]).begin();
                  it != Dune::get<1>(grid_->entityImps_[0]).end();
                  ++it)
-                it->boundaryId_ = boundaryIdCounter++;
+                if(it->elements_.size()==1)
+                    it->boundaryId_ = boundaryIdCounter++;
 
 
             // ////////////////////////////////////////////////
@@ -209,6 +212,7 @@ namespace Dune {
             // ////////////////////////////////////////////////
 
             Dune::FoamGrid<dimworld>* tmp = grid_;
+            tmp->numBoundarySegments_ = boundaryIdCounter;
             grid_ = nullptr;
             return tmp;
         }

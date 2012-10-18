@@ -1,3 +1,5 @@
+// -*- tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set ts=8 sw=4 et sts=4:
 #include <config.h>
 
 #include "make2din3dgrid.hh"
@@ -8,25 +10,47 @@
 
 #include <dune/foamgrid/foamgrid.hh>
 #include <dune/grid/test/checkgeometryinfather.cc>
+#include <dune/grid/common/gridinfo.hh>
+#include <dune/grid/test/basicunitcube.hh>
+#include <dune/grid/io/file/vtk/vtkwriter.hh>
 
 int main (int argc, char *argv[]) try
 {
-    // dimworld == 2
-    //FoamGrid<2>* grid2d = make2DHybridTestGrid<FoamGrid<2> >();
-    // path to gmsh test files
-    const std::string path = std::string(DUNE_GRID_EXAMPLE_GRIDS_PATH) + "gmsh/";
 
-    std::auto_ptr<FoamGrid<2> > grid2d( GmshReader<FoamGrid<2> >::read( path + "curved2d.msh", false, false ) );
+    Dune::GridFactory<FoamGrid<2> > factory;
+    BasicUnitCube<2>::insertVertices(factory);
+    BasicUnitCube<2>::insertSimplices(factory);
+    
+    std::auto_ptr<FoamGrid<2> > grid2d(factory.createGrid());
+    {
+        Dune::VTKWriter<typename FoamGrid<2>::LeafGridView > 
+            writer(grid2d->leafView(), VTK::nonconforming);
+        writer.write("refined0");
+    }
 
-    grid2d->globalRefine(1);
-    checkGeometryInFather(*grid2d);
     gridcheck(*grid2d);
-    // dimworld == 3
-    FoamGrid<3>* grid3d = make2Din3DHybridTestGrid<FoamGrid<3> >();
-
-    grid3d->globalRefine(1);
-    gridcheck(*grid3d);
-    checkGeometryInFather(*grid3d);
+    grid2d->globalRefine(2);
+    Dune::gridinfo(*grid2d);
+    {
+        Dune::VTKWriter<typename FoamGrid<2>::LeafGridView > 
+            writer(grid2d->leafView(), VTK::nonconforming);
+        writer.write("refined1");
+    }
+    checkGeometryInFather(*grid2d);
+    grid2d->globalRefine(-1);    
+    checkGeometryInFather(*grid2d);
+    Dune::gridinfo(*grid2d);
+    grid2d->globalRefine(2); 
+    {
+        Dune::VTKWriter<typename FoamGrid<2>::LeafGridView > 
+            writer(grid2d->leafView(), VTK::nonconforming);
+        writer.write("refined2");
+    }   
+    Dune::gridinfo(*grid2d);
+    gridcheck(*grid2d);
+    grid2d->globalRefine(3);
+    gridcheck(*grid2d);
+    checkIntersectionIterator(*grid2d);
     
 } 
 // //////////////////////////////////
