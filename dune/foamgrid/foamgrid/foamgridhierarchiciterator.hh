@@ -54,7 +54,7 @@ class FoamGridHierarchicIterator :
                 // Load sons of old target onto the iterator stack
                 if (!old_target->isLeaf()) {
                     
-                    for (int i=0; i<old_target->nSons(); i++)
+                    for (size_t i=0; i<old_target->nSons(); i++)
                         elemStack.push(old_target->sons_[i]);
                     
                 }

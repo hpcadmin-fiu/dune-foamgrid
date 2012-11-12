@@ -10,8 +10,9 @@ check_PROGRAMS = $(TESTPROGS)
 AM_LDFLAGS = @AM_LDFLAGS@
 AM_CXXFLAGS = -Wall -g
 
-# The directory where the example grid files used for testing are located.
+# The directories where the example grid files used for testing are located.
 AM_CPPFLAGS+=-DDUNE_GRID_EXAMPLE_GRIDS_PATH=\"$(DUNE_GRID_ROOT)/doc/grids/\"
+AM_CPPFLAGS+=-DDUNE_FOAMGRID_EXAMPLE_GRIDS_PATH=\"$(top_srcdir)/doc/grids/\"
 
 # define the programs
 foamgrid_test_SOURCES = foamgrid-test.cc
