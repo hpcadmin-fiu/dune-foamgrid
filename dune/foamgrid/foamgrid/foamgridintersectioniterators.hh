@@ -1,3 +1,5 @@
+// -*- tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set ts=8 sw=4 et sts=4:
 #ifndef DUNE_FOAMGRID_INTERSECTIONITERATORS_HH
 #define DUNE_FOAMGRID_INTERSECTIONITERATORS_HH
 
@@ -28,17 +30,9 @@ class FoamGridLeafIntersectionIterator
     the actual leaf iterator and I don't need it yet. */
     : public FoamGridLevelIntersectionIterator<GridImp>
 {
-#if 0
-    enum {dim=GridImp::dimension};
-#endif
     
     enum {dimworld=GridImp::dimensionworld};
     
-    #if 0
-    // The type used to store coordinates
-    typedef typename GridImp::ctype ctype;
-    
-#endif
 public:
     
     //! Constructor for a given grid entity and a given neighbor
@@ -52,46 +46,11 @@ public:
     {}
 
     typedef Dune::Intersection<const GridImp, Dune::FoamGridLeafIntersection> Intersection;
-#if 0
-    FoamGridLeafIntersectionIterator(const GridImp* identityGrid,
-                                         const HostLeafIntersectionIterator& hostIterator)
-        : selfLocal_(nullptr), neighborLocal_(nullptr), intersectionGlobal_(nullptr),
-          identityGrid_(identityGrid), 
-          hostIterator_(hostIterator)
-    {}
-        
-    //! equality
-    bool equals(const FoamGridLeafIntersectionIterator<GridImp>& other) const {
-        return hostIterator_ == other.hostIterator_;
-    }
 
-    
-    //! prefix increment
-    void increment() {
-        ++hostIterator_;
-
-        // Delete intersection geometry objects, if present
-        if (intersectionGlobal_ != nullptr) {
-            delete intersectionGlobal_;
-            intersectionGlobal_ = nullptr;
-        }
-        
-        if (selfLocal_ != nullptr) {
-            delete selfLocal_;
-            selfLocal_ = nullptr;
-        }
-        
-        if (neighborLocal_ != nullptr) {
-            delete neighborLocal_;
-            neighborLocal_ = nullptr;
-        }
-    }
-#endif
     //! \brief dereferencing
     const Intersection & dereference() const {
         return reinterpret_cast<const Intersection&>(*this);
-    }
-    
+    }    
 };
 
 
@@ -140,20 +99,6 @@ public:
     {
         return reinterpret_cast<const Intersection&>(intersection_);
     }
-
-#if 0
-    FoamGridElement* target() const {
-        const bool isValid = center_ && neighbor_>=0 && neighbor_<2;
-
-        if (!isValid)
-            return center_;
-        else if (neighbor_==0) 
-            return center_->pred_;
-        else 
-            return center_->succ_;
-
-    }
-#endif
 
 private:
   //**********************************************************
