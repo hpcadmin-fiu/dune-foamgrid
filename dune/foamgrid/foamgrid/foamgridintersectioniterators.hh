@@ -86,12 +86,13 @@ public:
   //! equality
   bool equals(const FoamGridLevelIntersectionIterator<GridImp>& other) const {
       return (GridImp::getRealImplementation(intersection_).center_   == GridImp::getRealImplementation(other.intersection_).center_) 
+          && (GridImp::getRealImplementation(intersection_).edgeIndex_ == GridImp::getRealImplementation(other.intersection_).edgeIndex_)
           && (GridImp::getRealImplementation(intersection_).neighbor_ == GridImp::getRealImplementation(other.intersection_).neighbor_);
   }
 
     //! prefix increment
     void increment() {
-        GridImp::getRealImplementation(intersection_).neighbor_++;
+        GridImp::getRealImplementation(intersection_).increment();
     }
 
     //! \brief dereferencing

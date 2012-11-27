@@ -1,3 +1,5 @@
+// -*- tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set ts=8 sw=4 et sts=4:
 #ifndef DUNE_FOAMGRID_INTERSECTIONS_HH
 #define DUNE_FOAMGRID_INTERSECTIONS_HH
 
@@ -18,9 +20,11 @@ template <class GridImp>
 class FoamGridLevelIntersectionIterator;
 
 
-//! \todo Please doc me !
+//! \brief Base class of all intersections within FoamGrid
+//!
+//! encapsulates common functionality of level and leaf intersections.
 template<class GridImp>
-class FoamGridLevelIntersection
+class FoamGridIntersection
 {
     
         enum {dim=GridImp::dimension};
@@ -40,10 +44,39 @@ class FoamGridLevelIntersection
         typedef typename GridImp::template Codim<0>::Entity Entity;
         typedef Dune::Intersection<const GridImp, Dune::FoamGridLevelIntersectionIterator> Intersection;
 
-    FoamGridLevelIntersection(const FoamGridEntityImp<2,dimworld>* center, int nb)
-        : center_(center), neighbor_(nb)
-    {}
+    /**
+     * \brief Initalizes an intersection.
+     *
+     * After initialization this object always represents the first intersection 
+     * related to an edge.
+     * \param edge The index of the edge this intersection lives on.
+     */
+    FoamGridIntersection(const FoamGridEntityImp<2,dimworld>* center, int edge)
+        : center_(center), edgeIndex_(edge), neighbor_(0)
+    {
+        if(edge!=center_->corners() &&
+           center_->edges_[edgeIndex_]->elements_.size() &&
+           center_==center_->edges_[edgeIndex_]->elements_[0])
+            // Move index to point to the first real neighbor 
+            ++neighbor_;
+    }
 
+    void increment(){
+        ++neighbor_;
+        while(neighbor_<center_->edges_[edgeIndex_]->elements_.size() &&
+              center_==center_->edges_[edgeIndex_]->elements_[neighbor_])
+            ++neighbor_;
+        
+        if(neighbor_<center_->edges_[edgeIndex_]->elements_.size())
+            return;
+        ++edgeIndex_;
+        neighbor_=0;
+        if(edgeIndex_!=center_->corners() &&
+           center_==center_->edges_[edgeIndex_]->elements_[0])
+            // Move index to point to the first real neighbor 
+            ++neighbor_;
+    }
+    
         //! return EntityPointer to the Entity on the inside of this intersection
         //! (that is the Entity where we started this Iterator)
         EntityPointer inside() const {
@@ -55,31 +88,31 @@ class FoamGridLevelIntersection
         //! (that is the neighboring Entity)
         EntityPointer outside() const {
             // Return the 'other' element on the current edge
-            return FoamGridEntityPointer<0,GridImp> (center_->edges_[neighbor_]->otherElement(center_));
+            return FoamGridEntityPointer<0,GridImp> (center_->edges_[edgeIndex_]->elements_[neighbor_]);
         }
         
         
     /** \brief return true if intersection is with boundary.
     */
     bool boundary () const {
-        return center_->edges_[neighbor_]->elements_.size()==1;
+        return center_->edges_[edgeIndex_]->elements_.size()==1;
     }
         
         
     //! return true if across the edge an neighbor on this level exists
     bool neighbor () const {
-        return center_->edges_[neighbor_]->elements_.size()>1;
+        return center_->edges_[edgeIndex_]->elements_.size()>1;
     }
     
     
     //! return information about the Boundary
     int boundaryId () const DUNE_DEPRECATED {
-        return center_->edges_[neighbor_]->boundarySegmentIndex();
+        return center_->edges_[edgeIndex_]->boundarySegmentIndex();
     }
         
     //! return information about the Boundary
     int boundarySegmentIndex () const {
-        return center_->edges_[neighbor_]->boundarySegmentIndex();
+        return center_->edges_[edgeIndex_]->boundarySegmentIndex();
     }
         
     //! Return true if this is a conforming intersection
@@ -106,8 +139,8 @@ class FoamGridLevelIntersection
             const Dune::GenericReferenceElement<double,dim>& refElement
                 = Dune::GenericReferenceElements<double, dim>::general(center_->type());
 
-            coordinates[0] = refElement.position(refElement.subEntity(neighbor_, 1, 0, dim),dim);
-            coordinates[1] = refElement.position(refElement.subEntity(neighbor_, 1, 1, dim),dim);
+            coordinates[0] = refElement.position(refElement.subEntity(edgeIndex_, 1, 0, dim),dim);
+            coordinates[1] = refElement.position(refElement.subEntity(edgeIndex_, 1, 1, dim),dim);
 
             return LocalGeometry(FoamGridGeometry<dim-1, dim, GridImp>(type(), coordinates));
         }
@@ -119,7 +152,7 @@ class FoamGridLevelIntersection
             std::vector<FieldVector<double, dim> > coordinates(2);
 
             // Get two vertices of the intersection
-            const FoamGridEntityImp<2,dimworld>* outside = center_->edges_[neighbor_]->otherElement(center_);
+            const FoamGridEntityImp<2,dimworld>* outside = center_->edges_[edgeIndex_]->elements_[neighbor_];
             const Dune::GenericReferenceElement<double,dim>& refElement
                 = Dune::GenericReferenceElements<double, dim>::general(outside->type());
 
@@ -141,8 +174,8 @@ class FoamGridLevelIntersection
             const Dune::GenericReferenceElement<double,dim>& refElement
                 = Dune::GenericReferenceElements<double, dim>::general(center_->type());
 
-            coordinates[0] = center_->vertex_[refElement.subEntity(neighbor_, 1, 0, dim)]->pos_;
-            coordinates[1] = center_->vertex_[refElement.subEntity(neighbor_, 1, 1, dim)]->pos_;
+            coordinates[0] = center_->vertex_[refElement.subEntity(edgeIndex_, 1, 0, dim)]->pos_;
+            coordinates[1] = center_->vertex_[refElement.subEntity(edgeIndex_, 1, 1, dim)]->pos_;
 
             return Geometry(FoamGridGeometry<dim-1, dimworld, GridImp>(type(), coordinates));
         }
@@ -150,17 +183,17 @@ class FoamGridLevelIntersection
         
         //! local number of codim 1 entity in self where intersection is contained in
         int indexInInside () const {
-            return neighbor_;
+            return edgeIndex_;
         }
         
         
         //! local number of codim 1 entity in neighbor where intersection is contained
         int indexInOutside () const {
-            assert(center_->edges_[neighbor_]->elements_.size()==2);
-            const FoamGridEntityImp<2,dimworld>* other = center_->edges_[neighbor_]->otherElement(center_);
+            assert(center_->edges_[edgeIndex_]->elements_.size()==2);
+            const FoamGridEntityImp<2,dimworld>* other = center_->edges_[edgeIndex_]->elements_[neighbor_];
             assert(other);
             
-            return std::find(other->edges_.begin(), other->edges_.end(), center_->edges_[neighbor_]) 
+            return std::find(other->edges_.begin(), other->edges_.end(), center_->edges_[edgeIndex_]) 
                 - other->edges_.begin();
         }
         
@@ -178,8 +211,8 @@ class FoamGridLevelIntersection
                 = Dune::GenericReferenceElements<double, dim>::general(center_->type());
 
             // edge vertices, oriented
-            int v0 = std::min(refElement.subEntity(neighbor_, 1, 0, dim), refElement.subEntity(neighbor_, 1, 1, dim));
-            int v1 = std::max(refElement.subEntity(neighbor_, 1, 0, dim), refElement.subEntity(neighbor_, 1, 1, dim));
+            int v0 = std::min(refElement.subEntity(edgeIndex_, 1, 0, dim), refElement.subEntity(edgeIndex_, 1, 1, dim));
+            int v1 = std::max(refElement.subEntity(edgeIndex_, 1, 0, dim), refElement.subEntity(edgeIndex_, 1, 1, dim));
 
             // opposite vertex
             int v2 = (v1+1)%3;
@@ -202,8 +235,8 @@ class FoamGridLevelIntersection
             const Dune::GenericReferenceElement<double,dim>& refElement
                 = Dune::GenericReferenceElements<double, dim>::general(center_->type());
 
-            ctype edgeLength = (center_->vertex_[refElement.subEntity(neighbor_, 1, 0, dim)]->pos_
-                                - center_->vertex_[refElement.subEntity(neighbor_, 1, 1, dim)]->pos_).two_norm();
+            ctype edgeLength = (center_->vertex_[refElement.subEntity(edgeIndex_, 1, 0, dim)]->pos_
+                                - center_->vertex_[refElement.subEntity(edgeIndex_, 1, 1, dim)]->pos_).two_norm();
 
             FieldVector<ctype, dimworld> normal = unitOuterNormal(local);
             normal *= edgeLength;
@@ -231,10 +264,34 @@ class FoamGridLevelIntersection
     //! vector storing the outer normal 
     mutable FieldVector<typename GridImp::ctype, dimworld> outerNormal_;
 
-    /** \brief Count on which neighbor we are lookin' at.  */
+    /** \brief Count on which edge we are lookin' at.  */
+    int edgeIndex_;
+    
+    /** 
+     * \brief Count on which neighbor of the edge we are looking at.
+     *
+     * At a t-junction different intersections might occur for the same edge.
+     * In this case each intersection has a different set of neighbor elements.
+     * This index is always the one of the current neighbor in FoamGridEdge::elements_
+     */
     int neighbor_;
+    
 };
 
+template<class GridImp>
+class FoamGridLevelIntersection
+    : public FoamGridIntersection<GridImp>
+{
+
+public:
+    enum{ dimworld = GridImp::dimensionworld };
+    
+    FoamGridLevelIntersection(const FoamGridEntityImp<2,dimworld>* center, int edge)
+        : FoamGridIntersection<GridImp>(center, edge)
+    {}
+};
+    
+        
 
 
 /** \brief Iterator over all element neighbors
@@ -247,7 +304,7 @@ class FoamGridLevelIntersection
 */
 template<class GridImp>
 class FoamGridLeafIntersection
-    : public FoamGridLevelIntersection<GridImp>
+    : public FoamGridIntersection<GridImp>
 {
 #if 0
     enum {dim=GridImp::dimension};

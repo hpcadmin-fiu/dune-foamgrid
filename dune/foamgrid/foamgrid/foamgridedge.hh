@@ -52,15 +52,6 @@ namespace Dune {
         PartitionType partitionType() const {
             return InteriorEntity;
         }
-        
-        // this is a helper method which only makes sense as long as
-        // edges border at most two elements.
-        const FoamGridEntityImp<2,dimworld>* otherElement(const FoamGridEntityImp<2,dimworld>* element) {
-            assert(elements_.size()==2);
-            // Return the 'other' element on the current edge
-            return (elements_[0]==element) ? elements_[1] : elements_[0];
-        }
-
 
         std::vector<const FoamGridEntityImp<2,dimworld>*> elements_;
 
