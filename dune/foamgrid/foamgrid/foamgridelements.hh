@@ -45,7 +45,58 @@ namespace Dune {
         }
       
         unsigned int nSons_;
-      
+
+        /** \brief Compute local cordinates from global ones.
+         * \param coord The global coordinates.
+         * \return The corresponding local coordinates within the element.
+         */
+        FieldVector<double,2> globalToLocal(const FieldVector<double,dimworld>& coord) const
+        {
+            // If we set up the overdetermined system matrix we have
+            // A[i][0]=vertex_[1].pos_[i]-vertex_[0].pos_[i];
+            // A[i][1]=vertex_[2].pos_[i]-vertex_[0].pos_[i];
+            // t[i]=coord[i]-vertex_[0].pos_[i];
+            //
+            // to determine the local coordinates we solve
+            // A'A x= A' t
+            //
+            
+            FieldMatrix<double,2,2> mat; // A'A
+            // mat_{ij}=\sum_k A_{ki}A_{kj}
+            mat=0;
+            for(std::size_t i=0; i <dimworld; ++i)
+            {
+                mat[0][0]+=(vertex_[1]->pos_[i]-vertex_[0]->pos_[i])*(vertex_[1]->pos_[i]-vertex_[0]->pos_[i]);
+            }
+            for(std::size_t i=0; i <dimworld; ++i)
+            {
+                mat[1][0]+=(vertex_[2]->pos_[i]-vertex_[0]->pos_[i])*(vertex_[1]->pos_[i]-vertex_[0]->pos_[i]);
+            }
+            mat[0][1]=mat[1][0];
+            for(std::size_t i=0; i <dimworld; ++i)
+            {
+                mat[1][1]+=(vertex_[2]->pos_[i]-vertex_[0]->pos_[i])*(vertex_[2]->pos_[i]-vertex_[0]->pos_[i]);
+            }
+            
+            FieldVector<double, 2> b, x;
+            b=0;
+            for(std::size_t i=0; i <dimworld; ++i)
+            {
+                b[0]+=(vertex_[1]->pos_[i]-vertex_[0]->pos_[i])*(coord[i]-vertex_[0]->pos_[i]);
+                b[1]+=(vertex_[2]->pos_[i]-vertex_[0]->pos_[i])*(coord[i]-vertex_[0]->pos_[i]);
+            }
+            mat.solve(x, b);
+#ifndef NDEBUG
+            FieldVector<double,dimworld> test(vertex_[0]->pos_);
+            test.axpy(x[0], vertex_[1]->pos_);
+            test.axpy(-x[0], vertex_[0]->pos_);
+            test.axpy(x[1], vertex_[2]->pos_);
+            test.axpy(-x[1], vertex_[0]->pos_);
+            assert((test-coord).two_norm()< std::numeric_limits<double>::epsilon()*8);
+#endif
+            return x;
+        }
+        
         /**
          * \brief index of the refined element in the father
          *

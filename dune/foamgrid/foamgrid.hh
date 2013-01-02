@@ -627,7 +627,7 @@ class FoamGrid :
                 // create the edges and publish them in the father
                 Dune::get<1>(entityImps_[nextLevel])
                     .push_back(FoamGridEntityImp<1,dimworld>(nextLevelVertices[edgeVertexMapping[edgeIndex/2].first], &midVertex, 
-                                                             nextLevel, freeIdCounter_[1]++));
+                                                             nextLevel, freeIdCounter_[1]++, *edge));
                 (*edge)->sons_[0] = &Dune::get<1>(entityImps_[nextLevel]).back();
                 ++((*edge)->nSons_);
                 // Inherit the boundaryId
@@ -642,7 +642,7 @@ class FoamGrid :
                 assert((*edge)->vertex_[1]->son_!=nullptr);
                 Dune::get<1>(entityImps_[nextLevel])
                     .push_back(FoamGridEntityImp<1,dimworld>(&midVertex, nextLevelVertices[edgeVertexMapping[edgeIndex/2].second], 
-                                                             nextLevel, freeIdCounter_[1]++));
+                                                             nextLevel, freeIdCounter_[1]++, *edge));
                 (*edge)->sons_[1] = &Dune::get<1>(entityImps_[nextLevel]).back();
                 ++((*edge)->nSons_);
                 // Inherit the boundaryId

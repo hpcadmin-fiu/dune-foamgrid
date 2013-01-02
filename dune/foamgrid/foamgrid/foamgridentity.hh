@@ -360,7 +360,10 @@ class FoamGridEntity<0,dim,GridImp> :
         
         //! First leaf intersection
         FoamGridLeafIntersectionIterator<GridImp> ileafbegin () const{
-            return FoamGridLeafIntersectionIterator<GridImp>(target_, (isLeaf()) ? 0 : target_->edges_.size());
+            if(isLeaf())
+                return FoamGridLeafIntersectionIterator<GridImp>(target_,0);
+            else
+                return FoamGridLeafIntersectionIterator<GridImp>(target_);
         }
     
         
