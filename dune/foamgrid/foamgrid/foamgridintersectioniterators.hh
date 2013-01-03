@@ -98,12 +98,7 @@ public:
 
     //! prefix increment
     void increment()
-    {
-        if(GridImp::getRealImplementation(intersection_).neighbor_!=GridImp::getRealImplementation(intersection_).neighborEnd_)
-            std::cout<<std::endl<<"increment "<<GridImp::getRealImplementation(intersection_).edgeIndex_<<" "<<*GridImp::getRealImplementation(intersection_).neighbor_<<std::endl<<std::endl;
-        else
-            std::cout<<std::endl<<"increment boundary "<<GridImp::getRealImplementation(intersection_).edgeIndex_<<std::endl<<std::endl;;
-        
+    {        
         if(GridImp::getRealImplementation(intersection_).edgeIndex_ == GridImp::getRealImplementation(intersection_).center_->corners())
         {
             // This is already the end iterator
@@ -186,8 +181,13 @@ private:
 
     mutable MakeableInterfaceObject<Intersection> intersection_;
 
-    //! \brief map from edge index onto the intersections associated with the edge
+    //! \brief pointer to map from edge index onto the intersections associated with the edge
+    //!
+    //! This has to be pointer to prevent copying it during copying the iterator.
+    //! Otherwise the stored iterators to its entries would be invalidated.
     shared_ptr<MapType> leafEdges_;
+
+    //! \brief Iterator pointing to the elements of the current edge.
     typename std::map<int, ElementVector>::const_iterator
     topLevelEdgeIter_;
 };
