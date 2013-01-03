@@ -8,6 +8,7 @@
 */
 
 #include <list>
+#include <set>
 
 #include <dune/common/collectivecommunication.hh>
 #include <dune/common/tuples.hh>
@@ -402,6 +403,7 @@ class FoamGrid :
             leafIndexSet_.update(*this);
 
             globalRefined=std::max(globalRefined+refCount,0);
+            postAdapt();
         }
         
         /** \brief Mark entity for refinement
@@ -446,20 +448,88 @@ class FoamGrid :
 
         //! \brief Book-keeping routine to be called before adaptation
         bool preAdapt() {
-            DUNE_THROW(NotImplemented, "preAdapt");
+            // Loop over all leaf entities and check whether they might be
+            // coarsened. If there is one return true.
+            typedef typename Traits::template Codim<0>::LeafIterator Iterator;
+            int addLevels = 0;
+            bool willCoarsen = false;
+            
+            for(Iterator elem=this->leafbegin<0>(), end = this->leafend<0>();
+                elem != end; ++elem)
+            {
+                int mark=getMark(*elem);
+                addLevels=std::max(addLevels, elem->level()+mark-maxLevel());
+                willCoarsen = willCoarsen || mark<0;
+            }
+            if(addLevels)
+            {
+                entityImps_.push_back(tuple<std::list<FoamGridEntityImp<0,dimworld> >,
+                                            std::list<FoamGridEntityImp<1,dimworld> >,
+                                            std::list<FoamGridEntityImp<2,dimworld> > >());
+                levelIndexSets_.push_back(new FoamGridLevelIndexSet<const FoamGrid >());
+            }
+            return willCoarsen;
         }
         
         
         //! Triggers the grid refinement process
         bool adapt()
         {
-            DUNE_THROW(NotImplemented, "adapt");
+            std::set<int> levelsChanged;
+            bool haveRefined=false;
+            
+            // Loop over all leaf elements and refine/coarsen those that marked for it.
+            typedef typename Traits::template Codim<0>::LeafIterator Iterator;
+            for(Iterator elem=this->leafbegin<0>(), end = this->leafend<0>();
+                elem != end; ++elem)
+            {
+                int mark=getMark(*elem);
+                if(mark>0)
+                {
+                    // Refine Triangles
+                    if(elem->type().isTriangle())
+                    {
+                        refineSimplexElement(*const_cast<FoamGridEntityImp<2,dimworld>*>(this->getRealImplementation(*elem).target_), 1);
+                        levelsChanged.insert(elem->level()+1);
+                        haveRefined=true;
+                    }
+                    else
+                        DUNE_THROW(NotImplemented, "Refinement only supported for triangles!");
+                }
+                if(mark<0)
+                {
+                    // Coarsen triangles
+                    if(elem->type().isTriangle())
+                    {
+                        assert(elem->level());
+                        refineSimplexElement(*const_cast<FoamGridEntityImp<2,dimworld>*>(this->getRealImplementation(*elem).target_), -1);
+                        levelsChanged.insert(elem->level()-1);
+                    }
+                    else
+                        DUNE_THROW(NotImplemented, "Refinement only supported for triangles!");
+                }
+            }
+            // Update the level indices.
+            typedef typename std::set<int>::const_iterator SIter;
+            for(SIter l=levelsChanged.begin(); l!=levelsChanged.end(); ++l)
+                levelIndexSets_[*l]->update(*this, *l);
+
+            if(levelsChanged.size())
+                // Update the leaf indices
+            leafIndexSet_.update(*this);
             globalRefined=0;
+            return haveRefined;
         }
 
         /** \brief Clean up refinement markers */
         void postAdapt() {
-            DUNE_THROW(NotImplemented, "postAdapt");
+            // Loop over all leaf entities and remove the isNew Marker.
+            typedef typename Traits::template Codim<0>::LeafIterator Iterator;
+            
+            for(Iterator elem=this->leafbegin<0>(), end = this->leafend<0>();
+                elem != end; ++elem)
+                const_cast<FoamGridEntityImp<2,dimworld>*>(this->getRealImplementation(*elem).target_)->isNew_=false;
+            
         }
         
         /*@}*/
