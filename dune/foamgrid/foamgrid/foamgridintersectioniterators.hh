@@ -62,8 +62,6 @@ public:
         GridImp::getRealImplementation(intersection_).neighborEnd_=topLevelEdgeIter_->second.end();
         assert(*GridImp::getRealImplementation(intersection_).neighbor_);
 
-        
-
         if(center->edges_[edge]->elements_.size()==1){
             // This is a boundary edge.
             GridImp::getRealImplementation(intersection_).neighbor_=
@@ -98,7 +96,7 @@ public:
 
     //! prefix increment
     void increment()
-    {        
+    {
         if(GridImp::getRealImplementation(intersection_).edgeIndex_ == GridImp::getRealImplementation(intersection_).center_->corners())
         {
             // This is already the end iterator
@@ -106,26 +104,30 @@ public:
             return;
         }
         assert(topLevelEdgeIter_!=leafEdges_->end());
-        //const ElementVector& vec=topLevelEdgeIter_->second;
-        //typename ElementVector::const_iterator vend = vec.end();
         
+        if(GridImp::getRealImplementation(intersection_).neighbor_ !=
+           GridImp::getRealImplementation(intersection_).neighborEnd_)
+            // increment
+            ++GridImp::getRealImplementation(intersection_).neighbor_;
+        
+        if(GridImp::getRealImplementation(intersection_).neighbor_ !=
+           GridImp::getRealImplementation(intersection_).neighborEnd_ &&
+           *(GridImp::getRealImplementation(intersection_).neighbor_) ==
+           GridImp::getRealImplementation(intersection_).center_)
+            // pointing to to the center_ -> increment another time
+            ++GridImp::getRealImplementation(intersection_).neighbor_;
+
         if(GridImp::getRealImplementation(intersection_).neighbor_ ==
-           GridImp::getRealImplementation(intersection_).neighborEnd_ || 
-           ++GridImp::getRealImplementation(intersection_).neighbor_ ==
            GridImp::getRealImplementation(intersection_).neighborEnd_)
         {
             assert(topLevelEdgeIter_!=leafEdges_->end());
-            //if(leafEdgeIter_==topLevelEdgeIter_->second.end())
-            {
-                ++topLevelEdgeIter_;
-                ++GridImp::getRealImplementation(intersection_).edgeIndex_;
-                if(topLevelEdgeIter_==leafEdges_->end())
-                    return;
-
-                GridImp::getRealImplementation(intersection_).neighbor_
-                    = topLevelEdgeIter_->second.begin();
-            }
+            ++topLevelEdgeIter_;
+            ++GridImp::getRealImplementation(intersection_).edgeIndex_;
+            if(topLevelEdgeIter_==leafEdges_->end())
+                return;
             
+            GridImp::getRealImplementation(intersection_).neighbor_
+                = topLevelEdgeIter_->second.begin();
             GridImp::getRealImplementation(intersection_).neighborEnd_=
                 topLevelEdgeIter_->second.end();
             if(GridImp::getRealImplementation(intersection_).center_->edges_[GridImp::getRealImplementation(intersection_).edgeIndex_]->elements_.size()==1){
