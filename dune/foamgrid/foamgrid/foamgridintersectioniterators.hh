@@ -34,11 +34,13 @@ class FoamGridLeafIntersectionIterator
     
     typedef std::vector<const FoamGridEntityImp<2,dimworld>*> ElementVector;
 
+    typedef std::map<int, ElementVector> MapType;
 public:
     
     //! Constructor for a given grid entity and a given neighbor
     FoamGridLeafIntersectionIterator(const FoamGridEntityImp<2,dimworld>* center, int edge) 
-        : intersection_(FoamGridLeafIntersection<GridImp>(center,edge))
+        : intersection_(FoamGridLeafIntersection<GridImp>(center,edge)),
+          leafEdges_(make_shared<MapType>())
     {
         if(edge==center->corners())
         {
@@ -47,23 +49,28 @@ public:
         }
         
         for(std::size_t i=0; i<3; ++i)
-            traverseAndPushLeafEdges(center->edges_[i], leafEdges_[i]);
-        
-        GridImp::getRealImplementation(intersection_).edgeIndex_=edge;
-        GridImp::getRealImplementation(intersection_).neighbor_=leafEdges_[edge].begin();
-        GridImp::getRealImplementation(intersection_).neighborEnd_=leafEdges_[edge].end();
-        if(center->edges_[edge]->elements_.size()==1){
-            // This is a boundary edge.
-            return;
-        }
+            traverseAndPushLeafEdges(center->edges_[i], (*leafEdges_)[i]);
+
 
         // Search for the first intersection.
         // For each edge there is either one or it is a boundary intersection
-        topLevelEdgeIter_=leafEdges_.find(edge);
-        leafEdgeIter_=topLevelEdgeIter_->second.begin();
+        topLevelEdgeIter_=leafEdges_->find(edge);
+        assert(topLevelEdgeIter_!=leafEdges_->end());
+        assert(edge>0 || topLevelEdgeIter_ == leafEdges_->begin());
+        GridImp::getRealImplementation(intersection_).neighbor_=topLevelEdgeIter_->second.begin();
+        GridImp::getRealImplementation(intersection_).edgeIndex_=edge;
+        GridImp::getRealImplementation(intersection_).neighborEnd_=topLevelEdgeIter_->second.end();
+        assert(*GridImp::getRealImplementation(intersection_).neighbor_);
+
         
-        GridImp::getRealImplementation(intersection_).neighbor_=leafEdges_[edge].begin();
-        GridImp::getRealImplementation(intersection_).neighborEnd_=leafEdges_[edge].end();
+
+        if(center->edges_[edge]->elements_.size()==1){
+            // This is a boundary edge.
+            GridImp::getRealImplementation(intersection_).neighbor_=
+                topLevelEdgeIter_->second.end();
+            return;
+        }
+
         if(GridImp::getRealImplementation(intersection_).neighbor_ != GridImp::getRealImplementation(intersection_).neighborEnd_
            && *GridImp::getRealImplementation(intersection_).neighbor_==center)
         {
@@ -73,51 +80,66 @@ public:
 
     /** \brief Constructor creating the 'one-after-last'-iterator */
     FoamGridLeafIntersectionIterator(const FoamGridEntityImp<2,dimworld>* center) 
-        : intersection_(FoamGridLeafIntersection<GridImp>(center,center->corners()))
-    {
-        topLevelEdgeIter_=leafEdges_.end();
-        
+        : intersection_(FoamGridLeafIntersection<GridImp>(center,center->corners())),
+          leafEdges_(make_shared<MapType>())
+    {        
     }
 
     typedef Dune::Intersection<const GridImp, Dune::FoamGridLeafIntersection> Intersection;
 
     //! equality
     bool equals(const FoamGridLeafIntersectionIterator<GridImp>& other) const {
-        return (GridImp::getRealImplementation(intersection_).center_   == GridImp::getRealImplementation(other.intersection_).center_) 
-            && topLevelEdgeIter_ == other.topLevelEdgeIter_
-            && *GridImp::getRealImplementation(intersection_).neighbor_ == 
-            *GridImp::getRealImplementation(other.intersection_).neighbor_;
+        return GridImp::getRealImplementation(intersection_).center_   == GridImp::getRealImplementation(other.intersection_).center_ && 
+            GridImp::getRealImplementation(intersection_).edgeIndex_ == GridImp::getRealImplementation(other.intersection_).edgeIndex_ && 
+            (GridImp::getRealImplementation(intersection_).edgeIndex_ == GridImp::getRealImplementation(intersection_).center_->corners()  ||
+             (*GridImp::getRealImplementation(intersection_).neighbor_ == 
+              *GridImp::getRealImplementation(other.intersection_).neighbor_));
     }
 
     //! prefix increment
     void increment()
     {
-        if(topLevelEdgeIter_==leafEdges_.end())
+        if(GridImp::getRealImplementation(intersection_).neighbor_!=GridImp::getRealImplementation(intersection_).neighborEnd_)
+            std::cout<<std::endl<<"increment "<<GridImp::getRealImplementation(intersection_).edgeIndex_<<" "<<*GridImp::getRealImplementation(intersection_).neighbor_<<std::endl<<std::endl;
+        else
+            std::cout<<std::endl<<"increment boundary "<<GridImp::getRealImplementation(intersection_).edgeIndex_<<std::endl<<std::endl;;
+        
+        if(GridImp::getRealImplementation(intersection_).edgeIndex_ == GridImp::getRealImplementation(intersection_).center_->corners())
         {
             // This is already the end iterator
             DUNE_THROW(InvalidStateException, "Cannot increment a one past the end iterator");
             return;
         }
+        assert(topLevelEdgeIter_!=leafEdges_->end());
+        //const ElementVector& vec=topLevelEdgeIter_->second;
+        //typename ElementVector::const_iterator vend = vec.end();
         
-        ++GridImp::getRealImplementation(intersection_).neighbor_;
-
         if(GridImp::getRealImplementation(intersection_).neighbor_ ==
-           topLevelEdgeIter_->second.end())
+           GridImp::getRealImplementation(intersection_).neighborEnd_ || 
+           ++GridImp::getRealImplementation(intersection_).neighbor_ ==
+           GridImp::getRealImplementation(intersection_).neighborEnd_)
         {
-            ++leafEdgeIter_;
-            if(leafEdgeIter_==topLevelEdgeIter_->second.end())
+            assert(topLevelEdgeIter_!=leafEdges_->end());
+            //if(leafEdgeIter_==topLevelEdgeIter_->second.end())
             {
                 ++topLevelEdgeIter_;
-                if(topLevelEdgeIter_==leafEdges_.end())
+                ++GridImp::getRealImplementation(intersection_).edgeIndex_;
+                if(topLevelEdgeIter_==leafEdges_->end())
                     return;
 
-                leafEdgeIter_=topLevelEdgeIter_->second.begin();
+                GridImp::getRealImplementation(intersection_).neighbor_
+                    = topLevelEdgeIter_->second.begin();
             }
             
-            GridImp::getRealImplementation(intersection_).neighbor_=
-                topLevelEdgeIter_->second.begin();
             GridImp::getRealImplementation(intersection_).neighborEnd_=
                 topLevelEdgeIter_->second.end();
+            if(GridImp::getRealImplementation(intersection_).center_->edges_[GridImp::getRealImplementation(intersection_).edgeIndex_]->elements_.size()==1){
+                // This is a boundary edge.
+                GridImp::getRealImplementation(intersection_).neighbor_=
+                    GridImp::getRealImplementation(intersection_).neighborEnd_;
+                return;
+            
+            }
             if(GridImp::getRealImplementation(intersection_).neighbor_ != GridImp::getRealImplementation(intersection_).neighborEnd_
                && *GridImp::getRealImplementation(intersection_).neighbor_==
                GridImp::getRealImplementation(intersection_).center_)
@@ -132,6 +154,7 @@ public:
     const Intersection & dereference() const {
         return reinterpret_cast<const Intersection&>(*this);
     }
+
 private:
 
     //! \brief Pushes all leaf Edges into leafEdges_
@@ -144,8 +167,16 @@ private:
                                   ElementVector& leafEdges)
     {
         if(edge->isLeaf())
+        {
             leafEdges.insert(leafEdges.end(), edge->elements_.begin(),
                               edge->elements_.end());
+#ifndef NDEBUG
+            typedef typename ElementVector::const_iterator
+                iter;
+            for(iter i=leafEdges.begin(); i!=leafEdges.end(); ++i)
+                assert(*i);
+#endif
+        }
         else
         {
             traverseAndPushLeafEdges(edge->sons_[0],leafEdges);
@@ -156,11 +187,9 @@ private:
     mutable MakeableInterfaceObject<Intersection> intersection_;
 
     //! \brief map from edge index onto the intersections associated with the edge
-    std::map<int, ElementVector> leafEdges_;
-
+    shared_ptr<MapType> leafEdges_;
     typename std::map<int, ElementVector>::const_iterator
     topLevelEdgeIter_;
-    typename ElementVector::const_iterator     leafEdgeIter_;
 };
 
 
@@ -237,7 +266,9 @@ protected:
     /** \brief Constructor creating the 'one-after-last'-iterator */
     FoamGridLevelIntersectionIterator(const FoamGridEntityImp<2,dimworld>* center) 
         : intersection_(FoamGridLevelIntersection<GridImp>(center,center->corners()))
-    {}
+    {
+        GridImp::getRealImplementation(intersection_).neighborIndex_=0;
+    }
 
 public:
 
@@ -268,16 +299,31 @@ public:
                 GridImp::getRealImplementation(intersection_).neighbor_=GridImp::getRealImplementation(intersection_).center_->edges_[GridImp::getRealImplementation(intersection_).edgeIndex_]->elements_.begin();
                 GridImp::getRealImplementation(intersection_).neighborIndex_=0;
             }
+        }else
+        {
+            // Move to the next intersection of this edge
+            ++GridImp::getRealImplementation(intersection_).neighborIndex_;
+            ++GridImp::getRealImplementation(intersection_).neighbor_;
         }
+        
         // Search for the first intersection.
         // An intersection has either two neighbor elements on the same level
         // or is a boundary intersection
         while(GridImp::getRealImplementation(intersection_).edgeIndex_ != GridImp::getRealImplementation(intersection_).center_->corners()) // still a valid edge
         {
+            if(GridImp::getRealImplementation(intersection_).center_->edges_[GridImp::getRealImplementation(intersection_).edgeIndex_]->elements_.size()==1)
+            {
+                // This is a boundary intersection.
+                GridImp::getRealImplementation(intersection_).neighborIndex_
+                    =GridImp::getRealImplementation(intersection_).center_->edges_[GridImp::getRealImplementation(intersection_).edgeIndex_]->elements_.size();
+                return;
+            }
+            
             while(GridImp::getRealImplementation(intersection_).neighbor_!=GridImp::getRealImplementation(intersection_).center_->edges_[GridImp::getRealImplementation(intersection_).edgeIndex_]->elements_.end() &&
                   (GridImp::getRealImplementation(intersection_).center_==*GridImp::getRealImplementation(intersection_).neighbor_
                    ||GridImp::getRealImplementation(intersection_).center_->level()!=(*GridImp::getRealImplementation(intersection_).neighbor_)->level()))
             {
+                // Wrong level or neighbor points to center. In both cases this intersection is invalid.
                 ++GridImp::getRealImplementation(intersection_).neighborIndex_;
                 ++GridImp::getRealImplementation(intersection_).neighbor_;
             }
@@ -293,7 +339,7 @@ public:
                 }
                 else
                 {
-                    // No valid intersection found on this edge, move to next one.
+                    // No valid intersection found on this edge, move to next edge.
                     ++GridImp::getRealImplementation(intersection_).edgeIndex_;
                     if(GridImp::getRealImplementation(intersection_).edgeIndex_ < GridImp::getRealImplementation(intersection_).center_->corners())
                     {
@@ -320,7 +366,6 @@ public:
     {
         return reinterpret_cast<const Intersection&>(intersection_);
     }
-
 private:
   //**********************************************************
   //  private data

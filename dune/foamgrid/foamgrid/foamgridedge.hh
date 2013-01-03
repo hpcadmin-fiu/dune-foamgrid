@@ -20,7 +20,7 @@ namespace Dune {
         FoamGridEntityImp(const FoamGridEntityImp<0,dimworld>* v0, 
                           const FoamGridEntityImp<0,dimworld>* v1, 
                           int level, unsigned int id) 
-            : FoamGridEntityBase(level,id), nSons_(0), father_(nullptr)
+            : FoamGridEntityBase(level,id), elements_(), nSons_(0), father_(nullptr)
         {
             vertex_[0] = v0;
             vertex_[1] = v1;
