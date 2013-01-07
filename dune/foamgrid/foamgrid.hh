@@ -459,27 +459,31 @@ class FoamGrid :
             {
                 int mark=getMark(*elem);
                 addLevels=std::max(addLevels, elem->level()+mark-maxLevel());
-                // If this element is marked for coarsening, but another child
-                // of this element's father is marked for refinement, then we 
-                // need to reset the marker to doNothing
-                bool otherChildRefined=false;
-                FoamGridEntityImp<2,dimworld>& father = *this->getRealImplementation(*elem).target_->father_;
-                typedef typename array<FoamGridEntityImp<2,dimworld>*,4>::iterator
-                    ChildrenIter;
-                for(ChildrenIter child=father.sons_.begin(); child != 
-                        father.sons_.end(); ++child)
-                    otherChildRefined=otherChildRefined || 
-                        (*child)->markState_==FoamGridEntityImp<2,dimworld>::REFINE;
-                    
-                if(otherChildRefined)
+                
+                if(mark<0)
                 {
+                    // If this element is marked for coarsening, but another child
+                    // of this element's father is marked for refinement, then we 
+                    // need to reset the marker to doNothing
+                    bool otherChildRefined=false;
+                    FoamGridEntityImp<2,dimworld>& father = *this->getRealImplementation(*elem).target_->father_;
+                    typedef typename array<FoamGridEntityImp<2,dimworld>*,4>::iterator
+                        ChildrenIter;
                     for(ChildrenIter child=father.sons_.begin(); child != 
-                        father.sons_.end(); ++child)
-                        if((*child)->markState_==FoamGridEntityImp<2,dimworld>::COARSEN)
-                            (*child)->markState_=FoamGridEntityImp<2,dimworld>::DO_NOTHING;
+                            father.sons_.end(); ++child)
+                        otherChildRefined=otherChildRefined || 
+                            (*child)->markState_==FoamGridEntityImp<2,dimworld>::REFINE;
+                    
+                    if(otherChildRefined)
+                    {
+                        for(ChildrenIter child=father.sons_.begin(); child != 
+                                father.sons_.end(); ++child)
+                            if((*child)->markState_==FoamGridEntityImp<2,dimworld>::COARSEN)
+                                (*child)->markState_=FoamGridEntityImp<2,dimworld>::DO_NOTHING;
+                    }
+                    else
+                        willCoarsen = willCoarsen || mark<0;
                 }
-                else
-                    willCoarsen = willCoarsen || mark<0;
             }
             if(addLevels)
             {
