@@ -26,11 +26,26 @@ namespace Dune {
           father_ = nullptr;
         }
 
+        bool hasFather() const
+        {
+            return father_!=nullptr;
+        }
+        
+        bool mightVanish() const
+        {
+            return markState_==COARSEN;
+        }
+        
         bool isLeaf() const {
             // The sons are either all nullptr or all != nullptr
             return sons_[0] == nullptr;
         }
 
+        bool isNew() const 
+        {
+            return isNew_;
+        }
+        
         unsigned int corners() const {
             return 3;
         }

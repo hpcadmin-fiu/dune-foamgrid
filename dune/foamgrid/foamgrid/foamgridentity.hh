@@ -383,6 +383,15 @@ class FoamGridEntity<0,dim,GridImp> :
         return level()>0;
     }
         
+    bool isNew() const
+    {
+        return target_->isNew();
+    }
+    
+    bool mightVanish() const
+    {
+        return target_->mightVanish();
+    }
         //! Inter-level access to father element on coarser grid.
         //! Assumes that meshes are nested.
         FoamGridEntityPointer<0,GridImp> father () const {
