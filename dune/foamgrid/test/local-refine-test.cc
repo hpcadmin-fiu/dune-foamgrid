@@ -6,6 +6,7 @@
 #include <dune/grid/io/file/gmshreader.hh>
 #include <dune/grid/test/gridcheck.cc>
 #include <dune/grid/test/checkintersectionit.cc>
+#include <dune/grid/test/checkadaptation.cc>
 #include <dune/grid/../../doc/grids/gridfactory/hybridtestgrids.hh>
 
 #include <dune/foamgrid/foamgrid.hh>
@@ -27,35 +28,29 @@ int main (int argc, char *argv[]) try
             writer(grid2d->leafView(), VTK::nonconforming);
         writer.write("refined0");
     }
-    /*
-    gridcheck(*grid2d);
-    grid2d->globalRefine(1);
+    
     Dune::gridinfo(*grid2d);
-    {
-        Dune::VTKWriter<typename FoamGrid<2>::LeafGridView > 
-            writer(grid2d->leafView(), VTK::nonconforming);
-        writer.write("refined1");
-    }
-    checkGeometryInFather(*grid2d);
-    grid2d->globalRefine(-1); 
-    */
-
+    
+    // check grid adaptation interface 
+    checkAdaptation( *grid2d );
+    /*
     grid2d->mark(1,*grid2d->leafbegin<0>());
     if(grid2d->preAdapt())
         DUNE_THROW(SystemError, "preAdapt return true despite having marked non"
                    <<" elements for coarsening.");
     if(!grid2d->adapt())
-        DUNE_THROW(SystemError, "preAdapt return falsedespite having marked "
+        DUNE_THROW(SystemError, "preAdapt return false despite having marked "
                    <<" elements for refinement.");
     grid2d->postAdapt();
+    */
     
     {
         Dune::VTKWriter<typename FoamGrid<2>::LeafGridView > 
             writer(grid2d->leafView(), VTK::nonconforming);
         writer.write("refined-l");
     }   
-    checkGeometryInFather(*grid2d);
     Dune::gridinfo(*grid2d);
+    checkGeometryInFather(*grid2d);
     gridcheck(*grid2d);
     //checkIntersectionIterator(*grid2d);
     
