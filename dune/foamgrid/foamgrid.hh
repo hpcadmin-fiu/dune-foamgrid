@@ -459,7 +459,27 @@ class FoamGrid :
             {
                 int mark=getMark(*elem);
                 addLevels=std::max(addLevels, elem->level()+mark-maxLevel());
-                willCoarsen = willCoarsen || mark<0;
+                // If this element is marked for coarsening, but another child
+                // of this element's father is marked for refinement, then we 
+                // need to reset the marker to doNothing
+                bool otherChildRefined=false;
+                FoamGridEntityImp<2,dimworld>& father = *this->getRealImplementation(*elem).target_->father_;
+                typedef typename array<FoamGridEntityImp<2,dimworld>*,4>::iterator
+                    ChildrenIter;
+                for(ChildrenIter child=father.sons_.begin(); child != 
+                        father.sons_.end(); ++child)
+                    otherChildRefined=otherChildRefined || 
+                        (*child)->markState_==FoamGridEntityImp<2,dimworld>::REFINE;
+                    
+                if(otherChildRefined)
+                {
+                    for(ChildrenIter child=father.sons_.begin(); child != 
+                        father.sons_.end(); ++child)
+                        if((*child)->markState_==FoamGridEntityImp<2,dimworld>::COARSEN)
+                            (*child)->markState_=FoamGridEntityImp<2,dimworld>::DO_NOTHING;
+                }
+                else
+                    willCoarsen = willCoarsen || mark<0;
             }
             if(addLevels)
             {
@@ -475,7 +495,13 @@ class FoamGrid :
         //! Triggers the grid refinement process
         bool adapt()
         {
-            std::set<int> levelsChanged;
+            // The entities that are erased for each level
+            std::vector<tuple<std::set<FoamGridEntityImp<0,dimworld>* >,
+                              std::set<FoamGridEntityImp<1,dimworld>* >,
+                              std::set<FoamGridEntityImp<2,dimworld>* > > > eraseEntities;
+            eraseEntities.resize(maxLevel()+1);
+            
+            std::set<std::size_t> levelsChanged;
             bool haveRefined=false;
             
             // Loop over all leaf elements and refine/coarsen those that marked for it.
@@ -502,24 +528,67 @@ class FoamGrid :
                     if(elem->type().isTriangle())
                     {
                         assert(elem->level());
-                        refineSimplexElement(*const_cast<FoamGridEntityImp<2,dimworld>*>(this->getRealImplementation(*elem).target_), -1);
-                        levelsChanged.insert(elem->level()-1);
+                        coarsenSimplexElement(*const_cast<FoamGridEntityImp<2,dimworld>*>(this->getRealImplementation(*elem).target_),
+                                              Dune::get<2>(eraseEntities[elem->level()]),
+                                              Dune::get<1>(eraseEntities[elem->level()]),
+                                              Dune::get<0>(eraseEntities[elem->level()]));
+                                              levelsChanged.insert(elem->level());
                     }
                     else
                         DUNE_THROW(NotImplemented, "Refinement only supported for triangles!");
                 }
             }
-            // Update the level indices.
-            typedef typename std::set<int>::const_iterator SIter;
-            for(SIter l=levelsChanged.begin(); l!=levelsChanged.end(); ++l)
-                levelIndexSets_[*l]->update(*this, *l);
-
+            typedef typename std::set<std::size_t>::const_reverse_iterator SIter;
+            for(SIter level=levelsChanged.rbegin(); level!=levelsChanged.rend(); ++level)
+            {
+                eraseVanishedEntities(Dune::get<2>(eraseEntities[*level]),
+                                      Dune::get<2>(entityImps_[*level]));
+                eraseVanishedEntities(Dune::get<0>(eraseEntities[*level]),
+                                      Dune::get<0>(entityImps_[*level]));
+                // erase vanished edges
+                typedef typename std::list<FoamGridEntityImp<1,dimworld> >::iterator
+                    EdgeIter;
+                for(EdgeIter edge=Dune::get<1>(entityImps_[*level]).begin();
+                    edge != Dune::get<1>(entityImps_[*level]).end(); ++edge)
+                {
+                    bool hasSameLevelElements=false;
+                    typedef typename std::vector<const FoamGridEntityImp<2,dimworld>*>::const_iterator
+                        ElementIter;
+                    for(ElementIter elem=edge->elements_.begin();
+                        elem != edge->elements_.end(); ++elem)
+                        hasSameLevelElements = hasSameLevelElements || (*elem)->level()==*level;
+                    if(hasSameLevelElements)
+                    {
+                        Dune::get<1>(eraseEntities[*level]).erase(&(*edge));
+                        Dune::get<1>(entityImps_[*level]).erase(edge);
+                    }
+                }
+                assert(!Dune::get<1>(eraseEntities[*level]).size());
+                
+                if( Dune::get<0>(entityImps_[*level]).size())
+                {
+                    assert(Dune::get<1>(entityImps_[*level]).size() &&
+                           Dune::get<2>(entityImps_[*level]).size());
+                    // Update the level indices.
+                    levelIndexSets_[*level]->update(*this, *level);
+                }
+                else
+                {
+                    assert(!Dune::get<1>(entityImps_[*level]).size() &&
+                           !Dune::get<2>(entityImps_[*level]).size());
+                    if(static_cast<int>(*level)==maxLevel())
+                        entityImps_.pop_back();
+                }
+            }
+                                                           
             if(levelsChanged.size())
                 // Update the leaf indices
             leafIndexSet_.update(*this);
             globalRefined=0;
             return haveRefined;
         }
+
+        
 
         /** \brief Clean up refinement markers */
         void postAdapt() {
@@ -612,6 +681,149 @@ class FoamGrid :
         
     private:
 
+        //! \brief Erase Entities from memory that vanished due to coarsening.
+        //! \tparam i The dimension of the entities.
+        //! \param eraseeEntities Set of entities to be erased
+        //! \param  levelEntities The vector with the level entitied
+        template<int i>
+        void eraseVanishedEntities(std::set<FoamGridEntityImp<i,dimworld>*>& eraseEntities,
+                                   std::list<FoamGridEntityImp<i,dimworld> >& levelEntities)
+        {
+            typedef typename std::list<FoamGridEntityImp<i,dimworld> >::iterator EntityIterator;
+            for(EntityIterator entity=levelEntities.begin(); entity != levelEntities.end();
+                ++entity)
+            {
+                typedef typename std::set<FoamGridEntityImp<i,dimworld>*>::iterator Iter;
+                Iter entry=eraseEntities.find(&(*entity));
+                if(entry!= eraseEntities.end())
+                    levelEntities.erase(entity);
+            }
+        }
+
+    
+
+    //! \brief Coarsen an Element
+    //! \param element The element to coarsen
+    void coarsenSimplexElement(FoamGridEntityImp<2,dimworld>& element,
+                               std::set<FoamGridEntityImp<2,dimworld>*>& elementsToErase,
+                               std::set<FoamGridEntityImp<1,dimworld>*>& edgesToErase,
+                               std::set<FoamGridEntityImp<0,dimworld>*>& verticesToErase)
+    {
+        // If we coarsen an element, this means that we erase all chidren of its father
+        // to prevent inconsistencies.
+        const FoamGridEntityImp<2,dimworld>& father = *(element.father_);
+
+        // The edges that might be erased
+        std::set<FoamGridEntityImp<1,dimworld>*> childEdges;
+        // The vertices that might be erased
+        std::set<FoamGridEntityImp<0,dimworld>*> childVertices;
+        typedef typename array<FoamGridEntityImp<2,dimworld>*,4>::const_iterator
+            ChildrenIter;
+        for(ChildrenIter child=father.sons_.begin(); child != 
+                father.sons_.end(); ++child)
+        {
+            // Remember element for the actual deletion taking place later
+            elementsToErase.insert(*child);
+            // Reset marker to prevent processing it again.
+            (*child)->markState_=FoamGridEntityImp<2,dimworld>::DO_NOTHING;
+            
+            
+            typedef typename array<FoamGridEntityImp<1,dimworld>*,3>::iterator
+                EdgeIter;
+            for(EdgeIter edge=(*child)->edges_.begin(); edge != (*child)->edges_.end();
+                ++edge)
+            {
+                // Remove references to elements that will be erased
+                typedef typename std::vector<const FoamGridEntityImp<2,dimworld>*>::iterator
+                    ElementIter;
+                for(ElementIter element = (*edge)->elements_.begin(); 
+                    element != (*edge)->elements_.end();
+                    ++element)
+                {
+                    for(ChildrenIter child1=father.sons_.begin(); child != 
+                            father.sons_.end(); ++child1)
+                        if(*element==*child)
+                        {
+                            // To prevent removing an element from a vector
+                            // we just overwrite the elment with its father.
+                            // later we will check the edges and erase all
+                            // of them that do not have any elements on the same
+                            // level.
+                            *element=&father;
+                        }
+                }
+                // \todo remove edgesToErase
+                edgesToErase.insert(*edge);
+            }
+                
+
+                
+            typedef FoamGridEntityImp<0,dimworld>** VertexIter;
+            for(VertexIter vertex=(*child)->vertex_; vertex != (*child)->vertex_+(*child)->corners();
+                ++vertex)
+                childVertices.insert(*vertex);
+        }
+        
+        // Check whether those guys are really erased.
+        // That is, we remove all vertices and edges that are part of a child element of one
+        // of the neighbours of the father element
+        typedef  typename array<FoamGridEntityImp<1,dimworld>*,3>::const_iterator
+                EdgeIter;
+        for(EdgeIter edge=father.edges_.begin(); edge != father.edges_.end();
+            ++edge)
+        {
+            typedef typename std::vector<const FoamGridEntityImp<2,dimworld>*>::iterator
+                NeighborIter;
+            for(NeighborIter neighbor = (*edge)->elements_.begin(); 
+                neighbor != (*edge)->elements_.end();
+                ++neighbor)
+            {
+                assert((*neighbor)->level()<=father.level());
+                if(*neighbor != &father && (*neighbor)->level()==father.level() &&
+                   !(*neighbor)->isLeaf())
+                {
+                    // This is a real neighbor element on the same level
+                    // Check whether one of its children is marked for coarsening
+                    bool coarsened=false;
+                    for(ChildrenIter child=(*neighbor)->sons_.begin();
+                        child != (*neighbor)->sons_.end(); ++child)
+                        if((*child)->mightVanish())
+                        {
+                            coarsened=true;
+                            break;
+                        }
+                        
+                    if(!coarsened)
+                    {
+                        // Remove all entities that exist in the children of the neighbor
+                        // from the list
+                        for(ChildrenIter child=(*neighbor)->sons_.begin();
+                            child != (*neighbor)->sons_.end(); ++child)
+                        {
+                            typedef typename array<FoamGridEntityImp<1,dimworld>*,3>::iterator
+                                EdgeIter;
+                            for(EdgeIter edge=(*child)->edges_.begin(); edge != (*child)->edges_.end();
+                                ++edge)
+                                childEdges.erase(*edge);
+                            typedef FoamGridEntityImp<0,dimworld>** VertexIter;
+                            for(VertexIter vertex=(*child)->vertex_; 
+                                vertex != (*child)->vertex_+(*child)->corners();
+                                ++vertex)
+                                childVertices.erase(*vertex);
+                        }
+                    }
+                }
+            }
+        }
+        edgesToErase.insert(childEdges.begin(), childEdges.end());
+        verticesToErase.insert(childVertices.begin(), childVertices.end());
+        elementsToErase.insert(father.sons_.begin(), father.sons_.end());
+    }
+    
+                        
+                             
+        
+
     //! \brief refine an Element
     //! \param elemet The element to refine
     //! \param refCount How many times to refine the element
@@ -619,7 +831,15 @@ class FoamGrid :
                        int refCount)
     {
         if(refCount<0)
+        {
+            // We always remove all the children from the father.
+            // Removing means:
+            // 1. remove pointers in father element, edges and vertices
+            // 2. Mark removed entities for deletion.
             DUNE_THROW(NotImplemented, "Coarsening not implemented yet");
+            return;
+        }
+        
 
         // TODO: Currently we are assuming that only globalRefine is available
         // and therefore the next level is not yet present.
@@ -627,6 +847,14 @@ class FoamGrid :
         // Therefore we need some kind of detection for this later on.
 
         unsigned int nextLevel=element.level()+1;
+
+        
+        std::cout<<"Vertices "<<nextLevel<<": "<<Dune::get<0>(entityImps_[nextLevel]).size()
+                 <<std::endl;
+        std::cout<<"Edges "<<nextLevel<<": "<<Dune::get<1>(entityImps_[nextLevel]).size()
+                 <<std::endl;
+        std::cout<<"Elements "<<nextLevel<<": "<<Dune::get<2>(entityImps_[nextLevel]).size()
+                 <<std::endl;
 
         array<FoamGridEntityImp<0,dimworld>*, 6> nextLevelVertices;
         std::size_t vertexIndex=0;
@@ -902,6 +1130,13 @@ class FoamGrid :
                 refineSimplexElement(**elem, refCount);
             }
         }
+        std::cout<<"end refineSimplex"<<std::endl;
+        std::cout<<"Vertices "<<nextLevel<<": "<<Dune::get<0>(entityImps_[nextLevel]).size()
+                 <<std::endl;
+        std::cout<<"Edges "<<nextLevel<<": "<<Dune::get<1>(entityImps_[nextLevel]).size()
+                 <<std::endl;
+        std::cout<<"Elements "<<nextLevel<<": "<<Dune::get<2>(entityImps_[nextLevel]).size()
+                 <<std::endl;
     }
 
     /**
@@ -1032,14 +1267,14 @@ namespace Capabilities
     template<int dimworld>
     struct isLevelwiseConforming< FoamGrid<dimworld> >
     {
-        static const bool v = true;
+        static const bool v = false;
     };
 
     //! \todo Please doc me !
     template<int dimworld>
     struct isLeafwiseConforming< FoamGrid<dimworld> >
     {
-        static const bool v = true;
+        static const bool v = false;
     };
 }
 
