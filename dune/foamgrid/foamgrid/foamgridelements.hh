@@ -15,7 +15,7 @@ namespace Dune {
     public:
 
         /** \brief The different ways to mark an element for grid changes */
-        enum MarkState { DO_NOTHING , COARSEN , REFINE };
+        enum MarkState { DO_NOTHING , COARSEN , REFINE, IS_COARSENED };
 
         FoamGridEntityImp(int level, unsigned int id) 
             : FoamGridEntityBase(level,id),

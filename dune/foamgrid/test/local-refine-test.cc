@@ -33,16 +33,6 @@ int main (int argc, char *argv[]) try
     
     // check grid adaptation interface 
     checkAdaptation( *grid2d );
-    /*
-    grid2d->mark(1,*grid2d->leafbegin<0>());
-    if(grid2d->preAdapt())
-        DUNE_THROW(SystemError, "preAdapt return true despite having marked non"
-                   <<" elements for coarsening.");
-    if(!grid2d->adapt())
-        DUNE_THROW(SystemError, "preAdapt return false despite having marked "
-                   <<" elements for refinement.");
-    grid2d->postAdapt();
-    */
     
     {
         Dune::VTKWriter<typename FoamGrid<2>::LeafGridView > 

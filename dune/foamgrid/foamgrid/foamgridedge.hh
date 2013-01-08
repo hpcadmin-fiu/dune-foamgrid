@@ -32,7 +32,7 @@ namespace Dune {
                           const FoamGridEntityImp<0,dimworld>* v1, 
                           int level, unsigned int id,
                           FoamGridEntityImp* father) 
-            : FoamGridEntityBase(level,id), nSons_(0), father_(father)
+            : FoamGridEntityBase(level,id), elements_(), nSons_(0), father_(father)
         {
             vertex_[0] = v0;
             vertex_[1] = v1;
@@ -41,7 +41,7 @@ namespace Dune {
 
         /** \todo Implement this method! */
         bool isLeaf() const {
-            return nSons_<2;
+            return sons_[0]==nullptr;
         }
 
         unsigned int boundarySegmentIndex() const {

@@ -15,7 +15,7 @@ namespace Dune {
     {
     public:
         FoamGridEntityBase(int level, unsigned int id)
-            : level_(level), id_(id)
+            : level_(level), id_(id), willVanish_()
         {}
 
         unsigned int level() const {
@@ -31,7 +31,8 @@ namespace Dune {
         unsigned int leafIndex_;
         
         unsigned int id_;
-        
+        //! \brief Whether this entity will vanish due to coarsening.
+        bool willVanish_;
     };
 
     /**
