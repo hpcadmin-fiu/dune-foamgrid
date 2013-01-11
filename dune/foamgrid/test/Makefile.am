@@ -1,5 +1,7 @@
 
-TESTPROGS = global-refine-test foamgrid-test
+TESTPROGS =  foamgrid-test \
+	global-refine-test \
+	local-refine-test
 
 # which tests to run
 TESTS = $(TESTPROGS)
@@ -18,5 +20,7 @@ AM_CPPFLAGS+=-DDUNE_FOAMGRID_EXAMPLE_GRIDS_PATH=\"$(top_srcdir)/doc/grids/\"
 foamgrid_test_SOURCES = foamgrid-test.cc
 
 global_refine_test_SOURCES = global-refine-test.cc
+
+local_refine_test_SOURCES = local-refine-test.cc
 
 include $(top_srcdir)/am/global-rules

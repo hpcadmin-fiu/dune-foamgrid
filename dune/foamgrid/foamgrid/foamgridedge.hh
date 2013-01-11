@@ -20,7 +20,19 @@ namespace Dune {
         FoamGridEntityImp(const FoamGridEntityImp<0,dimworld>* v0, 
                           const FoamGridEntityImp<0,dimworld>* v1, 
                           int level, unsigned int id) 
-            : FoamGridEntityBase(level,id), nSons_(0)
+            : FoamGridEntityBase(level,id), elements_(), nSons_(0), father_(nullptr)
+        {
+            vertex_[0] = v0;
+            vertex_[1] = v1;
+            sons_[0] =sons_[1] = nullptr;
+        }
+
+
+        FoamGridEntityImp(const FoamGridEntityImp<0,dimworld>* v0, 
+                          const FoamGridEntityImp<0,dimworld>* v1, 
+                          int level, unsigned int id,
+                          FoamGridEntityImp* father) 
+            : FoamGridEntityBase(level,id), elements_(), nSons_(0), father_(father)
         {
             vertex_[0] = v0;
             vertex_[1] = v1;
@@ -29,7 +41,7 @@ namespace Dune {
 
         /** \todo Implement this method! */
         bool isLeaf() const {
-            return nSons_<2;
+            return sons_[0]==nullptr;
         }
 
         unsigned int boundarySegmentIndex() const {
@@ -52,15 +64,6 @@ namespace Dune {
         PartitionType partitionType() const {
             return InteriorEntity;
         }
-        
-        // this is a helper method which only makes sense as long as
-        // edges border at most two elements.
-        const FoamGridEntityImp<2,dimworld>* otherElement(const FoamGridEntityImp<2,dimworld>* element) {
-            assert(elements_.size()==2);
-            // Return the 'other' element on the current edge
-            return (elements_[0]==element) ? elements_[1] : elements_[0];
-        }
-
 
         std::vector<const FoamGridEntityImp<2,dimworld>*> elements_;
 
@@ -74,6 +77,9 @@ namespace Dune {
 
         /** \brief The number of refined edges (0 or 2). */
         unsigned int nSons_;
+        
+        /** \brief Pointer to father element */
+        FoamGridEntityImp<1,dimworld>* father_;
         
     };
 
