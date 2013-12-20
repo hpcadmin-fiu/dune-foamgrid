@@ -291,7 +291,7 @@ class FoamGrid :
             typedef FoamGridEntityPointer<EntitySeed::codimension, const FoamGrid> EntityPointerImpl;
             typedef typename Traits::template Codim<EntitySeed::codimension>::EntityPointer EntityPointer;
 
-            return EntityPointer(EntityPointerImpl(seed.getImplementationPointer()));
+            return EntityPointer(EntityPointerImpl(this->getRealImplementation(seed).getImplementationPointer()));
         }
 
         

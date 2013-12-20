@@ -6,6 +6,8 @@
  * \brief The SubGridEntitySeed class
  */
 
+#include <dune/common/nullptr.hh>
+
 
 namespace Dune {
 
@@ -43,9 +45,28 @@ class FoamGridEntitySeed
          * If would use SubGridEntitySeed(hostEntity.seed())
          * we would have one copy even with optimization enabled.
          */
+        FoamGridEntitySeed() :
+            entityImplPointer_(nullptr)
+        {}
+
+        /**
+         * \brief Create EntitySeed from hostgrid Entity
+         *
+         * We call hostEntity.seed() directly in the constructor
+         * of SubGridEntitySeed to allow for return value optimization.
+         *
+         * If would use SubGridEntitySeed(hostEntity.seed())
+         * we would have one copy even with optimization enabled.
+         */
         FoamGridEntitySeed(const EntityImplType* impl) :
             entityImplPointer_(impl)
         {}
+
+        /** \brief check whether it is safe to create an Entity from this Seed */
+        bool isValid() const
+        {
+          return entityImplPointer_;
+        }
 
     protected:
 
