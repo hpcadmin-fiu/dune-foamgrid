@@ -65,6 +65,32 @@ namespace Dune {
             return InteriorEntity;
         }
 
+        /** \brief Return level index of sub entity with codim = cc and local number i
+         */
+        int subLevelIndex (int i, unsigned int codim) const {
+            assert(1<=codim && codim<=2);
+            switch (codim) {
+            case 1:
+                return this->levelIndex_;
+            case 2:
+                return vertex_[i]->levelIndex_;
+            }
+            DUNE_THROW(GridError, "Non-existing codimension requested!");
+        }
+
+        /** \brief Return leaf index of sub entity with codim = cc and local number i
+         */
+        int subLeafIndex (int i,unsigned int codim) const {
+            assert(1<=codim && codim<=2);
+            switch (codim) {
+            case 1:
+                return this->leafIndex_;
+            case 2:
+                return vertex_[i]->leafIndex_;
+            }
+            DUNE_THROW(GridError, "Non-existing codimension requested!");
+        }
+
         std::vector<const FoamGridEntityImp<2,dimworld>*> elements_;
 
         const FoamGridEntityImp<0,dimworld>* vertex_[2];

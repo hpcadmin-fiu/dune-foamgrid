@@ -78,6 +78,22 @@ namespace Dune {
             return InteriorEntity;
         }
         
+        /** \brief Return level index of sub entity with codim = cc and local number i
+         */
+        int subLevelIndex (int i, unsigned int codim) const {
+            assert(codim==2);
+            return this->levelIndex_;
+            DUNE_THROW(GridError, "Non-existing codimension requested!");
+        }
+
+        /** \brief Return leaf index of sub entity with codim = cc and local number i
+         */
+        int subLeafIndex (int i,unsigned int codim) const {
+            assert(codim==2);
+            return this->leafIndex_;
+            DUNE_THROW(GridError, "Non-existing codimension requested!");
+        }
+
         FieldVector<double, dimworld> pos_;
         
         //! Son vertex on the next finer grid
