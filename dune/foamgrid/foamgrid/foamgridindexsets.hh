@@ -43,12 +43,7 @@ namespace Dune {
                       int i,
                       unsigned int codim) const
         {
-            if( cc == 0 )
-                return GridImp::getRealImplementation(e).subLevelIndex(i,codim);
-            else {
-                DUNE_THROW(Dune::NotImplemented, "!");
-                //return GridImp::getRealImplementation(e).levelIndex(); 
-            }
+            return GridImp::getRealImplementation(e).target_->subLevelIndex(i,codim);
         }
 
         //! get number of entities of given codim, type and on this level
@@ -202,12 +197,7 @@ public:
                       int i,
                       unsigned int codim) const
         {
-            if( cc == 0 )
-                return GridImp::getRealImplementation(e).subLeafIndex(i,codim);
-            else {
-                DUNE_THROW(Dune::NotImplemented, "!");
-                //return GridImp::getRealImplementation(e).leafIndex(); 
-            }
+            return GridImp::getRealImplementation(e).target_->subLevelIndex(i,codim);
         }
 
     //! get number of entities of given type

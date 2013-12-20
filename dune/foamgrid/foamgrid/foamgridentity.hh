@@ -280,36 +280,6 @@ class FoamGridEntity<0,dim,GridImp> :
             dune_static_assert(0<=cc && cc<=2, "Only codimensions with 0 <= cc <= 2 are valid!");
             return (cc==0) ? 1 : 3;
         }
-        
-    /** \brief Return level index of sub entity with codim = cc and local number i
-     */
-    int subLevelIndex (int i,unsigned int codim) const {
-        assert(0<=codim && codim<=dim);
-        switch (codim) {
-        case 0:
-            return target_->levelIndex_;
-        case 1:
-            return target_->edges_[i]->levelIndex_;
-        case 2:
-            return target_->vertex_[i]->levelIndex_;
-        }
-        DUNE_THROW(GridError, "Non-existing codimension requested!");
-    }
-
-    /** \brief Return leaf index of sub entity with codim = cc and local number i
-     */
-    int subLeafIndex (int i,unsigned int codim) const {
-        assert(0<=codim && codim<=dim);
-        switch (codim) {
-        case 0:
-            return target_->leafIndex_;
-        case 1:
-            return target_->edges_[i]->leafIndex_;
-        case 2:
-            return target_->vertex_[i]->leafIndex_;
-        }
-        DUNE_THROW(GridError, "Non-existing codimension requested!");
-    }
 
     /** \brief Return index of sub entity with codim = cc and local number i
      */
