@@ -364,7 +364,7 @@ class FoamGridGlobalIdSet :
             We use the remove_const to extract the Type from the mutable class,
             because the const class is not instantiated yet.
         */
-    IdType subId (const typename remove_const<GridImp>::type::Traits::template Codim<0>::Entity& e, int i, int codim) const
+        IdType subId (const typename remove_const<GridImp>::type::Traits::template Codim<0>::Entity& e, int i, int codim) const
         {
             return GridImp::getRealImplementation(e).subId(i,codim);
         }
@@ -405,7 +405,7 @@ class FoamGridLocalIdSet :
         * We use the remove_const to extract the Type from the mutable class,
         * because the const class is not instantiated yet.
         */
-    IdType subId (const typename remove_const<GridImp>::type::template Codim<0>::Entity& e, int i, int codim) const
+        IdType subId (const typename remove_const<GridImp>::type::template Codim<0>::Entity& e, int i, int codim) const
         {
             return GridImp::getRealImplementation(e).subId(i,codim);
         }
