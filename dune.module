@@ -5,6 +5,6 @@
 #Name of the module
 Module: dune-foamgrid
 Version: 2.1
-Maintainer: sander@mi.fu-berlin.de
+Maintainer: sander@igpm.rwth-aachen.de
 #depending on 
 Depends: dune-common dune-grid
