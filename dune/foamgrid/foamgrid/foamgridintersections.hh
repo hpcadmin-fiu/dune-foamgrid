@@ -139,8 +139,8 @@ class FoamGridIntersection
             std::vector<FieldVector<double, dim> > coordinates(2);
 
             // Get two vertices of the intersection
-            const Dune::GenericReferenceElement<double,dim>& refElement
-                = Dune::GenericReferenceElements<double, dim>::general(center_->type());
+            const Dune::ReferenceElement<double,dim>& refElement
+                = Dune::ReferenceElements<double, dim>::general(center_->type());
 
             coordinates[0] = refElement.position(refElement.subEntity(edgeIndex_, 1, 0, dim),dim);
             coordinates[1] = refElement.position(refElement.subEntity(edgeIndex_, 1, 1, dim),dim);
@@ -155,8 +155,8 @@ class FoamGridIntersection
             std::vector<FieldVector<double, dim> > coordinates(2);
 
             // Get two vertices of the intersection
-            const Dune::GenericReferenceElement<double,dim>& refElement
-                = Dune::GenericReferenceElements<double, dim>::general((*neighbor_)->type());
+            const Dune::ReferenceElement<double,dim>& refElement
+                = Dune::ReferenceElements<double, dim>::general((*neighbor_)->type());
 
             int idxInOutside = indexInOutside();
             
@@ -173,8 +173,8 @@ class FoamGridIntersection
             std::vector<FieldVector<double, dimworld> > coordinates(2);
 
             // Get two vertices of the intersection
-            const Dune::GenericReferenceElement<double,dim>& refElement
-                = Dune::GenericReferenceElements<double, dim>::general(center_->type());
+            const Dune::ReferenceElement<double,dim>& refElement
+                = Dune::ReferenceElements<double, dim>::general(center_->type());
 
             coordinates[0] = center_->vertex_[refElement.subEntity(edgeIndex_, 1, 0, dim)]->pos_;
             coordinates[1] = center_->vertex_[refElement.subEntity(edgeIndex_, 1, 1, dim)]->pos_;
@@ -199,8 +199,8 @@ class FoamGridIntersection
             assert(center_->type().isTriangle());
 
             // Compute vertices
-            const Dune::GenericReferenceElement<double,dim>& refElement
-                = Dune::GenericReferenceElements<double, dim>::general(center_->type());
+            const Dune::ReferenceElement<double,dim>& refElement
+                = Dune::ReferenceElements<double, dim>::general(center_->type());
 
             // edge vertices, oriented
             int v0 = std::min(refElement.subEntity(edgeIndex_, 1, 0, dim), refElement.subEntity(edgeIndex_, 1, 1, dim));
@@ -224,8 +224,8 @@ class FoamGridIntersection
         //! return outer normal multiplied by the integration element
         FieldVector<ctype, dimworld> integrationOuterNormal (const FieldVector<ctype, dim-1>& local) const {
 
-            const Dune::GenericReferenceElement<double,dim>& refElement
-                = Dune::GenericReferenceElements<double, dim>::general(center_->type());
+            const Dune::ReferenceElement<double,dim>& refElement
+                = Dune::ReferenceElements<double, dim>::general(center_->type());
 
             ctype edgeLength = (center_->vertex_[refElement.subEntity(edgeIndex_, 1, 0, dim)]->pos_
                                 - center_->vertex_[refElement.subEntity(edgeIndex_, 1, 1, dim)]->pos_).two_norm();

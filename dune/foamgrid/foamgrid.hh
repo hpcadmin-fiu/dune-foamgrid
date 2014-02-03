@@ -953,8 +953,8 @@ class FoamGrid :
         
         array<FoamGridEntityImp<1,dimworld>*, 9> nextLevelEdges;
         std::size_t edgeIndex=0;
-        const Dune::GenericReferenceElement<double,dimension>& refElement
-            = Dune::GenericReferenceElements<double, dimension>::general(element.type());
+        const Dune::ReferenceElement<double,dimension>& refElement
+            = Dune::ReferenceElements<double, dimension>::general(element.type());
 
         // I am just to dumb for a general edge to verticex mapping.
         // Therefore we just store it here

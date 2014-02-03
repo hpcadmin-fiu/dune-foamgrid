@@ -142,8 +142,8 @@ namespace Dune {
 
                 FoamGridEntityImp<2,dimworld>* element = &(*eIt);
 
-                const Dune::GenericReferenceElement<double,dim>& refElement
-                    = Dune::GenericReferenceElements<double, dim>::general(eIt->type());
+                const Dune::ReferenceElement<double,dim>& refElement
+                    = Dune::ReferenceElements<double, dim>::general(eIt->type());
 
                 // Loop over all edges of this element
                 for (size_t i=0; i<element->edges_.size(); ++i) {
