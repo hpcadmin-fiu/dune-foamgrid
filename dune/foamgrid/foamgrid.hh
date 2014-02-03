@@ -10,7 +10,7 @@
 #include <list>
 #include <set>
 
-#include <dune/common/collectivecommunication.hh>
+#include <dune/common/parallel/collectivecommunication.hh>
 #include <dune/common/tuples.hh>
 #include <dune/common/stdstreams.hh>
 #include <dune/grid/common/capabilities.hh>
