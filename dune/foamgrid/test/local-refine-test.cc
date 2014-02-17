@@ -25,7 +25,7 @@ int main (int argc, char *argv[]) try
     std::auto_ptr<FoamGrid<2> > grid2d(factory.createGrid());
     {
         Dune::VTKWriter<typename FoamGrid<2>::LeafGridView > 
-            writer(grid2d->leafView(), VTK::nonconforming);
+            writer(grid2d->leafGridView(), VTK::nonconforming);
         writer.write("refined0");
     }
     
@@ -36,7 +36,7 @@ int main (int argc, char *argv[]) try
     
     {
         Dune::VTKWriter<typename FoamGrid<2>::LeafGridView > 
-            writer(grid2d->leafView(), VTK::nonconforming);
+            writer(grid2d->leafGridView(), VTK::nonconforming);
         writer.write("refined-l");
     }   
     Dune::gridinfo(*grid2d);

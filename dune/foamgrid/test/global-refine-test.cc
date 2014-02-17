@@ -24,7 +24,7 @@ int main (int argc, char *argv[]) try
     std::auto_ptr<FoamGrid<2> > grid2d(factory.createGrid());
     {
         Dune::VTKWriter<typename FoamGrid<2>::LeafGridView > 
-            writer(grid2d->leafView(), VTK::nonconforming);
+            writer(grid2d->leafGridView(), VTK::nonconforming);
         writer.write("refined0");
     }
 
@@ -33,7 +33,7 @@ int main (int argc, char *argv[]) try
     Dune::gridinfo(*grid2d);
     {
         Dune::VTKWriter<typename FoamGrid<2>::LeafGridView > 
-            writer(grid2d->leafView(), VTK::nonconforming);
+            writer(grid2d->leafGridView(), VTK::nonconforming);
         writer.write("refined1");
     }
     checkGeometryInFather(*grid2d);
@@ -41,7 +41,7 @@ int main (int argc, char *argv[]) try
 
     {
         Dune::VTKWriter<typename FoamGrid<2>::LeafGridView > 
-            writer(grid2d->leafView(), VTK::nonconforming);
+            writer(grid2d->leafGridView(), VTK::nonconforming);
         writer.write("refined-0");
     }   
     checkGeometryInFather(*grid2d);
@@ -49,7 +49,7 @@ int main (int argc, char *argv[]) try
     grid2d->globalRefine(2); 
     {
         Dune::VTKWriter<typename FoamGrid<2>::LeafGridView > 
-            writer(grid2d->leafView(), VTK::nonconforming);
+            writer(grid2d->leafGridView(), VTK::nonconforming);
         writer.write("refined2");
     }   
     Dune::gridinfo(*grid2d);
@@ -57,7 +57,7 @@ int main (int argc, char *argv[]) try
     grid2d->globalRefine(3);
     {
         Dune::VTKWriter<typename FoamGrid<2>::LeafGridView > 
-            writer(grid2d->leafView(), VTK::nonconforming);
+            writer(grid2d->leafGridView(), VTK::nonconforming);
         writer.write("refined5");
     }   
     gridcheck(*grid2d);
