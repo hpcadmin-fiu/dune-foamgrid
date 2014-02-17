@@ -107,12 +107,6 @@ class FoamGridIntersection
         return center_->edges_[edgeIndex_]->elements_.size()==1;
     }
         
-        
-    //! return information about the Boundary
-    int boundaryId () const DUNE_DEPRECATED {
-        return center_->edges_[edgeIndex_]->boundarySegmentIndex();
-    }
-        
     //! return information about the Boundary
     int boundarySegmentIndex () const {
         return center_->edges_[edgeIndex_]->boundarySegmentIndex();
