@@ -8,17 +8,16 @@
  * \brief The local geometry of th elements of FoamGrid
  */
 
-namespace Dune{
+#include <vector>
+
+#include <dune/geometry/multilineargeometry.hh>
+
+namespace Dune {
     
     template<int mydim, int coorddim, class GridImp>
     class FoamGridLocalGeometry :
-        public GenericGeometry::BasicGeometry<mydim, GenericGeometry::DefaultGeometryTraits<typename GridImp::ctype,mydim,coorddim> >
+        public CachedMultiLinearGeometry<typename GridImp::ctype,mydim,coorddim>
     {
-        typedef GenericGeometry
-        ::BasicGeometry<2, GenericGeometry::DefaultGeometryTraits<typename GridImp::ctype,
-                                                                  mydim,
-                                                                  coorddim> > Base;
-        
     public:
         /**
          * \brief Empty default constructor.
@@ -33,7 +32,7 @@ namespace Dune{
          * the father element.
          */
         FoamGridLocalGeometry(const GeometryType& type, const std::vector<FieldVector<typename GridImp::ctype,coorddim> >& coordinates) :
-        Base(type, coordinates)
+        CachedMultiLinearGeometry<typename GridImp::ctype,mydim,coorddim>(type, coordinates)
     {} 
     };
 } // namespace Dune

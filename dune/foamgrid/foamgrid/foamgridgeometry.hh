@@ -2,23 +2,20 @@
 #define DUNE_FOAMGRID_GEOMETRY_HH
 
 /** \file
-* \brief The FoamGridGeometry class and its specializations
+* \brief The FoamGridGeometry class
 */
 
-#include <dune/common/fmatrix.hh>
-#include <dune/common/typetraits.hh>
-#include <dune/geometry/genericgeometry/geometry.hh>
+#include <vector>
+
+#include <dune/geometry/multilineargeometry.hh>
 
 
 namespace Dune {
 
 template<int mydim, int coorddim, class GridImp>
 class FoamGridGeometry :
-        public GenericGeometry::BasicGeometry<mydim, GenericGeometry::DefaultGeometryTraits<typename GridImp::ctype,mydim,coorddim> >
+        public CachedMultiLinearGeometry<typename GridImp::ctype, mydim, coorddim>
 {
-
-    typedef typename GenericGeometry::BasicGeometry<mydim, GenericGeometry::DefaultGeometryTraits<typename GridImp::ctype,mydim,coorddim> > Base;
-
     public:
 
     /**
@@ -30,7 +27,7 @@ class FoamGridGeometry :
      * \brief Construct geometry from coordinate vector
      */
     FoamGridGeometry(const GeometryType& type, const std::vector<FieldVector<typename GridImp::ctype,coorddim> >& coordinates) :
-        Base(type, coordinates)
+        CachedMultiLinearGeometry<typename GridImp::ctype, mydim, coorddim>(type, coordinates)
     {}
 
 };
