@@ -37,6 +37,3 @@ Makefile.in
 ## /src
 /src/dune_foamgrid
 
-# /dune/foamgrid/test
-dune/foamgrid/test/global-refine-test
-dune/foamgrid/test/foamgrid-test
