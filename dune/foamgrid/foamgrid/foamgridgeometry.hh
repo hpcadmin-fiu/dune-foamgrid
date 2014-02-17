@@ -12,17 +12,6 @@
 
 namespace Dune {
 
-template<int mydim, int coorddim, class GridImp> class FoamGridGeometry;
-
-namespace FacadeOptions
-{
-    template< int mydim, int cdim, class GridImp>
-    struct StoreGeometryReference<mydim, cdim, GridImp, FoamGridGeometry>
-    {
-        static const bool v = false;
-    };
-}
-
 template<int mydim, int coorddim, class GridImp>
 class FoamGridGeometry :
         public GenericGeometry::BasicGeometry<mydim, GenericGeometry::DefaultGeometryTraits<typename GridImp::ctype,mydim,coorddim> >
