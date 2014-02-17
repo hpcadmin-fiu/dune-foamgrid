@@ -26,6 +26,9 @@ Makefile.in
 /am
 /dune-foamgrid.pc
 
+compile
+test-driver
+
 # /doc/doxygen/
 /doc/doxygen/html
 /doc/doxygen/doxygen-tag
