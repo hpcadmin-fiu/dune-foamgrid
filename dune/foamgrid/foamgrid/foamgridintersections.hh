@@ -42,7 +42,6 @@ class FoamGridIntersection
 
         typedef typename GridImp::template Codim<0>::EntityPointer EntityPointer;
         typedef typename GridImp::template Codim<0>::Entity Entity;
-//        typedef Dune::Intersection<const GridImp, typename Dune::FoamGridLevelIntersectionIterator> Intersection;
 
     /**
      * \brief Initalizes an intersection.
@@ -55,34 +54,6 @@ class FoamGridIntersection
                          int edge)
         : center_(center), edgeIndex_(edge)
     {}
-    /*
-    void increment(){
-        ++neighbor_;
-        while(neighbor_<(*edges_)[edgeIndex_]->elements_.size() &&
-              (center_==center_->edges_[edgeIndex_]->elements_[neighbor_]
-               ||center_->level()!=center_->edges_[edgeIndex_]->elements_[neighbor_]->level()))
-            ++neighbor_;
-        
-        if(neighbor_<center_->edges_[edgeIndex_]->elements_.size())
-            return;
-        neighbor_=0;
-        for(++edgeIndex_;edgeIndex_!=center_->corners();++edgeIndex_){ // Not an end iterator
-            while(center_->edges_[edgeIndex_]->elements_.size()>1 // not on boundary
-                  && (center_==center_->edges_[edgeIndex_]->elements_[neighbor_]
-                      ||center_->level()!=center_->edges_[edgeIndex_]->elements_[neighbor_]->level()))
-            {
-                // Move index to point to the first real neighbor 
-                ++neighbor_;
-            }
-            if(neighbor_<center_->edges_[edgeIndex_]->elements_.size())
-            {
-                // Found the first intersection
-                break;
-            }
-            neighbor_=0;
-        }
-    }
-    */
     
         //! return EntityPointer to the Entity on the inside of this intersection
         //! (that is the Entity where we started this Iterator)
@@ -330,8 +301,6 @@ public:
     enum {dimworld=GridImp::dimensionworld};
     
     enum {dim=GridImp::dimension};
-
-    typedef Dune::Intersection<const GridImp, typename Dune::FoamGridLeafIntersection<GridImp> > Intersection;
 
     typedef typename GridImp::ctype ctype;
     
