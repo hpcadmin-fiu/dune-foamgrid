@@ -41,8 +41,6 @@ class FoamGridIntersection
         enum {dimworld=GridImp::dimensionworld};
 
         typedef typename GridImp::template Codim<0>::EntityPointer EntityPointer;
-        typedef typename GridImp::template Codim<1>::Geometry Geometry;
-        typedef typename GridImp::template Codim<1>::LocalGeometry LocalGeometry;
         typedef typename GridImp::template Codim<0>::Entity Entity;
 //        typedef Dune::Intersection<const GridImp, typename Dune::FoamGridLevelIntersectionIterator> Intersection;
 
@@ -112,83 +110,11 @@ class FoamGridIntersection
         return center_->edges_[edgeIndex_]->boundarySegmentIndex();
     }
         
-    //! Return true if this is a conforming intersection
-    bool conforming () const {
-        // FoamGrid level intersections are always conforming
-        return true;
-    }
-        
     //! Geometry type of an intersection
     GeometryType type () const {
         return GeometryType(GeometryType::simplex, dim-1);
     }
 
-
-        //! intersection of codimension 1 of this neighbor with element where
-        //! iteration started.
-        //! Here returned element is in LOCAL coordinates of the element
-        //! where iteration started.
-        LocalGeometry geometryInInside () const {
-
-            std::vector<FieldVector<double, dim> > coordinates(2);
-
-            // Get two vertices of the intersection
-            const Dune::ReferenceElement<double,dim>& refElement
-                = Dune::ReferenceElements<double, dim>::general(center_->type());
-
-            coordinates[0] = refElement.position(refElement.subEntity(edgeIndex_, 1, 0, dim),dim);
-            coordinates[1] = refElement.position(refElement.subEntity(edgeIndex_, 1, 1, dim),dim);
-
-            return LocalGeometry(FoamGridGeometry<dim-1, dim, GridImp>(type(), coordinates));
-        }
-        
-        //! intersection of codimension 1 of this neighbor with element where iteration started.
-        //! Here returned element is in LOCAL coordinates of neighbor
-        //! In the LevelIntersection we know that the intersection is conforming
-        LocalGeometry geometryInOutside () const {
-
-            // Get two vertices of the intersection
-            const Dune::ReferenceElement<double,dim>& refElement
-                = Dune::ReferenceElements<double, dim>::general(center_->type());
-
-            std::array<FoamGridEntityImp<0,dimworld>*, 2> vtx;
-
-            vtx[0] = center_->vertex_[refElement.subEntity(edgeIndex_, 1, 0, dim)];
-            vtx[1] = center_->vertex_[refElement.subEntity(edgeIndex_, 1, 1, dim)];
-
-
-            std::vector<FieldVector<double, dim> > coordinates(2);
-
-            // Find the intersection vertices in local numbering of the outside element
-            // That way we get the local orientation correctly.
-            const Dune::ReferenceElement<double,dim>& refElementOther
-                = Dune::ReferenceElements<double, dim>::general((*neighbor_)->type());
-
-            for (int i=0; i<refElementOther.size(dim); i++)
-              for (int j=0; j<2; j++)
-                if (vtx[j] == (*neighbor_)->vertex_[refElementOther.subEntity(0,0,i,dim)])
-                  coordinates[j] = refElement.position(refElement.subEntity(0,0, i, dim),dim);
-
-            return LocalGeometry(FoamGridGeometry<dim-1, dim, GridImp>(type(), coordinates));
-        }
-        
-        //! intersection of codimension 1 of this neighbor with element where iteration started.
-        //! Here returned element is in GLOBAL coordinates of the element where iteration started.
-        Geometry geometry () const {
-
-            std::vector<FieldVector<double, dimworld> > coordinates(2);
-
-            // Get two vertices of the intersection
-            const Dune::ReferenceElement<double,dim>& refElement
-                = Dune::ReferenceElements<double, dim>::general(center_->type());
-
-            coordinates[0] = center_->vertex_[refElement.subEntity(edgeIndex_, 1, 0, dim)]->pos_;
-            coordinates[1] = center_->vertex_[refElement.subEntity(edgeIndex_, 1, 1, dim)]->pos_;
-
-            return Geometry(FoamGridGeometry<dim-1, dimworld, GridImp>(type(), coordinates));
-        }
-        
-        
         //! local number of codim 1 entity in self where intersection is contained in
         int indexInInside () const {
             return edgeIndex_;
@@ -280,12 +206,23 @@ class FoamGridLevelIntersection
 {
     friend class FoamGridLevelIntersectionIterator<GridImp>;
 
+    enum {dim=GridImp::dimension};
+
+    typedef typename GridImp::template Codim<1>::Geometry Geometry;
+    typedef typename GridImp::template Codim<1>::LocalGeometry LocalGeometry;
+
 public:
     enum{ dimworld = GridImp::dimensionworld };
     
     FoamGridLevelIntersection(const FoamGridEntityImp<2,dimworld>* center, int edge)
                               : FoamGridIntersection<GridImp>(center, edge)
     {}
+
+    //! Return true if this is a conforming intersection
+    bool conforming () const {
+        // FoamGrid level intersections are always conforming
+        return true;
+    }
 
     //! local number of codim 1 entity in neighbor where intersection is contained
     int indexInOutside () const {
@@ -301,6 +238,71 @@ public:
     bool neighbor () const {
       return this->neighborIndex_!=this->center_->edges_[this->edgeIndex_]->elements_.size();
     }
+
+    //! intersection of codimension 1 of this neighbor with element where
+    //! iteration started.
+    //! Here returned element is in LOCAL coordinates of the element
+    //! where iteration started.
+    LocalGeometry geometryInInside () const {
+
+      std::vector<FieldVector<double, dim> > coordinates(2);
+
+      // Get two vertices of the intersection
+      const Dune::ReferenceElement<double,dim>& refElement
+          = Dune::ReferenceElements<double, dim>::general(this->center_->type());
+
+      coordinates[0] = refElement.position(refElement.subEntity(this->edgeIndex_, 1, 0, dim),dim);
+      coordinates[1] = refElement.position(refElement.subEntity(this->edgeIndex_, 1, 1, dim),dim);
+
+      return LocalGeometry(FoamGridGeometry<dim-1, dim, GridImp>(this->type(), coordinates));
+    }
+
+    //! intersection of codimension 1 of this neighbor with element where iteration started.
+    //! Here returned element is in LOCAL coordinates of neighbor
+    //! In the LevelIntersection we know that the intersection is conforming
+    LocalGeometry geometryInOutside () const {
+
+    // Get two vertices of the intersection
+    const Dune::ReferenceElement<double,dim>& refElement
+        = Dune::ReferenceElements<double, dim>::general(this->center_->type());
+
+    std::array<FoamGridEntityImp<0,dimworld>*, 2> vtx;
+
+    vtx[0] = this->center_->vertex_[refElement.subEntity(this->edgeIndex_, 1, 0, dim)];
+    vtx[1] = this->center_->vertex_[refElement.subEntity(this->edgeIndex_, 1, 1, dim)];
+
+    std::vector<FieldVector<double, dim> > coordinates(2);
+
+    // Find the intersection vertices in local numbering of the outside element
+    // That way we get the local orientation correctly.
+    const Dune::ReferenceElement<double,dim>& refElementOther
+        = Dune::ReferenceElements<double, dim>::general((*this->neighbor_)->type());
+
+    for (int i=0; i<refElementOther.size(dim); i++)
+      for (int j=0; j<2; j++)
+        if (vtx[j] == (*this->neighbor_)->vertex_[refElementOther.subEntity(0,0,i,dim)])
+          coordinates[j] = refElement.position(refElement.subEntity(0,0, i, dim),dim);
+
+    return LocalGeometry(FoamGridGeometry<dim-1, dim, GridImp>(this->type(), coordinates));
+  }
+
+  //! intersection of codimension 1 of this neighbor with element where iteration started.
+  //! Here returned element is in GLOBAL coordinates of the element where iteration started.
+  Geometry geometry () const {
+
+    std::vector<FieldVector<double, dimworld> > coordinates(2);
+
+    // Get two vertices of the intersection
+    const Dune::ReferenceElement<double,dim>& refElement
+        = Dune::ReferenceElements<double, dim>::general(this->center_->type());
+
+    coordinates[0] = this->center_->vertex_[refElement.subEntity(this->edgeIndex_, 1, 0, dim)]->pos_;
+    coordinates[1] = this->center_->vertex_[refElement.subEntity(this->edgeIndex_, 1, 1, dim)]->pos_;
+
+    return Geometry(FoamGridGeometry<dim-1, dimworld, GridImp>(this->type(), coordinates));
+  }
+
+
     private:
     int neighborIndex_;
     
@@ -333,13 +335,19 @@ public:
 
     typedef typename GridImp::ctype ctype;
     
-    typedef typename FoamGridIntersection<GridImp>::LocalGeometry LocalGeometry;
+    typedef typename GridImp::template Codim<1>::Geometry Geometry;
+    typedef typename GridImp::template Codim<1>::LocalGeometry LocalGeometry;
 
     FoamGridLeafIntersection(const FoamGridEntityImp<2,FoamGridIntersection<GridImp>::dimworld>* center,
                              int edge)
         : FoamGridIntersection<GridImp>(center, edge)
     {}    
     
+    //! Return true if this is a conforming intersection
+    bool conforming () const {
+        DUNE_THROW(Dune::NotImplemented, "FoamGridLeafIntersection::conforming");
+    }
+
     //! local number of codim 1 entity in neighbor where intersection is contained
     int indexInOutside () const {
         assert(this->neighbor_!=neighborEnd_);
@@ -359,15 +367,16 @@ public:
         
     }
 
+    Geometry geometry () const {
+      DUNE_THROW(Dune::NotImplemented, "FoamGridLeafIntersection::geometry()");
+    }
+
     //! intersection of codimension 1 of this neighbor with element where
     //! iteration started.
     //! Here returned element is in LOCAL coordinates of the element
     //! where iteration started.
     LocalGeometry geometryInInside () const {
-        
-        if(edgePointer_->level()==this->center_->level())
-            return FoamGridIntersection<GridImp>::geometryInInside();
-        
+
         std::vector<FieldVector<double, dim> > coordinates(2);
         
         coordinates[0]=this->center_->globalToLocal(edgePointer_->vertex_[0]->pos_);
