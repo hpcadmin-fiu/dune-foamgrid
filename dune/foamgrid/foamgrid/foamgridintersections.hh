@@ -197,18 +197,21 @@ class FoamGridIntersection
                 = Dune::ReferenceElements<double, dim>::general(center_->type());
 
             // edge vertices, oriented
-            int v0 = std::min(refElement.subEntity(edgeIndex_, 1, 0, dim), refElement.subEntity(edgeIndex_, 1, 1, dim));
-            int v1 = std::max(refElement.subEntity(edgeIndex_, 1, 0, dim), refElement.subEntity(edgeIndex_, 1, 1, dim));
+            int v0 = refElement.subEntity(edgeIndex_, 1, 0, dim);
+            int v1 = refElement.subEntity(edgeIndex_, 1, 1, dim);
 
             // opposite vertex
             int v2 = (v1+1)%3;
+            if (v2==v0)
+              v2 = (v0+1)%3;
+            assert(v2!=v0 and v2!=v1);
 
             // Compute oriented edge
             FieldVector<ctype, dimworld> edge = center_->vertex_[v1]->pos_ - center_->vertex_[v0]->pos_;
 
             // compute triangle edge normal
             FieldVector<ctype, dimworld> scaledEdge = edge;
-            edge *= edge*(center_->vertex_[v2]->pos_ - center_->vertex_[v0]->pos_);
+            scaledEdge *= edge*(center_->vertex_[v2]->pos_ - center_->vertex_[v0]->pos_) / edge.two_norm2();
             FieldVector<ctype, dimworld> normal = center_->vertex_[v2]->pos_ - center_->vertex_[v0]->pos_;
             normal -= scaledEdge;
             normal *= -1;
