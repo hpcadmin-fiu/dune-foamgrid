@@ -13,6 +13,7 @@ foamgrid_HEADERS = foamgridedge.hh \
                    foamgridintersections.hh \
                    foamgridleafiterator.hh \
                    foamgridleveliterator.hh \
+                   foamgridlocalgeometry.hh \
                    foamgridvertex.hh
 
 include $(top_srcdir)/am/global-rules
