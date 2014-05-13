@@ -9,6 +9,8 @@
 
 #include <memory>
 
+#include <dune/common/version.hh>
+
 #include <dune/grid/common/gridenums.hh>
 #include <dune/grid/common/grid.hh>
 
@@ -277,7 +279,11 @@ class FoamGridEntity<0,dim,GridImp> :
         template<int cc>
         int count () const
         {
+#if DUNE_VERSION_NEWER(DUNE_COMMON,2,4)
+            static_assert(0<=cc && cc<=2, "Only codimensions with 0 <= cc <= 2 are valid!");
+#else
             dune_static_assert(0<=cc && cc<=2, "Only codimensions with 0 <= cc <= 2 are valid!");
+#endif
             return (cc==0) ? 1 : 3;
         }
 

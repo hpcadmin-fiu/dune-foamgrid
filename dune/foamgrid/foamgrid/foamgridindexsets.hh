@@ -233,7 +233,11 @@ public:
     void update(const GridImp& grid)
     {
 
+#if DUNE_VERSION_NEWER(DUNE_COMMON,2,4)
+        static_assert(dim==2, "LeafIndexSet::update() only works for 2d grids");
+#else
         dune_static_assert(dim==2, "LeafIndexSet::update() only works for 2d grids");
+#endif
 
         // ///////////////////////////////
         //   Init the element indices
