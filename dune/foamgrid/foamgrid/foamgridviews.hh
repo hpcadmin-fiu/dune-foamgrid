@@ -73,8 +73,6 @@ namespace Dune
     template< class GridImp, PartitionIteratorType pitype >
     class FoamGridLevelGridView
     {
-      typedef FoamGridLevelGridView< GridImp, pitype > ThisType;
-
     public:
       typedef FoamGridLevelGridViewTraits<GridImp,pitype> Traits;
 
@@ -259,8 +257,6 @@ namespace Dune
     template< class GridImp, PartitionIteratorType pitype >
     class FoamGridLeafGridView
     {
-      typedef FoamGridLeafGridView< GridImp, pitype > ThisType;
-
     public:
       typedef FoamGridLeafGridViewTraits<GridImp,pitype> Traits;
 
