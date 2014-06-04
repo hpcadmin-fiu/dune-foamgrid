@@ -23,7 +23,6 @@
 
 // The components of the FoamGrid interface
 #include "foamgrid/foamgridgeometry.hh"
-#include "foamgrid/foamgridlocalgeometry.hh"
 #include "foamgrid/foamgridentity.hh"
 #include "foamgrid/foamgridentitypointer.hh"
 #include "foamgrid/foamgridentityseed.hh"
@@ -67,8 +66,7 @@ struct FoamGridFamily
         CollectiveCommunication<Dune::FoamGrid<dimworld> > ,
         DefaultLevelGridViewTraits,
         DefaultLeafGridViewTraits,
-        FoamGridEntitySeed /*,
-                             FoamGridLocalGeometry*/
+        FoamGridEntitySeed
             > Traits;
 };
 
