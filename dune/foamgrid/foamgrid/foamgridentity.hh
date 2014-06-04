@@ -287,6 +287,14 @@ class FoamGridEntity<0,dim,GridImp> :
             return (cc==0) ? 1 : 3;
         }
 
+        /** \brief Return the number of subEntities of codimension cc.
+        */
+        unsigned int count (unsigned int codim) const
+        {
+            assert(0<=codim && codim<=2);
+            return (codim==0) ? 1 : 3;
+        }
+
     /** \brief Return index of sub entity with codim = cc and local number i
      */
     int subId (int i,unsigned int codim) const {
