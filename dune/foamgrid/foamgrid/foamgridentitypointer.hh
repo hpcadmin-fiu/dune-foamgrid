@@ -62,12 +62,6 @@ class FoamGridEntityPointer
             return virtualEntity_.level();
         }
     
-    /** \brief Throw away all temporary memory 
-     * \deprecated Removed in dune-grid 2.2
-     */
-    void compactify() const
-    {}
-        
     protected:
     
         //! virtual entity
