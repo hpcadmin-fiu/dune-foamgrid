@@ -252,7 +252,6 @@ class FoamGrid :
         /** \brief The number of boundary edges on the coarsest level */
         size_t numBoundarySegments() const
         {
-            //  DUNE_THROW(Dune::NotImplemented, "numBoundarySegments");
             return numBoundarySegments_;
         }
         
