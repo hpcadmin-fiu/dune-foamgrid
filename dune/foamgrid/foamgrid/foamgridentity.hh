@@ -41,37 +41,6 @@ template<class GridImp>
 class FoamGridHierarchicIterator;
 
 
-
-
-template<int codim, int dim, class GridImp>
-class FoamGridMakeableEntity :
-    public GridImp::template Codim<codim>::Entity
-{
-
-    enum {dimworld = GridImp::dimensionworld};
-
-    public:
-
-        //! \todo Please doc me !
-    FoamGridMakeableEntity(const FoamGridEntityImp<dim-codim,dimworld>* target) :
-            GridImp::template Codim<codim>::Entity (FoamGridEntity<codim, dim, const GridImp>(target))
-        {}
-        
-        
-        //! \todo Please doc me !
-    void setToTarget(const FoamGridEntityImp<dim-codim,dimworld>* target) {
-            this->realEntity.setToTarget(target);
-        }
-        
-        
-        //! \todo Please doc me !
-    const FoamGridEntityImp<dim-codim,dimworld>* getTarget() {
-            return this->realEntity.target_;
-        }
-    
-};
-
-
 /** \brief The implementation of entities in a FoamGrid
 *   \ingroup FoamGrid
 *
@@ -81,8 +50,6 @@ template<int codim, int dim, class GridImp>
 class FoamGridEntity :
     public EntityDefaultImplementation <codim,dim,GridImp,FoamGridEntity>
 {
-    friend class FoamGridMakeableEntity<codim,dim,GridImp>;
-
     template <class GridImp_>
     friend class FoamGridLevelIndexSet;
 
@@ -175,8 +142,6 @@ class FoamGridEntity :
     const FoamGridEntityImp<dim-codim,GridImp::dimensionworld>* target_;
 
         
-    private:
-    
         //! \todo Please doc me !
         void setToTarget(const FoamGridEntityImp<dim-codim,GridImp::dimensionworld>* target)
         {
@@ -448,7 +413,7 @@ class FoamGridEntity<0,dim,GridImp> :
                 for (size_t i=0; i<target_->nSons(); i++)
                     it.elemStack.push(target_->sons_[i]);
             
-            it.virtualEntity_.setToTarget((it.elemStack.empty()) 
+            GridImp::getRealImplementation(it.virtualEntity_).setToTarget((it.elemStack.empty())
                                           ? nullptr : it.elemStack.top());
             
             return it;

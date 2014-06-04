@@ -104,6 +104,9 @@ class FoamGrid :
     template<int codim_, int dim_, class GridImp_>
     friend class FoamGridEntity;
 
+    template <int codim_, class GridImp_>
+    friend class FoamGridEntityPointer;
+
     public:
         
     /** \brief This grid is always 2-dimensional */

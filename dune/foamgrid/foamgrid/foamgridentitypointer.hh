@@ -48,7 +48,7 @@ class FoamGridEntityPointer
         
         //! equality
         bool equals(const FoamGridEntityPointer<codim,GridImp>& i) const {
-            return virtualEntity_.getTarget() == i.virtualEntity_.getTarget();
+            return GridImp::getRealImplementation(virtualEntity_).target_ == GridImp::getRealImplementation(i.virtualEntity_).target_;
         }
     
         
@@ -65,8 +65,8 @@ class FoamGridEntityPointer
     protected:
     
         //! virtual entity
-        mutable FoamGridMakeableEntity<codim,dim,GridImp> virtualEntity_;
-    
+        mutable MakeableInterfaceObject<Entity> virtualEntity_;
+
         
 };
 
