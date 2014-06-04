@@ -14,6 +14,7 @@ foamgrid_HEADERS = foamgrid.cc \
                    foamgridintersections.hh \
                    foamgridleafiterator.hh \
                    foamgridleveliterator.hh \
-                   foamgridvertex.hh
+                   foamgridvertex.hh \
+                   foamgridviews.hh
 
 include $(top_srcdir)/am/global-rules

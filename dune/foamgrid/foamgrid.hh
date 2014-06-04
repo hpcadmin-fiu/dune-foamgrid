@@ -31,6 +31,7 @@
 #include "foamgrid/foamgridleafiterator.hh"
 #include "foamgrid/foamgridhierarchiciterator.hh"
 #include "foamgrid/foamgridindexsets.hh"
+#include "foamgrid/foamgridviews.hh"
 
 namespace Dune {
 
@@ -64,8 +65,8 @@ struct FoamGridFamily
         FoamGridIdSet< const FoamGrid<dimworld> >,  // local IdSet
         unsigned int,   // local id type
         CollectiveCommunication<Dune::FoamGrid<dimworld> > ,
-        DefaultLevelGridViewTraits,
-        DefaultLeafGridViewTraits,
+        FoamGridLevelGridViewTraits,
+        FoamGridLeafGridViewTraits,
         FoamGridEntitySeed
             > Traits;
 };
@@ -103,6 +104,11 @@ class FoamGrid :
 
     template <int codim_, class GridImp_>
     friend class FoamGridEntityPointer;
+
+    template <class GridImp_, PartitionIteratorType PiType_>
+    friend class FoamGridLeafGridView;
+    template <class GridImp_, PartitionIteratorType PiType_>
+    friend class FoamGridLevelGridView;
 
     public:
         
