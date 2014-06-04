@@ -59,9 +59,9 @@ struct FoamGridFamily
         FoamGridLeafIterator,
         FoamGridLevelIndexSet< const FoamGrid<dimworld> >,
         FoamGridLeafIndexSet< const FoamGrid<dimworld> >,
-        FoamGridGlobalIdSet< const FoamGrid<dimworld> >,
+        FoamGridIdSet< const FoamGrid<dimworld> >,  // global IdSet
         unsigned int,   // global id type
-        FoamGridLocalIdSet< const FoamGrid<dimworld> >,
+        FoamGridIdSet< const FoamGrid<dimworld> >,  // local IdSet
         unsigned int,   // local id type
         CollectiveCommunication<Dune::FoamGrid<dimworld> > ,
         DefaultLevelGridViewTraits,
@@ -83,8 +83,7 @@ class FoamGrid :
     
     friend class FoamGridLevelIndexSet<const FoamGrid >;
     friend class FoamGridLeafIndexSet<const FoamGrid >;
-    friend class FoamGridGlobalIdSet<const FoamGrid >;
-    friend class FoamGridLocalIdSet<const FoamGrid >;
+    friend class FoamGridIdSet<const FoamGrid >;
     friend class FoamGridHierarchicIterator<const FoamGrid >;
     friend class FoamGridLevelIntersectionIterator<const FoamGrid >;
     friend class FoamGridLeafIntersectionIterator<const FoamGrid >;
@@ -259,13 +258,13 @@ class FoamGrid :
         
         /** \brief Access to the GlobalIdSet */
         const typename Traits::GlobalIdSet& globalIdSet() const{
-            return globalIdSet_;
+            return idSet_;
         }
         
         
         /** \brief Access to the LocalIdSet */
         const typename Traits::LocalIdSet& localIdSet() const{
-            return localIdSet_;
+            return idSet_;
         }
         
         
@@ -1295,12 +1294,9 @@ class FoamGrid :
         //! The leaf index set
         FoamGridLeafIndexSet<const FoamGrid > leafIndexSet_;
     
-        //! The global id set
-        FoamGridGlobalIdSet<const FoamGrid > globalIdSet_;
+        //! The id set
+        FoamGridIdSet<const FoamGrid > idSet_;
     
-        //! The local id set
-        FoamGridLocalIdSet<const FoamGrid > localIdSet_;
-
     /** \brief Counters that always provide the next free id for each dimension */
     array<unsigned int, dimension+1> freeIdCounter_;
 

@@ -332,8 +332,8 @@ public:
 
 
 template <class GridImp>
-class FoamGridGlobalIdSet :
-    public IdSet<GridImp,FoamGridGlobalIdSet<GridImp>, unsigned int>
+class FoamGridIdSet :
+    public IdSet<GridImp,FoamGridIdSet<GridImp>, unsigned int>
 {
             
     public:
@@ -368,48 +368,6 @@ class FoamGridGlobalIdSet :
         void update() {}
 
 };
-
-
-
-
-template<class GridImp>
-class FoamGridLocalIdSet :
-    public IdSet<GridImp,FoamGridLocalIdSet<GridImp>, unsigned int>
-{
-        
-    public:
-        //! define the type used for persistent local ids
-        typedef unsigned int IdType;
-
-    //! get id of an entity
-        /*
-            We use the remove_const to extract the Type from the mutable class,
-            because the const class is not instantiated yet.
-        */
-        template<int cd>
-        IdType id (const typename remove_const<GridImp>::type::Traits::template Codim<cd>::Entity& e) const
-        {
-            // Return id of the host entity
-            return GridImp::getRealImplementation(e).target_->id_;
-        }
-        
-        
-        //! get id of subEntity
-        /*
-        * We use the remove_const to extract the Type from the mutable class,
-        * because the const class is not instantiated yet.
-        */
-        IdType subId (const typename remove_const<GridImp>::type::template Codim<0>::Entity& e, int i, int codim) const
-        {
-            return GridImp::getRealImplementation(e).subId(i,codim);
-        }
-        
-        
-        /** \todo Should be private */
-        void update() {}
-
-};
-
 
 }  // namespace Dune
 
