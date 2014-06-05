@@ -386,4 +386,4 @@ namespace Dune
 
 }
 
-#endif // #ifndef DUNE_GRID_UGGRID_UGGRIDVIEWS_HH
+#endif // #ifndef DUNE_FOAMGRID_FOAMGRID_FOAMGRIDVIEWS_HH
