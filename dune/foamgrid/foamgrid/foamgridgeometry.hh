@@ -7,11 +7,13 @@
 
 #include <vector>
 
+#include <dune/common/version.hh>
 #include <dune/geometry/multilineargeometry.hh>
 
 
 namespace Dune {
 
+#if ! DUNE_VERSION_NEWER(DUNE_GRID,2,4)
 template<int mydim, int coorddim, class GridImp> class FoamGridGeometry;
 
 namespace FacadeOptions
@@ -22,6 +24,7 @@ namespace FacadeOptions
         static const bool v = false;
     };
 }
+#endif
 
 template<int mydim, int coorddim, class GridImp>
 class FoamGridGeometry :
