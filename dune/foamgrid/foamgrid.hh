@@ -131,7 +131,9 @@ class FoamGrid :
     /** \brief Constructor, constructs an empty grid
      */
     FoamGrid() 
-        : globalRefined(), numBoundarySegments_()
+        : leafGridView_(*this),
+          globalRefined(),
+          numBoundarySegments_()
     {
         std::fill(freeIdCounter_.begin(), freeIdCounter_.end(), 0);
     }
@@ -285,9 +287,27 @@ class FoamGrid :
         /** \brief Access to the LeafIndexSet */
         const typename Traits::LeafIndexSet& leafIndexSet() const
         {
-            return leafIndexSet_;
+            return leafGridView_.indexSet();
         }
+
         
+        //! View for the leaf grid
+        template<PartitionIteratorType pitype>
+        typename Traits::template Partition<pitype>::LeafGridView
+        leafGridView() const {
+          typedef typename Traits::template Partition<pitype>::LeafGridView View;
+          return View(leafGridView_);
+        }
+
+        //! View for the leaf grid for All_Partition
+        typename Traits::template Partition<All_Partition>::LeafGridView
+        leafGridView() const
+        {
+          typedef typename Traits::template Partition<All_Partition>::LeafGridView View;
+          return View(leafGridView_);
+        }
+
+
         /** \brief Create EntityPointer from EnitySeed */
         template < class EntitySeed >
         typename Traits::template Codim<EntitySeed::codimension>::EntityPointer
@@ -495,8 +515,10 @@ class FoamGrid :
         std::vector<FoamGridLevelIndexSet<const FoamGrid>*> levelIndexSets_;
         
         //! The leaf index set
-        FoamGridLeafIndexSet<const FoamGrid > leafIndexSet_;
-    
+        //FoamGridLeafIndexSet<const FoamGrid > leafIndexSet_;
+    // The leaf grid view
+    FoamGridLeafGridView<const FoamGrid, All_Partition> leafGridView_;
+
         //! The id set
         FoamGridIdSet<const FoamGrid > idSet_;
     

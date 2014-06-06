@@ -7,6 +7,8 @@
 
 #include <dune/grid/common/gridenums.hh>
 
+#include <dune/foamgrid/foamgrid/foamgridindexsets.hh>
+
 namespace Dune
 {
 
@@ -257,6 +259,9 @@ namespace Dune
     template< class GridImp, PartitionIteratorType pitype >
     class FoamGridLeafGridView
     {
+      // Grid must be able to call the 'update' method of the index set
+      friend GridImp;
+
     public:
       typedef FoamGridLeafGridViewTraits<GridImp,pitype> Traits;
 
@@ -286,6 +291,12 @@ namespace Dune
       : grid_( &grid )
       {}
 
+      /** \brief Copy constructor */
+      FoamGridLeafGridView ( const FoamGridLeafGridView<GridImp,pitype>& other )
+      : grid_( other.grid_ ),
+        indexSet_(other.indexSet_)
+      {}
+
       /** \brief obtain a const reference to the underlying hierarchic grid */
       const Grid &grid () const
       {
@@ -296,19 +307,19 @@ namespace Dune
       /** \brief obtain the index set */
       const IndexSet &indexSet () const
       {
-        return grid().leafIndexSet();
+        return indexSet_;
       }
 
       /** \brief obtain number of entities in a given codimension */
       int size ( int codim ) const
       {
-        return grid().size( codim );
+        return indexSet_.size( codim );
       }
 
       /** \brief obtain number of entities with a given geometry type */
       int size ( const GeometryType &type ) const
       {
-        return grid().size( type );
+        return indexSet_.size( type );
       }
 
       /** \brief obtain begin iterator for this view */
@@ -362,13 +373,13 @@ namespace Dune
       /** \brief Return size of the overlap region for a given codim on the grid view.  */
       int overlapSize(int codim) const
       {
-        return grid().overlapSize(codim);
+        return 0;
       }
 
       /** \brief Return size of the ghost region for a given codim on the grid view.  */
       int ghostSize(int codim) const
       {
-        return grid().ghostSize(codim);
+        return 0;
       }
 
       /** communicate data on this view */
@@ -382,6 +393,7 @@ namespace Dune
 
     private:
       const Grid *grid_;
+      FoamGridLeafIndexSet<GridImp> indexSet_;
     };
 
 }

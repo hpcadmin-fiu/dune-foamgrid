@@ -179,7 +179,17 @@ class FoamGridLeafIndexSet :
     enum {dimworld = remove_const<GridImp>::type::dimensionworld};
     
 public:
+
+    /** \brief Default constructor */
+    FoamGridLeafIndexSet()
+    {}
     
+    /** \brief Copy constructor */
+    FoamGridLeafIndexSet(const FoamGridLeafIndexSet& other)
+    : size_(other.size_),
+      myTypes_(other.myTypes_)
+    {}
+
         //! get index of an entity
         /*
             We use the RemoveConst to extract the Type from the mutable class,
@@ -321,10 +331,10 @@ public:
     }
         
     // Number of entities per dimension
-    int size_[dim+1];
+    array<int,dim+1> size_;
 
     /** \brief The GeometryTypes present for each codim */
-    std::vector<GeometryType> myTypes_[dim+1];
+    array<std::vector<GeometryType>, dim+1> myTypes_;
 
 };
 
