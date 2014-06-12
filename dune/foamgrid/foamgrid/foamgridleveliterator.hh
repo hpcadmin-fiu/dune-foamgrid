@@ -30,15 +30,15 @@ class FoamGridLevelIterator :
             : FoamGridEntityPointer<codim,GridImp>(it),
               levelIterator_(it)
         {
-            this->virtualEntity_.setToTarget(&(*levelIterator_));
+            GridImp::getRealImplementation(this->virtualEntity_).setToTarget(&(*levelIterator_));
         }
         
     //! prefix increment
         void increment() {
             ++levelIterator_;
-            this->virtualEntity_.setToTarget(&(*levelIterator_));
+            GridImp::getRealImplementation(this->virtualEntity_).setToTarget(&(*levelIterator_));
         }
-        
+
         
     private:
     

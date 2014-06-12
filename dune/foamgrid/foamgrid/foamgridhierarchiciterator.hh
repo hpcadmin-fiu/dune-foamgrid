@@ -61,7 +61,7 @@ class FoamGridHierarchicIterator :
                 
             }
             
-            this->virtualEntity_.setToTarget((elemStack.empty()) 
+            GridImp::getRealImplementation(this->virtualEntity_).setToTarget((elemStack.empty())
                                              ? nullptr : elemStack.top());
         }
 

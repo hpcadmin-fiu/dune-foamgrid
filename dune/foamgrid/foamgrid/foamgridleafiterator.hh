@@ -30,10 +30,10 @@ public:
         
         const std::list<FoamGridEntityImp<dim-codim,dimworld> >& entities = Dune::get<dim-codim>(grid_->entityImps_[fullRefineLevel]);
         // The &* turns an iterator into a plain pointer
-        this->virtualEntity_.setToTarget(&*entities.begin());
+        GridImp::getRealImplementation(this->virtualEntity_).setToTarget(&*entities.begin());
         levelIterator_ = entities.begin();
 
-        if (!this->virtualEntity_.getTarget()->isLeaf())
+        if (!GridImp::getRealImplementation(this->virtualEntity_).target_->isLeaf())
             increment();
     }
 
@@ -50,7 +50,7 @@ public:
             globalIncrement();
 
         } while (levelIterator_!=Dune::get<dim-codim>(grid_->entityImps_[grid_->maxLevel()]).end() 
-                 && !this->virtualEntity_.getTarget()->isLeaf());
+                 && !GridImp::getRealImplementation(this->virtualEntity_).target_->isLeaf());
     }
 
 private:
@@ -64,16 +64,16 @@ private:
 
         // Increment on this level
         ++levelIterator_;
-        this->virtualEntity_.setToTarget(&(*levelIterator_));
+        GridImp::getRealImplementation(this->virtualEntity_).setToTarget(&(*levelIterator_));
         if (levelIterator_==Dune::get<dim-codim>(grid_->entityImps_[oldLevel]).end())
-            this->virtualEntity_.setToTarget(nullptr);
+            GridImp::getRealImplementation(this->virtualEntity_).setToTarget(nullptr);
 
         // If beyond the end of this level set to first of next level
         if (levelIterator_==Dune::get<dim-codim>(grid_->entityImps_[oldLevel]).end() && oldLevel < grid_->maxLevel()) {
 
             const std::list<FoamGridEntityImp<dim-codim,dimworld> >& entities = Dune::get<dim-codim>(grid_->entityImps_[oldLevel+1]);
             levelIterator_ = entities.begin();
-            this->virtualEntity_.setToTarget(&*entities.begin());
+            GridImp::getRealImplementation(this->virtualEntity_).setToTarget(&*entities.begin());
 
         }
 

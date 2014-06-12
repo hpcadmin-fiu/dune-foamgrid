@@ -1,6 +1,7 @@
 foamgriddir = $(includedir)/dune/foamgrid/foamgrid
 
-foamgrid_HEADERS = foamgridedge.hh \
+foamgrid_HEADERS = foamgrid.cc \
+                   foamgridedge.hh \
                    foamgridelements.hh \
                    foamgridentity.hh \
                    foamgridentitypointer.hh \
@@ -13,7 +14,7 @@ foamgrid_HEADERS = foamgridedge.hh \
                    foamgridintersections.hh \
                    foamgridleafiterator.hh \
                    foamgridleveliterator.hh \
-                   foamgridlocalgeometry.hh \
-                   foamgridvertex.hh
+                   foamgridvertex.hh \
+                   foamgridviews.hh
 
 include $(top_srcdir)/am/global-rules
