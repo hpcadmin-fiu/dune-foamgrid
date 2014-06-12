@@ -1,5 +1,7 @@
 #include <config.h>
 
+#include <iostream>
+
 #include "make2din3dgrid.hh"
 #include <dune/grid/io/file/gmshreader.hh>
 #include <dune/grid/test/gridcheck.cc>
@@ -17,29 +19,49 @@ int main (int argc, char *argv[]) try
     const std::string dune_grid_path = std::string(DUNE_GRID_EXAMPLE_GRIDS_PATH) + "gmsh/";
     const std::string dune_foamgrid_path = std::string(DUNE_FOAMGRID_EXAMPLE_GRIDS_PATH) + "gmsh/";
 
-    std::auto_ptr<FoamGrid<2> > grid2d( GmshReader<FoamGrid<2> >::read( dune_grid_path + "curved2d.msh", false, false ) );
+    {
+        std::cout << "Checking FoamGrid<2> (2d in 2d grid)" << std::endl;
 
-        
-    gridcheck(*grid2d);
-    checkIntersectionIterator(*grid2d);
+        std::cout << "  Creating grid" << std::endl;
+        std::auto_ptr<FoamGrid<2> > grid2d( GmshReader<FoamGrid<2> >::read( dune_grid_path + "curved2d.msh", false, false ) );
 
-    // dimworld == 3
-    FoamGrid<3>* grid3d = make2Din3DHybridTestGrid<FoamGrid<3> >();
+        std::cout << "  Calling gridcheck" << std::endl;
+        gridcheck(*grid2d);
 
-    gridcheck(*grid3d);
-    checkIntersectionIterator(*grid3d);
+        std::cout << "  Calling checkIntersectionIterator" << std::endl;
+        checkIntersectionIterator(*grid2d);
+    }
+    {
+        std::cout << "Checking FoamGrid<3> (2d in 3d grid)" << std::endl;
 
-    // dimworld == 3,  and a grid containing a T-Junction
-    std::auto_ptr<FoamGrid<3> > gridTJunction( GmshReader<FoamGrid<3> >::read( dune_foamgrid_path + "tjunction-2d.msh", false, false ) );
+        // dimworld == 3
+        std::cout << "  Creating grid" << std::endl;
+        FoamGrid<3>* grid3d = make2Din3DHybridTestGrid<FoamGrid<3> >();
 
-    gridcheck(*gridTJunction);
-    checkIntersectionIterator(*gridTJunction);
-} 
+        std::cout << "  Calling gridcheck" << std::endl;
+        gridcheck(*grid3d);
+
+        std::cout << "  Calling checkIntersectionIterator" << std::endl;
+        checkIntersectionIterator(*grid3d);
+    }
+    {
+        std::cout << "Checking FoamGrid<3> (2d in 3d grid)" << std::endl;
+
+        // dimworld == 3,  and a grid containing a T-Junction
+        std::cout << "  Creating grid" << std::endl;
+        std::auto_ptr<FoamGrid<3> > gridTJunction( GmshReader<FoamGrid<3> >::read( dune_foamgrid_path + "tjunction-2d.msh", false, false ) );
+
+        std::cout << "  Calling gridcheck" << std::endl;
+        gridcheck(*gridTJunction);
+
+        std::cout << "  Calling checkIntersectionIterator" << std::endl;
+        checkIntersectionIterator(*gridTJunction);
+    }
+}
 // //////////////////////////////////
 //   Error handler
 // /////////////////////////////////
- catch (Exception e) {
-
+catch (Exception e) {
     std::cout << e << std::endl;
     return 1;
- }
+}
