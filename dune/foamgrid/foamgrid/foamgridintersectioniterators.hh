@@ -149,7 +149,7 @@ public:
 
     //! \brief dereferencing
     const Intersection & dereference() const {
-        return reinterpret_cast<const Intersection&>(*this);
+        return intersection_;
     }
 
 private:
@@ -366,7 +366,7 @@ public:
     //! \brief dereferencing
     const Intersection & dereference() const
     {
-        return reinterpret_cast<const Intersection&>(intersection_);
+        return intersection_;
     }
 private:
   //**********************************************************
