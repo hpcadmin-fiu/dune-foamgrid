@@ -1,6 +1,6 @@
 # -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
-AC_PREREQ(2.50)
+AC_PREREQ([2.62])
 DUNE_AC_INIT # gets module version from dune.module file
 AC_CONFIG_SRCDIR([src/dune_foamgrid.cc])
 AC_CONFIG_HEADERS([config.h])
@@ -19,6 +19,8 @@ LIBS="$DUNE_LIBS"
 AC_CONFIG_FILES([
   Makefile
   src/Makefile
+  cmake/Makefile
+  cmake/modules/Makefile
   dune/Makefile
   dune/foamgrid/Makefile
   dune/foamgrid/foamgrid/Makefile
