@@ -29,6 +29,7 @@ dune_foamgrid_LDFLAGS = $(AM_LDFLAGS) \
 	$(AMIRAMESH_LDFLAGS) \
 	$(ALBERTA_LDFLAGS) \
 	$(ALUGRID_LDFLAGS) \
+	$(DUNE_LDFLAGS)
 
 # don't follow the full GNU-standard
 # we need automake 1.5
