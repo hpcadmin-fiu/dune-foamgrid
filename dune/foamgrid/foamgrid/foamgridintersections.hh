@@ -349,7 +349,7 @@ public:
         std::vector<FieldVector<double, dim> > coordinates(2);
         
         coordinates[0]=this->center_->globalToLocal(edgePointer_->vertex_[0]->pos_);
-        coordinates[0]=this->center_->globalToLocal(edgePointer_->vertex_[1]->pos_);
+        coordinates[1]=this->center_->globalToLocal(edgePointer_->vertex_[1]->pos_);
         
         return LocalGeometry(FoamGridGeometry<dim-1, dim, GridImp>(this->type(), coordinates));
     }
@@ -366,7 +366,7 @@ public:
         std::vector<FieldVector<double, dim> > coordinates(2);
         
         coordinates[0]=(*this->neighbor_)->globalToLocal(edgePointer_->vertex_[0]->pos_);
-        coordinates[0]=(*this->neighbor_)->globalToLocal(edgePointer_->vertex_[1]->pos_);
+        coordinates[1]=(*this->neighbor_)->globalToLocal(edgePointer_->vertex_[1]->pos_);
         
         return LocalGeometry(FoamGridGeometry<dim-1, dim, GridImp>(this->type(), coordinates));
     }
