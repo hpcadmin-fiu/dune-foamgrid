@@ -8,6 +8,7 @@
 
 #include <dune/common/nullptr.hh>
 
+#include <dune/foamgrid/foamgrid/foamgridentity.hh>
 
 namespace Dune {
 

@@ -6,6 +6,7 @@
 #include <dune/common/fvector.hh>
 #include <dune/geometry/type.hh>
 #include <dune/grid/common/gridenums.hh>
+#include <dune/grid/common/exceptions.hh>
 
 
 namespace Dune {

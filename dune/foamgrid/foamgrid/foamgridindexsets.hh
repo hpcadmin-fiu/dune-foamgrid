@@ -10,6 +10,8 @@
 #include <vector>
 #include <list>
 
+#include <dune/common/version.hh>
+
 #include <dune/grid/common/indexidset.hh>
 
 #include <dune/foamgrid/foamgrid/foamgridvertex.hh>  // for FoamGridEntityImp

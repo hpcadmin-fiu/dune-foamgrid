@@ -3,6 +3,8 @@
 #ifndef DUNE_FOAMGRID_ELEMENTS_HH
 #define DUNE_FOAMGRID_ELEMENTS_HH
 
+#include <dune/common/fmatrix.hh>
+
 #include <dune/foamgrid/foamgrid/foamgridvertex.hh>
 #include <dune/foamgrid/foamgrid/foamgridedge.hh>
 #include <dune/common/nullptr.hh>

@@ -8,6 +8,8 @@
 
 #include <map>
 
+#include <dune/common/shared_ptr.hh>
+
 /** \file
 * \brief The FoamGridLeafIntersectionIterator and FoamGridLevelIntersectionIterator classes
 */
