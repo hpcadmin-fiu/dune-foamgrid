@@ -19,7 +19,7 @@
 // Implementation classes
 #include "foamgrid/foamgridvertex.hh"
 #include "foamgrid/foamgridedge.hh"
-#include "foamgrid/foamgridelements.hh"
+//#include "foamgrid/foamgridelements.hh""
 
 // The components of the FoamGrid interface
 #include "foamgrid/foamgridgeometry.hh"
@@ -45,7 +45,7 @@ template<int dimworld>
 struct FoamGridFamily
 {
     typedef GridTraits<
-        2,   // dim
+        1,   // dim
         dimworld,   // dimworld
         Dune::FoamGrid<dimworld>,
         FoamGridGeometry,
@@ -79,7 +79,7 @@ struct FoamGridFamily
 */
 template <int dimworld>
 class FoamGrid :
-        public GridDefaultImplementation  <2, dimworld, double, FoamGridFamily<dimworld> >
+        public GridDefaultImplementation  <1, dimworld, double, FoamGridFamily<dimworld> >
 {
 
     friend class FoamGridLevelIndexSet<const FoamGrid >;
@@ -112,8 +112,8 @@ class FoamGrid :
 
     public:
 
-    /** \brief This grid is always 2-dimensional */
-    enum {dimension = 2};
+    /** \brief This grid is always 1-dimensional */
+    enum {dimension = 1};
 
     //**********************************************************
     // The Interface Methods
@@ -227,13 +227,11 @@ class FoamGrid :
          */
         int size (int level, int codim) const {
 
-            // Turn dynamic index into static index
-            if (codim==2)
-                return Dune::get<0>(entityImps_[level]).size();
+            // Turn dynamic index into static index();
             if (codim==1)
-                return Dune::get<1>(entityImps_[level]).size();
+                return Dune::get<0>(entityImps_[level]).size();
             if (codim==0)
-                return Dune::get<2>(entityImps_[level]).size();
+                return Dune::get<1>(entityImps_[level]).size();
 
             return 0;
         }
@@ -478,6 +476,8 @@ class FoamGrid :
     void refineSimplexElement(FoamGridEntityImp<2,dimworld>& element,
                        int refCount);
 
+    //void refineLineElement(FoamGridEntityImp<1,dimworld>& element, int refCount);
+
     /**
      * \brief Overwrites the neighbours of this and descendant edges
      *
@@ -508,8 +508,7 @@ class FoamGrid :
 
     // Stores the lists of vertices, edges, elements for each level
     std::vector<tuple<std::list<FoamGridEntityImp<0,dimworld> >,
-                      std::list<FoamGridEntityImp<1,dimworld> >,
-                      std::list<FoamGridEntityImp<2,dimworld> > > > entityImps_;
+                      std::list<FoamGridEntityImp<1,dimworld> > > > entityImps_;
 
         //! Our set of level indices
         std::vector<FoamGridLevelIndexSet<const FoamGrid>*> levelIndexSets_;
@@ -535,7 +534,7 @@ class FoamGrid :
     bool willCoarsen;
 }; // end Class FoamGrid
 
-#include <dune/foamgrid/foamgrid/foamgrid.cc>
+#include "foamgrid/foamgrid.cc"
 
 
 namespace Capabilities
@@ -581,6 +580,6 @@ namespace Capabilities
 // The factory should be present whenever the user includes foamgrid.hh.
 // However since the factory needs to know the grid the include directive
 // comes here at the end.
-#include <dune/foamgrid/foamgrid/foamgridfactory.hh>
+#include "foamgrid/foamgridfactory.hh"
 
 #endif

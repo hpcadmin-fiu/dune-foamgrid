@@ -7,7 +7,7 @@
 
 #include <list>
 
-#include <dune/foamgrid/foamgrid/foamgridentity.hh>
+#include "foamgridentity.hh"
 
 namespace Dune {
 

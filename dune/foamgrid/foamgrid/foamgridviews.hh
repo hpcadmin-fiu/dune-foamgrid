@@ -7,7 +7,7 @@
 
 #include <dune/grid/common/gridenums.hh>
 
-#include <dune/foamgrid/foamgrid/foamgridindexsets.hh>
+#include "foamgridindexsets.hh"
 
 namespace Dune
 {

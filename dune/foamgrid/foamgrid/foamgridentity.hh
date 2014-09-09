@@ -14,8 +14,8 @@
 #include <dune/grid/common/gridenums.hh>
 #include <dune/grid/common/grid.hh>
 
-#include <dune/foamgrid/foamgrid/foamgridvertex.hh>
-#include <dune/foamgrid/foamgrid/foamgridgeometry.hh>
+#include "foamgridvertex.hh"
+#include "foamgridgeometry.hh"
 
 namespace Dune {
 
@@ -101,7 +101,6 @@ class FoamGridEntity :
             return *this;
         }
 
-
         //! level of this element
         int level () const {
             return target_->level();
@@ -148,9 +147,8 @@ class FoamGridEntity :
             target_ = target;
         }
 
+
 };
-
-
 
 
 /** \brief Specialization for codim-0-entities, i.e., elements.
@@ -187,7 +185,7 @@ class FoamGridEntity<0,dim,GridImp> :
 
 
         //! Constructor for an entity in a given grid level
-        FoamGridEntity(const FoamGridEntityImp<2,dimworld>* hostEntity) :
+        FoamGridEntity(const FoamGridEntityImp<1,dimworld>* hostEntity) :
             target_(hostEntity)
         {}
 
@@ -245,19 +243,19 @@ class FoamGridEntity<0,dim,GridImp> :
         int count () const
         {
 #if DUNE_VERSION_NEWER(DUNE_COMMON,2,4)
-            static_assert(0<=cc && cc<=2, "Only codimensions with 0 <= cc <= 2 are valid!");
+            static_assert(0<=cc && cc<=1, "Only codimensions with 0 <= cc <= 1 are valid!");
 #else
-            dune_static_assert(0<=cc && cc<=2, "Only codimensions with 0 <= cc <= 2 are valid!");
+            dune_static_assert(0<=cc && cc<=1, "Only codimensions with 0 <= cc <= 2 are valid!");
 #endif
-            return (cc==0) ? 1 : 3;
+            return (cc==0) ? 1 : 2;
         }
 
         /** \brief Return the number of subEntities of codimension cc.
         */
         unsigned int count (unsigned int codim) const
         {
-            assert(0<=codim && codim<=2);
-            return (codim==0) ? 1 : 3;
+            assert(0<=codim && codim<=1);
+            return (codim==0) ? 1 : 2;
         }
 
     /** \brief Return index of sub entity with codim = cc and local number i
@@ -268,8 +266,6 @@ class FoamGridEntity<0,dim,GridImp> :
         case 0:
             return target_->id_;
         case 1:
-            return target_->edges_[i]->id_;
-        case 2:
             return target_->vertex_[i]->id_;
         }
         DUNE_THROW(GridError, "Non-existing codimension requested!");
@@ -286,9 +282,6 @@ class FoamGridEntity<0,dim,GridImp> :
                 // The cast is correct when this if clause is executed
                 return FoamGridEntityPointer<codim,GridImp>( (FoamGridEntityImp<dim-codim,dimworld>*)this->target_);
             } else if (codim==1) {
-                // The cast is correct when this if clause is executed
-                return FoamGridEntityPointer<codim,GridImp>( (FoamGridEntityImp<dim-codim,dimworld>*)this->target_->edges_[i]);
-            } else if (codim==2) {
                 // The cast is correct when this if clause is executed
                 return FoamGridEntityPointer<codim,GridImp>( (FoamGridEntityImp<dim-codim,dimworld>*)this->target_->vertex_[i]);
             }
@@ -358,7 +351,7 @@ class FoamGridEntity<0,dim,GridImp> :
         * Assumes that meshes are nested.
         */
         LocalGeometry geometryInFather () const {
-            FoamGridEntityImp<2,dimworld>* father = target_->father_;
+            FoamGridEntityImp<1,dimworld>* father = target_->father_;
             // Check whether there really is a father
             if(father==nullptr)
                 DUNE_THROW(GridError, "There is no father Element.");
@@ -433,12 +426,12 @@ class FoamGridEntity<0,dim,GridImp> :
 
 
         /** \brief Make this class point to a new FoamGridEntityImp object */
-        void setToTarget(const FoamGridEntityImp<2,dimworld>* target)
+        void setToTarget(const FoamGridEntityImp<1,dimworld>* target)
         {
             target_ = target;
         }
 
-        const FoamGridEntityImp<2,dimworld>* target_;
+        const FoamGridEntityImp<1,dimworld>* target_;
 
     private:
 

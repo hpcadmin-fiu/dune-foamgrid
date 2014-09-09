@@ -3,8 +3,8 @@
 #ifndef DUNE_FOAMGRID_INTERSECTIONITERATORS_HH
 #define DUNE_FOAMGRID_INTERSECTIONITERATORS_HH
 
-#include <dune/foamgrid/foamgrid/foamgridintersections.hh>
-#include <dune/foamgrid/foamgrid/foamgridvertex.hh>
+#include "foamgridintersections.hh"
+#include "foamgridvertex.hh"
 
 #include <map>
 

@@ -7,7 +7,8 @@
 #include <dune/geometry/type.hh>
 #include <dune/grid/common/gridenums.hh>
 
-#include <dune/foamgrid/foamgrid/foamgridvertex.hh>
+#include "foamgridvertex.hh"
+
 
 namespace Dune {
 
@@ -17,10 +18,14 @@ namespace Dune {
     {
     public:
 
+
+
+        enum MarkState { DO_NOTHING , COARSEN , REFINE, IS_COARSENED };
+
         FoamGridEntityImp(const FoamGridEntityImp<0,dimworld>* v0,
                           const FoamGridEntityImp<0,dimworld>* v1,
                           int level, unsigned int id)
-            : FoamGridEntityBase(level,id), elements_(), nSons_(0), father_(nullptr)
+            : FoamGridEntityBase(level,id), nSons_(0), father_(nullptr)
         {
             vertex_[0] = v0;
             vertex_[1] = v1;
@@ -32,7 +37,8 @@ namespace Dune {
                           const FoamGridEntityImp<0,dimworld>* v1,
                           int level, unsigned int id,
                           FoamGridEntityImp* father)
-            : FoamGridEntityBase(level,id), elements_(), nSons_(0), father_(father)
+
+            : FoamGridEntityBase(level,id), nSons_(0), father_(father)
         {
             vertex_[0] = v0;
             vertex_[1] = v1;
@@ -44,9 +50,6 @@ namespace Dune {
             return sons_[0]==nullptr;
         }
 
-        unsigned int boundarySegmentIndex() const {
-            return boundaryId_;
-        }
 
         GeometryType type() const {
             return GeometryType(1);
@@ -91,12 +94,14 @@ namespace Dune {
             DUNE_THROW(GridError, "Non-existing codimension requested!");
         }
 
-        std::vector<const FoamGridEntityImp<2,dimworld>*> elements_;
+        int refinementIndex_;
+
+	bool isNew_;
+
+	MarkState markState_;
+
 
         const FoamGridEntityImp<0,dimworld>* vertex_[2];
-
-        /** \brief The boundary id.  Only used if this edge is a boundary edge */
-        unsigned int boundaryId_;
 
         /** \brief links to refinements of this edge */
         array<FoamGridEntityImp<1,dimworld>*,2> sons_;

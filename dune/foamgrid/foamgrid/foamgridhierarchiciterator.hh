@@ -7,8 +7,7 @@
 
 #include <stack>
 
-#include <dune/foamgrid/foamgrid/foamgridentitypointer.hh>
-
+#include "foamgridentitypointer.hh"
 namespace Dune {
 
 

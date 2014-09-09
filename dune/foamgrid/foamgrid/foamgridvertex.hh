@@ -59,11 +59,16 @@ namespace Dune {
 
         //private:
         bool isLeaf() const {
+
             return son_==nullptr;
         }
 
         GeometryType type() const {
             return GeometryType(0);
+        }
+
+        unsigned int boundarySegmentIndex() const {
+            return boundaryId_;
         }
 
         /** \brief Number of corners (==1) */
@@ -96,6 +101,11 @@ namespace Dune {
         }
 
         FieldVector<double, dimworld> pos_;
+
+	std::vector<const FoamGridEntityImp<1,dimworld>*> elements_;
+
+	//only used if the vertex is a boundary vertex
+	unsigned int boundaryId_;
 
         //! Son vertex on the next finer grid
         FoamGridEntityImp<0,dimworld>* son_;

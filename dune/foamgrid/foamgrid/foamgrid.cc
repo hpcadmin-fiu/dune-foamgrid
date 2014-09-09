@@ -123,6 +123,8 @@ void Dune::FoamGrid<dimworld>::globalRefine (int refCount)
           dverb << "refining element " << &(*element) << std::endl;
           if (element->type().isTriangle())
             refineSimplexElement(*element, refCount);
+// 	  if (element->type().isLine())
+// 	    refineLineElement(*element,refCount);
           else
             DUNE_THROW(NotImplemented, "Refinement only supported for triangles!");
         }
@@ -863,3 +865,65 @@ void Dune::FoamGrid<dimworld>::setIndices()
   // Update the leaf indices
   leafGridView_.indexSet_.update(*this);
 }
+
+//template <int dimworld>
+//void Dune::FoamGrid<dimworld>::refineLineElement(FoamGridEntityImp<1,dimworld>& element,
+//						 int refCount)
+//{
+//  std::cout<<"refineLineElement "<<std::endl;
+//     if(refCount<0)
+//   {
+//     // We always remove all the children from the father.
+//     // Removing means:
+//     // 1. remove pointers in father element, edges and vertices
+//     // 2. Mark removed entities for deletion.
+//     DUNE_THROW(NotImplemented, "Coarsening not implemented yet");
+//     return;
+//   }
+//
+//   unsigned int nextLevel=element.level()+1;
+//
+//     std::cout << "Vertices " << nextLevel << ": " << Dune::get<0>(entityImps_[nextLevel]).size()
+//               << std::endl;
+//     std::cout << "Elements " << nextLevel << ": " <<Dune::get<1>(entityImps_[nextLevel]).size()
+//               << std::endl;
+//
+//   array<FoamGridEntityImp<0,dimworld>*, 3> nextLevelVertices;
+//   std::size_t vertexIndex=0;
+//
+//     for(unsigned int c=0; c<element.vertex_.size(); ++c)
+//   {
+//     //ES: kopieren der Punkte warum brauche ich das ?
+//     if(element.vertex_[c]->son_==nullptr){
+//             // Not refined yet
+//       Dune::get<0>(entityImps_[nextLevel])
+//       .push_back(FoamGridEntityImp<0,dimworld>(nextLevel,
+//                                                element.vertex_[c]->pos_,
+//                                                element.vertex_[c]->id_));
+//       FoamGridEntityImp<0,dimworld>& newVertex =
+//       Dune::get<0>(entityImps_[nextLevel]).back();
+//       element.vertex_[c]->son_=&newVertex;
+//
+//     }
+//   }
+//
+//       if(!(element->nSons_)
+//     {
+//       // Not refined yet
+//       // Compute edge midpoint
+//       FieldVector<double, dimworld> midPoint;
+//       for(int dim=0; dim<dimworld;++dim)
+//         midPoint[dim]=(element->vertex_[0]->pos_[dim]
+//         + element->vertex_[1]->pos_[dim]) /2.0;
+//
+//       //create midpoint
+//       Dune::get<0>(entityImps_[nextLevel])
+//         .push_back(FoamGridEntityImp<0,dimworld>(nextLevel, midPoint,
+//                                                freeIdCounter_[0]++));
+//       FoamGridEntityImp<0,dimworld>& midVertex =
+//         Dune::get<0>(entityImps_[nextLevel]).back();
+//       check_for_duplicates(nextLevelVertices, &midVertex, vertexIndex);
+//       nextLevelVertices[vertexIndex++]=&midVertex;
+//     }
+//
+//}

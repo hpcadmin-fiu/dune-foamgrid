@@ -14,7 +14,7 @@
 
 #include <dune/grid/common/indexidset.hh>
 
-#include <dune/foamgrid/foamgrid/foamgridvertex.hh>  // for FoamGridEntityImp
+#include "foamgridvertex.hh"  // for FoamGridEntityImp
 
 namespace Dune {
 
@@ -52,10 +52,8 @@ namespace Dune {
         int size (int codim) const {
             switch (codim) {
             case 0:
-                return numTriangles_ + numQuads_;
-            case 1:
                 return numEdges_;
-            case 2:
+            case 1:
                 return numVertices_;
             }
 
@@ -102,18 +100,7 @@ namespace Dune {
             // ///////////////////////////////
             //   Init the element indices
             // ///////////////////////////////
-            numTriangles_ = 0;
-            numQuads_ = 0;
-            typename std::list<FoamGridEntityImp<2,dimworld> >::const_iterator eIt;
-            for (eIt =  Dune::get<dim>(grid.entityImps_[level_]).begin();
-                 eIt != Dune::get<dim>(grid.entityImps_[level_]).end();
-                 ++eIt)
-             /** \todo Remove this const cast */
-                *const_cast<unsigned int*>(&(eIt->levelIndex_)) = (eIt->type().isTriangle()) ? numTriangles_++ : numQuads_++;
 
-            // ///////////////////////////////
-            //   Init the element indices
-            // ///////////////////////////////
             numEdges_ = 0;
             typename std::list<FoamGridEntityImp<1,dimworld> >::const_iterator edIt;
             for (edIt =  Dune::get<1>(grid.entityImps_[level_]).begin();
@@ -246,20 +233,11 @@ public:
     {
 
 #if DUNE_VERSION_NEWER(DUNE_COMMON,2,4)
-        static_assert(dim==2, "LeafIndexSet::update() only works for 2d grids");
+        static_assert(dim==1, "LeafIndexSet::update() only works for 1d grids");
 #else
-        dune_static_assert(dim==2, "LeafIndexSet::update() only works for 2d grids");
+        dune_static_assert(dim==1, "LeafIndexSet::update() only works for 1d grids");
 #endif
 
-        // ///////////////////////////////
-        //   Init the element indices
-        // ///////////////////////////////
-        size_[dim] = 0;
-        typename GridImp::Traits::template Codim<0>::LeafIterator eIt    = grid.template leafbegin<0>();
-        typename GridImp::Traits::template Codim<0>::LeafIterator eEndIt = grid.template leafend<0>();
-
-        for (; eIt!=eEndIt; ++eIt)
-            *const_cast<unsigned int*>(&(GridImp::getRealImplementation(*eIt).target_->leafIndex_)) = size_[dim]++;
 
         // //////////////////////////////
         //   Init the edge indices
@@ -269,8 +247,8 @@ public:
 
         for (int i=grid.maxLevel(); i>=0; i--) {
 
-            typename GridImp::Traits::template Codim<1>::LevelIterator edIt    = grid.template lbegin<1>(i);
-            typename GridImp::Traits::template Codim<1>::LevelIterator edEndIt = grid.template lend<1>(i);
+             typename GridImp::Traits::template Codim<0>::LevelIterator edIt= grid.template lbegin<0>(i);
+             typename GridImp::Traits::template Codim<0>::LevelIterator edEndIt = grid.template lend<0>(i);
 
             for (; edIt!=edEndIt; ++edIt) {
 
@@ -298,7 +276,6 @@ public:
         size_[0] = 0;
 
         for (int i=grid.maxLevel(); i>=0; i--) {
-
             typename GridImp::Traits::template Codim<dim>::LevelIterator vIt    = grid.template lbegin<dim>(i);
             typename GridImp::Traits::template Codim<dim>::LevelIterator vEndIt = grid.template lend<dim>(i);
 
