@@ -17,9 +17,9 @@ namespace Dune {
     {
     public:
 
-        FoamGridEntityImp(const FoamGridEntityImp<0,dimworld>* v0, 
-                          const FoamGridEntityImp<0,dimworld>* v1, 
-                          int level, unsigned int id) 
+        FoamGridEntityImp(const FoamGridEntityImp<0,dimworld>* v0,
+                          const FoamGridEntityImp<0,dimworld>* v1,
+                          int level, unsigned int id)
             : FoamGridEntityBase(level,id), elements_(), nSons_(0), father_(nullptr)
         {
             vertex_[0] = v0;
@@ -28,10 +28,10 @@ namespace Dune {
         }
 
 
-        FoamGridEntityImp(const FoamGridEntityImp<0,dimworld>* v0, 
-                          const FoamGridEntityImp<0,dimworld>* v1, 
+        FoamGridEntityImp(const FoamGridEntityImp<0,dimworld>* v0,
+                          const FoamGridEntityImp<0,dimworld>* v1,
                           int level, unsigned int id,
-                          FoamGridEntityImp* father) 
+                          FoamGridEntityImp* father)
             : FoamGridEntityBase(level,id), elements_(), nSons_(0), father_(father)
         {
             vertex_[0] = v0;
@@ -103,10 +103,10 @@ namespace Dune {
 
         /** \brief The number of refined edges (0 or 2). */
         unsigned int nSons_;
-        
+
         /** \brief Pointer to father element */
         FoamGridEntityImp<1,dimworld>* father_;
-        
+
     };
 
 }

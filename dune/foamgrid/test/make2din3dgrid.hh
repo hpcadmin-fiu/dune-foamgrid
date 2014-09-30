@@ -20,10 +20,10 @@ GridType* make2Din3DHybridTestGrid()
 
     // Start grid creation
     GridFactory<GridType> factory;
-        
+
     // The list of grid vertex positions
     int numVertices = 16;
-    
+
     double vertices[16][3] = {{0,    0,    0},
                               {0.5,  0,    0},
                               {0.5,  0.5,  0},
@@ -40,7 +40,7 @@ GridType* make2Din3DHybridTestGrid()
                               {0.5,  1,    0},
                               {0,    1,    0},
                               {0.25, 0.75, 0}};
-    
+
     // Create the grid vertices
     for (int i=0; i<numVertices; i++) {
         Dune::FieldVector<double,3> pos;
@@ -49,12 +49,12 @@ GridType* make2Din3DHybridTestGrid()
         pos[2] = vertices[i][2];
         factory.insertVertex(pos);
     }
-    
+
     // Create the triangle elements
     int numTriangles = 2;
     unsigned int triangles[2][3] = {{9, 10, 11},
                                     {15, 13, 14}};
-    
+
     for (int i=0; i<numTriangles; i++) {
         std::vector<unsigned int> cornerIDs(3);
         for (int j=0; j<3; j++)
@@ -88,11 +88,11 @@ GridType* make2Din3DHybridTestGrid()
         cornerIDs[2] = quadrilaterals[i][1];
         factory.insertElement(Dune::GeometryType(Dune::GeometryType::simplex,2),cornerIDs);
     }
-    
+
 
 
 #endif
-    
+
 #if 0
     for (int i=0; i<numQuadrilaterals; i++) {
         std::vector<unsigned int> cornerIDs(4);
@@ -101,7 +101,7 @@ GridType* make2Din3DHybridTestGrid()
         factory.insertElement(Dune::GeometryType(Dune::GeometryType::cube,2),cornerIDs);
     }
 #endif
-    
+
     // Finish initialization
     return factory.createGrid();
 }

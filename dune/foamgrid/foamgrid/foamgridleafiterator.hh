@@ -20,14 +20,14 @@ class FoamGridLeafIterator :
 
 public:
 
-    FoamGridLeafIterator(const GridImp& grid) 
+    FoamGridLeafIterator(const GridImp& grid)
         : FoamGridEntityPointer <codim,GridImp>(nullptr),
           grid_(&grid)
     {
 
         /** \todo Can a make the fullRefineLevel work somehow? */
         const int fullRefineLevel = 0;
-        
+
         const std::list<FoamGridEntityImp<dim-codim,dimworld> >& entities = Dune::get<dim-codim>(grid_->entityImps_[fullRefineLevel]);
         // The &* turns an iterator into a plain pointer
         GridImp::getRealImplementation(this->virtualEntity_).setToTarget(&*entities.begin());
@@ -38,7 +38,7 @@ public:
     }
 
   //! Constructor
-    FoamGridLeafIterator() 
+    FoamGridLeafIterator()
         : FoamGridEntityPointer <codim,GridImp>(nullptr),
           grid_(nullptr)
     {}
@@ -49,7 +49,7 @@ public:
         do {
             globalIncrement();
 
-        } while (levelIterator_!=Dune::get<dim-codim>(grid_->entityImps_[grid_->maxLevel()]).end() 
+        } while (levelIterator_!=Dune::get<dim-codim>(grid_->entityImps_[grid_->maxLevel()]).end()
                  && !GridImp::getRealImplementation(this->virtualEntity_).target_->isLeaf());
     }
 
@@ -93,5 +93,5 @@ private:
 
 
 }  // namespace Dune
-  
+
 #endif

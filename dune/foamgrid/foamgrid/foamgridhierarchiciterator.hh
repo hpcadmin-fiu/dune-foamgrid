@@ -26,49 +26,49 @@ class FoamGridHierarchicIterator :
         public Dune::FoamGridEntityPointer <0,GridImp>
 {
     enum {dimworld = GridImp::dimensionworld};
-    
+
     friend class FoamGridEntity<0,GridImp::dimension,GridImp>;
 
     public:
-        
+
         typedef typename GridImp::template Codim<0>::Entity Entity;
 
     //! Constructor
-    FoamGridHierarchicIterator(int maxlevel) 
+    FoamGridHierarchicIterator(int maxlevel)
         : FoamGridEntityPointer<0,GridImp>(nullptr),
           maxlevel_(maxlevel)
     {}
-        
+
         //! \todo Please doc me !
         void increment()
         {
             if (elemStack.empty())
                 return;
-            
+
             const FoamGridEntityImp<2,dimworld>* old_target = elemStack.top();
             elemStack.pop();
-            
+
             // Traverse the tree no deeper than maxlevel
             if (old_target->level_ < maxlevel_) {
-                
+
                 // Load sons of old target onto the iterator stack
                 if (!old_target->isLeaf()) {
-                    
+
                     for (size_t i=0; i<old_target->nSons(); i++)
                         elemStack.push(old_target->sons_[i]);
-                    
+
                 }
-                
+
             }
-            
+
             GridImp::getRealImplementation(this->virtualEntity_).setToTarget((elemStack.empty())
                                              ? nullptr : elemStack.top());
         }
 
-        
+
 private:
-        
-    //! max level to go down 
+
+    //! max level to go down
     int maxlevel_;
 
     /** \brief For depth-first search */

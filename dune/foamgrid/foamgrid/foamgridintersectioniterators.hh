@@ -15,7 +15,7 @@
 */
 
 namespace Dune {
-    
+
 template<class GridImp>
 class FoamGridLevelIntersectionIterator;
 
@@ -31,16 +31,16 @@ class FoamGridLevelIntersectionIterator;
 template<class GridImp>
 class FoamGridLeafIntersectionIterator
 {
-    
+
     enum {dimworld=GridImp::dimensionworld};
-    
+
     typedef std::vector<const FoamGridEntityImp<2,dimworld>*> ElementVector;
 
     typedef std::map<int, ElementVector> MapType;
 public:
-    
+
     //! Constructor for a given grid entity and a given neighbor
-    FoamGridLeafIntersectionIterator(const FoamGridEntityImp<2,dimworld>* center, int edge) 
+    FoamGridLeafIntersectionIterator(const FoamGridEntityImp<2,dimworld>* center, int edge)
         : intersection_(FoamGridLeafIntersection<GridImp>(center,edge)),
           leafEdges_(make_shared<MapType>())
     {
@@ -49,7 +49,7 @@ public:
             // This is the end iterator
             return;
         }
-        
+
         for(std::size_t i=0; i<3; ++i)
             traverseAndPushLeafEdges(center->edges_[i], (*leafEdges_)[i]);
 
@@ -79,20 +79,20 @@ public:
     }
 
     /** \brief Constructor creating the 'one-after-last'-iterator */
-    FoamGridLeafIntersectionIterator(const FoamGridEntityImp<2,dimworld>* center) 
+    FoamGridLeafIntersectionIterator(const FoamGridEntityImp<2,dimworld>* center)
         : intersection_(FoamGridLeafIntersection<GridImp>(center,center->corners())),
           leafEdges_(make_shared<MapType>())
-    {        
+    {
     }
 
     typedef Dune::Intersection<const GridImp, typename Dune::FoamGridLeafIntersection<GridImp> > Intersection;
 
     //! equality
     bool equals(const FoamGridLeafIntersectionIterator<GridImp>& other) const {
-        return GridImp::getRealImplementation(intersection_).center_   == GridImp::getRealImplementation(other.intersection_).center_ && 
-            GridImp::getRealImplementation(intersection_).edgeIndex_ == GridImp::getRealImplementation(other.intersection_).edgeIndex_ && 
+        return GridImp::getRealImplementation(intersection_).center_   == GridImp::getRealImplementation(other.intersection_).center_ &&
+            GridImp::getRealImplementation(intersection_).edgeIndex_ == GridImp::getRealImplementation(other.intersection_).edgeIndex_ &&
             (GridImp::getRealImplementation(intersection_).edgeIndex_ == GridImp::getRealImplementation(intersection_).center_->corners()  ||
-             (*GridImp::getRealImplementation(intersection_).neighbor_ == 
+             (*GridImp::getRealImplementation(intersection_).neighbor_ ==
               *GridImp::getRealImplementation(other.intersection_).neighbor_));
     }
 
@@ -106,12 +106,12 @@ public:
             return;
         }
         assert(topLevelEdgeIter_!=leafEdges_->end());
-        
+
         if(GridImp::getRealImplementation(intersection_).neighbor_ !=
            GridImp::getRealImplementation(intersection_).neighborEnd_)
             // increment
             ++GridImp::getRealImplementation(intersection_).neighbor_;
-        
+
         if(GridImp::getRealImplementation(intersection_).neighbor_ !=
            GridImp::getRealImplementation(intersection_).neighborEnd_ &&
            *(GridImp::getRealImplementation(intersection_).neighbor_) ==
@@ -127,7 +127,7 @@ public:
             ++GridImp::getRealImplementation(intersection_).edgeIndex_;
             if(topLevelEdgeIter_==leafEdges_->end())
                 return;
-            
+
             GridImp::getRealImplementation(intersection_).neighbor_
                 = topLevelEdgeIter_->second.begin();
             GridImp::getRealImplementation(intersection_).neighborEnd_=
@@ -137,7 +137,7 @@ public:
                 GridImp::getRealImplementation(intersection_).neighbor_=
                     GridImp::getRealImplementation(intersection_).neighborEnd_;
                 return;
-            
+
             }
             if(GridImp::getRealImplementation(intersection_).neighbor_ != GridImp::getRealImplementation(intersection_).neighborEnd_
                && *GridImp::getRealImplementation(intersection_).neighbor_==
@@ -147,7 +147,7 @@ public:
             }
         }
     }
-    
+
 
     //! \brief dereferencing
     const Intersection & dereference() const {
@@ -203,7 +203,7 @@ private:
 template<class GridImp>
 class FoamGridLevelIntersectionIterator
 {
-    
+
     enum { dim=GridImp::dimension };
     enum { dimworld=GridImp::dimensionworld };
 
@@ -215,7 +215,7 @@ protected:
     //! \brief Constructor for a given grid entity and a given neighbor
     //! \param center Pointer to the element where the iterator was created.
     //! \param edge The index of the edge to start the investigation.
-    FoamGridLevelIntersectionIterator(const FoamGridEntityImp<2,dimworld>* center, std::size_t edge) 
+    FoamGridLevelIntersectionIterator(const FoamGridEntityImp<2,dimworld>* center, std::size_t edge)
         : intersection_(FoamGridLevelIntersection<GridImp>(center,edge))
     {
         if(edge==center->corners())
@@ -224,14 +224,14 @@ protected:
             GridImp::getRealImplementation(intersection_).neighborIndex_=0;
             return;
         }
-        
+
         if(center->edges_[GridImp::getRealImplementation(intersection_).edgeIndex_]->elements_.size()==1){
             // This is a boundary edge.
             GridImp::getRealImplementation(intersection_).neighborIndex_=
                 GridImp::getRealImplementation(intersection_).center_->edges_[GridImp::getRealImplementation(intersection_).edgeIndex_]->elements_.size();
             return;
         }
-        
+
         // Search for the first intersection.
         // An intersection has either two neighbor elements on the same level
         // or is a boundary intersection
@@ -268,7 +268,7 @@ protected:
     }
 
     /** \brief Constructor creating the 'one-after-last'-iterator */
-    FoamGridLevelIntersectionIterator(const FoamGridEntityImp<2,dimworld>* center) 
+    FoamGridLevelIntersectionIterator(const FoamGridEntityImp<2,dimworld>* center)
         : intersection_(FoamGridLevelIntersection<GridImp>(center,center->corners()))
     {
         GridImp::getRealImplementation(intersection_).neighborIndex_=0;
@@ -280,7 +280,7 @@ public:
 
   //! equality
   bool equals(const FoamGridLevelIntersectionIterator<GridImp>& other) const {
-      return (GridImp::getRealImplementation(this->intersection_).center_   == GridImp::getRealImplementation(other.intersection_).center_) 
+      return (GridImp::getRealImplementation(this->intersection_).center_   == GridImp::getRealImplementation(other.intersection_).center_)
           && (GridImp::getRealImplementation(this->intersection_).edgeIndex_ == GridImp::getRealImplementation(other.intersection_).edgeIndex_)
           && (GridImp::getRealImplementation(this->intersection_).neighborIndex_ == GridImp::getRealImplementation(other.intersection_).neighborIndex_);
   }
@@ -309,7 +309,7 @@ public:
             ++GridImp::getRealImplementation(intersection_).neighborIndex_;
             ++GridImp::getRealImplementation(intersection_).neighbor_;
         }
-        
+
         // Search for the first intersection.
         // An intersection has either two neighbor elements on the same level
         // or is a boundary intersection
@@ -322,7 +322,7 @@ public:
                     =GridImp::getRealImplementation(intersection_).center_->edges_[GridImp::getRealImplementation(intersection_).edgeIndex_]->elements_.size();
                 return;
             }
-            
+
             while(GridImp::getRealImplementation(intersection_).neighbor_!=GridImp::getRealImplementation(intersection_).center_->edges_[GridImp::getRealImplementation(intersection_).edgeIndex_]->elements_.end() &&
                   (GridImp::getRealImplementation(intersection_).center_==*GridImp::getRealImplementation(intersection_).neighbor_
                    ||GridImp::getRealImplementation(intersection_).center_->level()!=(*GridImp::getRealImplementation(intersection_).neighbor_)->level()))
@@ -363,7 +363,7 @@ public:
             GridImp::getRealImplementation(intersection_).neighborIndex_=0;
         }
     }
-        
+
 
     //! \brief dereferencing
     const Intersection & dereference() const

@@ -25,12 +25,12 @@ namespace Dune {
 
         //! level
         int level_;
-        
-        //! entity number 
+
+        //! entity number
         unsigned int levelIndex_;
-        
+
         unsigned int leafIndex_;
-        
+
         unsigned int id_;
         //! \brief Whether this entity will vanish due to coarsening.
         bool willVanish_;
@@ -51,13 +51,13 @@ namespace Dune {
         : public FoamGridEntityBase
     {
     public:
-        
-        FoamGridEntityImp(int level, const FieldVector<double, dimworld>& pos, unsigned int id) 
+
+        FoamGridEntityImp(int level, const FieldVector<double, dimworld>& pos, unsigned int id)
             : FoamGridEntityBase(level, id),
-              pos_(pos), son_(nullptr) 
+              pos_(pos), son_(nullptr)
         {}
-        
-        //private: 
+
+        //private:
         bool isLeaf() const {
             return son_==nullptr;
         }
@@ -78,7 +78,7 @@ namespace Dune {
         PartitionType partitionType() const {
             return InteriorEntity;
         }
-        
+
         /** \brief Return level index of sub entity with codim = cc and local number i
          */
         int subLevelIndex (int i, unsigned int codim) const {
@@ -96,10 +96,10 @@ namespace Dune {
         }
 
         FieldVector<double, dimworld> pos_;
-        
+
         //! Son vertex on the next finer grid
         FoamGridEntityImp<0,dimworld>* son_;
-        
+
     };
 
 }

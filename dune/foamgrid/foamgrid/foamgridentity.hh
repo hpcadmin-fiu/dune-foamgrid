@@ -64,33 +64,33 @@ class FoamGridEntity :
 
     friend class FoamGridEntityPointer<codim,GridImp>;
 
-    
+
     private:
-        
+
         typedef typename GridImp::ctype ctype;
 
     enum{dimworld = GridImp::dimensionworld};
-        
+
     public:
-    
+
         typedef typename GridImp::template Codim<codim>::Geometry Geometry;
 
         //! The type of the EntitySeed interface class
         typedef typename GridImp::template Codim<codim>::EntitySeed EntitySeed;
 
-    
-        
+
+
         //! Constructor for an entity in a given grid level
     FoamGridEntity(const FoamGridEntityImp<dim-codim,GridImp::dimensionworld>* target) :
             target_(target)
         {}
-        
+
         /** \brief Copy constructor */
         FoamGridEntity(const FoamGridEntity& original) :
             target_(original.target_)
         {}
-    
-    
+
+
         //! \todo Please doc me !
         FoamGridEntity& operator=(const FoamGridEntity& original)
         {
@@ -106,23 +106,23 @@ class FoamGridEntity :
         int level () const {
             return target_->level();
         }
-    
-        
+
+
         /** \brief The partition type for parallel computing
         */
         PartitionType partitionType () const {
             return target_->partitionType();
         }
-    
-        
+
+
         /** Intra-element access to entities of codimension cc > codim. Return number of entities
         * with codimension cc.
         */
         template<int cc> int count () const{
             return target_->template count<cc>();
         }
-        
-        
+
+
         //! geometry of this entity
         Geometry geometry () const
         {
@@ -132,7 +132,7 @@ class FoamGridEntity :
 
             return Geometry(FoamGridGeometry<dim-codim,dimworld,GridImp>(target_->type(), coordinates));
         }
-    
+
         //! Create EntitySeed
         EntitySeed seed () const
         {
@@ -141,13 +141,13 @@ class FoamGridEntity :
 
     const FoamGridEntityImp<dim-codim,GridImp::dimensionworld>* target_;
 
-        
+
         //! \todo Please doc me !
         void setToTarget(const FoamGridEntityImp<dim-codim,GridImp::dimensionworld>* target)
         {
             target_ = target;
         }
-    
+
 };
 
 
@@ -168,36 +168,36 @@ class FoamGridEntity<0,dim,GridImp> :
     enum {dimworld = GridImp::dimensionworld};
 
     public:
-    
+
         typedef typename GridImp::template Codim<0>::Geometry Geometry;
-    
+
         typedef typename GridImp::template Codim<0>::LocalGeometry LocalGeometry;
-    
+
         //! The Iterator over intersections on this level
         typedef FoamGridLevelIntersectionIterator<GridImp> LevelIntersectionIterator;
-    
+
         //! The Iterator over intersections on the leaf level
         typedef FoamGridLeafIntersectionIterator<GridImp> LeafIntersectionIterator;
-    
+
         //! Iterator over descendants of the entity
         typedef FoamGridHierarchicIterator<GridImp> HierarchicIterator;
-        
+
         //! The type of the EntitySeed interface class
         typedef typename GridImp::template Codim<0>::EntitySeed EntitySeed;
-        
-        
+
+
         //! Constructor for an entity in a given grid level
         FoamGridEntity(const FoamGridEntityImp<2,dimworld>* hostEntity) :
             target_(hostEntity)
         {}
-        
-        
+
+
         /** \brief Copy constructor */
         FoamGridEntity(const FoamGridEntity& original) :
             target_(original.target_)
         {}
-    
-        
+
+
         //! \todo Please doc me !
         FoamGridEntity& operator=(const FoamGridEntity& original)
         {
@@ -207,21 +207,21 @@ class FoamGridEntity<0,dim,GridImp> :
             }
             return *this;
         }
-    
-        
+
+
         //! Level of this element
         int level () const
         {
             return target_->level_;
         }
-    
-        
+
+
         /** \brief The partition type for parallel computing */
         PartitionType partitionType () const {
             return InteriorEntity;
         }
-    
-        
+
+
         //! Geometry of this entity
         Geometry geometry () const
         {
@@ -231,14 +231,14 @@ class FoamGridEntity<0,dim,GridImp> :
 
             return Geometry(FoamGridGeometry<dim,dimworld,GridImp>(target_->type(), coordinates));
         }
-    
+
         //! Create EntitySeed
         EntitySeed seed () const
         {
             return EntitySeed(target_);
         }
 
-        
+
         /** \brief Return the number of subEntities of codimension cc.
         */
         template<int cc>
@@ -274,8 +274,8 @@ class FoamGridEntity<0,dim,GridImp> :
         }
         DUNE_THROW(GridError, "Non-existing codimension requested!");
     }
-    
-        
+
+
 
         /** \brief Provide access to sub entity i of given codimension. Entities
         *  are numbered 0 ... count<cc>()-1
@@ -293,20 +293,20 @@ class FoamGridEntity<0,dim,GridImp> :
                 return FoamGridEntityPointer<codim,GridImp>( (FoamGridEntityImp<dim-codim,dimworld>*)this->target_->vertex_[i]);
             }
         }
-    
-        
+
+
         //! First level intersection
         FoamGridLevelIntersectionIterator<GridImp> ilevelbegin () const{
             return FoamGridLevelIntersectionIterator<GridImp>(target_, 0);
         }
-    
-        
+
+
         //! Reference to one past the last neighbor
         FoamGridLevelIntersectionIterator<GridImp> ilevelend () const{
             return FoamGridLevelIntersectionIterator<GridImp>(target_);
         }
-    
-        
+
+
         //! First leaf intersection
         FoamGridLeafIntersectionIterator<GridImp> ileafbegin () const{
             if(isLeaf())
@@ -314,29 +314,29 @@ class FoamGridEntity<0,dim,GridImp> :
             else
                 return FoamGridLeafIntersectionIterator<GridImp>(target_);
         }
-    
-        
+
+
         //! Reference to one past the last leaf intersection
         FoamGridLeafIntersectionIterator<GridImp> ileafend () const{
             return FoamGridLeafIntersectionIterator<GridImp>(target_);
         }
-    
-        
+
+
         //! returns true if Entity has NO children
         bool isLeaf() const {
             return target_->isLeaf();
         }
-    
+
     /** \brief Return true if this element has a father element */
     bool hasFather() const {
         return level()>0;
     }
-        
+
     bool isNew() const
     {
         return target_->isNew();
     }
-    
+
     bool mightVanish() const
     {
         return target_->mightVanish();
@@ -346,8 +346,8 @@ class FoamGridEntity<0,dim,GridImp> :
         FoamGridEntityPointer<0,GridImp> father () const {
             return FoamGridEntityPointer<0,GridImp>(target_->father_);
         }
-    
-    
+
+
         /** \brief Location of this element relative to the reference element element of the father.
         * This is sufficient to interpolate all dofs in conforming case.
         * Nonconforming may require access to neighbors of father and
@@ -362,7 +362,7 @@ class FoamGridEntity<0,dim,GridImp> :
             // Check whether there really is a father
             if(father==nullptr)
                 DUNE_THROW(GridError, "There is no father Element.");
-            
+
             // Sanity check
             if(target_->type().isTriangle()){
                 // Lookup the coordinates within the father
@@ -370,36 +370,36 @@ class FoamGridEntity<0,dim,GridImp> :
                 // are number as follows:
                 // First come the ones located in the corner
                 // ascending with the corner index.
-                // Their first corner (origin in the reference simplex) 
-                // is always the corner that is also a corner of the father. 
+                // Their first corner (origin in the reference simplex)
+                // is always the corner that is also a corner of the father.
                 // For the element with all corners on the edge midpoints of
                 // the father, the corner are numbered according to the edge indices
                 // of the father.
                 double mapping[4][3][2] ={
-                    { {0.0,0.0}, {0.5,0.0}, {0.0,0.5} }, 
-                    { {1.0,0.0}, {0.5,0.5}, {0.5,0.0} }, 
+                    { {0.0,0.0}, {0.5,0.0}, {0.0,0.5} },
+                    { {1.0,0.0}, {0.5,0.5}, {0.5,0.0} },
                     { {0.0,1.0}, {0.0,0.5}, {0.5,0.5} },
-                    { {0.5,0.0}, {0.5,0.5}, {0.0,0.5} }  
+                    { {0.5,0.0}, {0.5,0.5}, {0.0,0.5} }
                 };
-                            
+
                 std::vector<FieldVector<typename GridImp::ctype,GridImp::dimension> >
                     coordinates(3);
-                
+
                 for(int corner=0; corner <3; ++corner)
                     for(int entry=0; entry <2; ++entry)
                         coordinates[corner][entry]=
                             mapping[target_->refinementIndex_][corner][entry];
-            
+
                 // return LocalGeomety by value
-                return LocalGeometry(FoamGridGeometry<2,2,GridImp>(target_->type(), 
+                return LocalGeometry(FoamGridGeometry<2,2,GridImp>(target_->type(),
                                                                         coordinates));
-            }else{              
+            }else{
                 DUNE_THROW(NotImplemented, "geometryInFather only supported for triangles!");
             }
-            
+
         }
-    
-        
+
+
         /** \brief Inter-level access to son elements on higher levels<=maxlevel.
         * This is provided for sparsely stored nested unstructured meshes.
         * Returns iterator to first son.
@@ -412,36 +412,36 @@ class FoamGridEntity<0,dim,GridImp> :
             if (level()<=maxLevel && !isLeaf())
                 for (size_t i=0; i<target_->nSons(); i++)
                     it.elemStack.push(target_->sons_[i]);
-            
+
             GridImp::getRealImplementation(it.virtualEntity_).setToTarget((it.elemStack.empty())
                                           ? nullptr : it.elemStack.top());
-            
+
             return it;
         }
-    
-        
+
+
         //! Returns iterator to one past the last son
         FoamGridHierarchicIterator<GridImp> hend (int maxLevel) const
         {
             return FoamGridHierarchicIterator<const GridImp>(maxLevel);
         }
-        
-        
+
+
         // /////////////////////////////////////////
         //   Internal stuff
         // /////////////////////////////////////////
-    
-        
+
+
         /** \brief Make this class point to a new FoamGridEntityImp object */
         void setToTarget(const FoamGridEntityImp<2,dimworld>* target)
         {
             target_ = target;
         }
-        
+
         const FoamGridEntityImp<2,dimworld>* target_;
-        
+
     private:
-    
+
         typedef typename GridImp::ctype ctype;
 
 }; // end of FoamGridEntity codim = 0

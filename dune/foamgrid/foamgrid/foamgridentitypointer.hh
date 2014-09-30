@@ -18,12 +18,12 @@ template<int codim, class GridImp>
 class FoamGridEntityPointer
 {
     private:
-    
+
     enum { dim      = GridImp::dimension };
     enum { dimworld = GridImp::dimensionworld };
-    
+
     public:
-    
+
     //! export the type of the EntityPointer Implementation.
     //! Necessary for the typeconversion between Iterators and EntityPointer
     typedef FoamGridEntityPointer EntityPointerImp;
@@ -32,10 +32,10 @@ class FoamGridEntityPointer
     enum { codimension = codim };
 
         typedef typename GridImp::template Codim<codim>::Entity Entity;
-        
+
     //! Constructor from a FoamGrid entity
     FoamGridEntityPointer (const FoamGridEntity<codim,dim,GridImp>& entity)
-        : virtualEntity_(entity.target_) 
+        : virtualEntity_(entity.target_)
     {}
 
     FoamGridEntityPointer (const typename std::list<FoamGridEntityImp<dim-codim,dimworld> >::const_iterator& it)
@@ -45,13 +45,13 @@ class FoamGridEntityPointer
     FoamGridEntityPointer (const FoamGridEntityImp<dim-codim,dimworld>* target)
         : virtualEntity_(target)
     {}
-        
+
         //! equality
         bool equals(const FoamGridEntityPointer<codim,GridImp>& i) const {
             return GridImp::getRealImplementation(virtualEntity_).target_ == GridImp::getRealImplementation(i.virtualEntity_).target_;
         }
-    
-        
+
+
         //! dereferencing
         Entity& dereference() const {
             return virtualEntity_;
@@ -61,13 +61,13 @@ class FoamGridEntityPointer
         int level () const {
             return virtualEntity_.level();
         }
-    
+
     protected:
-    
+
         //! virtual entity
         mutable MakeableInterfaceObject<Entity> virtualEntity_;
 
-        
+
 };
 
 

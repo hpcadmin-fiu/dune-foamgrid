@@ -19,7 +19,7 @@ namespace Dune {
         /** \brief The different ways to mark an element for grid changes */
         enum MarkState { DO_NOTHING , COARSEN , REFINE, IS_COARSENED };
 
-        FoamGridEntityImp(int level, unsigned int id) 
+        FoamGridEntityImp(int level, unsigned int id)
             : FoamGridEntityBase(level,id),
               nSons_(0), refinementIndex_(-1),
               markState_(DO_NOTHING), isNew_(false)
@@ -32,22 +32,22 @@ namespace Dune {
         {
             return father_!=nullptr;
         }
-        
+
         bool mightVanish() const
         {
             return markState_==COARSEN;
         }
-        
+
         bool isLeaf() const {
             // The sons are either all nullptr or all != nullptr
             return sons_[0] == nullptr;
         }
 
-        bool isNew() const 
+        bool isNew() const
         {
             return isNew_;
         }
-        
+
         unsigned int corners() const {
             return 3;
         }
@@ -60,7 +60,7 @@ namespace Dune {
         unsigned int nSons() const {
             return nSons_;
         }
-      
+
         unsigned int nSons_;
 
         /** \brief Compute local cordinates from global ones.
@@ -77,7 +77,7 @@ namespace Dune {
             // to determine the local coordinates we solve
             // A'A x= A' t
             //
-            
+
             FieldMatrix<double,2,2> mat; // A'A
             // mat_{ij}=\sum_k A_{ki}A_{kj}
             mat=0;
@@ -94,7 +94,7 @@ namespace Dune {
             {
                 mat[1][1]+=(vertex_[2]->pos_[i]-vertex_[0]->pos_[i])*(vertex_[2]->pos_[i]-vertex_[0]->pos_[i]);
             }
-            
+
             FieldVector<double, 2> b, x;
             b=0;
             for(std::size_t i=0; i <dimworld; ++i)
@@ -160,13 +160,13 @@ namespace Dune {
         array<FoamGridEntityImp<1,dimworld>*, 3> edges_;
 
         FoamGridEntityImp<0,dimworld>* vertex_[3];
-        
+
         /** \brief Stores requests for refinement and coarsening */
         MarkState markState_;
-        
+
         /** \brief This flag is set by adapt() if this element has been newly created. */
         bool isNew_;
-        
+
     };
 
 }

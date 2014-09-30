@@ -26,18 +26,18 @@ class FoamGridLevelIntersectionIterator;
 template<class GridImp>
 class FoamGridIntersection
 {
-        
+
         // The type used to store coordinates
         typedef typename GridImp::ctype ctype;
 
     friend class FoamGridLevelIntersectionIterator<GridImp>;
     friend class FoamGridLeafIntersectionIterator<GridImp>;
-    
+
     public:
 
-    
+
         enum {dim=GridImp::dimension};
-    
+
         enum {dimworld=GridImp::dimensionworld};
 
         typedef typename GridImp::template Codim<0>::EntityPointer EntityPointer;
@@ -46,7 +46,7 @@ class FoamGridIntersection
     /**
      * \brief Initalizes an intersection.
      *
-     * After initialization this object always represents the first intersection 
+     * After initialization this object always represents the first intersection
      * related to an edge.
      * \param edge The index of the edge this intersection lives on.
      */
@@ -54,33 +54,33 @@ class FoamGridIntersection
                          int edge)
         : center_(center), edgeIndex_(edge)
     {}
-    
+
         //! return EntityPointer to the Entity on the inside of this intersection
         //! (that is the Entity where we started this Iterator)
         EntityPointer inside() const {
             return FoamGridEntityPointer<0,GridImp> (center_);
         }
 
-        
+
         //! return EntityPointer to the Entity on the outside of this intersection
         //! (that is the neighboring Entity)
         EntityPointer outside() const {
             // Return the 'other' element on the current edge
             return FoamGridEntityPointer<0,GridImp> ((*neighbor_));
         }
-        
-        
+
+
     /** \brief return true if intersection is with boundary.
     */
     bool boundary () const {
         return center_->edges_[edgeIndex_]->elements_.size()==1;
     }
-        
+
     //! return information about the Boundary
     int boundarySegmentIndex () const {
         return center_->edges_[edgeIndex_]->boundarySegmentIndex();
     }
-        
+
     //! Geometry type of an intersection
     GeometryType type () const {
         return GeometryType(GeometryType::simplex, dim-1);
@@ -90,14 +90,14 @@ class FoamGridIntersection
         int indexInInside () const {
             return edgeIndex_;
         }
-        
+
         virtual int indexInOutside() const=0;
-    
+
         //! return outer normal
         FieldVector<ctype, dimworld> outerNormal (const FieldVector<ctype, dim-1>& local) const {
             // The intersection normal is a vector that is orthogonal to the element normal
             // and to the intersection itself.
-            
+
             // only works for triangles
             assert(center_->type().isTriangle());
 
@@ -155,8 +155,8 @@ class FoamGridIntersection
             return outerNormal;
         }
     private:
- 
-    //! vector storing the outer normal 
+
+    //! vector storing the outer normal
     mutable FieldVector<typename GridImp::ctype, dimworld> outerNormal_;
 
     protected:
@@ -165,10 +165,10 @@ class FoamGridIntersection
 
     /** \brief Count on which edge we are lookin' at.  */
     int edgeIndex_;
-    
+
     /** \brief Iterator to the other neighbor of the intersection. */
     typename std::vector<const FoamGridEntityImp<2,dimworld>*>::const_iterator neighbor_;
-    
+
 };
 
 template<class GridImp>
@@ -184,7 +184,7 @@ class FoamGridLevelIntersection
 
 public:
     enum{ dimworld = GridImp::dimensionworld };
-    
+
     FoamGridLevelIntersection(const FoamGridEntityImp<2,dimworld>* center, int edge)
                               : FoamGridIntersection<GridImp>(center, edge)
     {}
@@ -199,9 +199,9 @@ public:
     int indexInOutside () const {
         assert(this->center_->edges_[this->edgeIndex_]->elements_.size()==2);
         assert(this->neighborIndex_!=this->center_->edges_[this->edgeIndex_]->elements_.size());
-        
-        return std::find((*this->neighbor_)->edges_.begin(), (*this->neighbor_)->edges_.end(), 
-                         this->center_->edges_[this->edgeIndex_]) 
+
+        return std::find((*this->neighbor_)->edges_.begin(), (*this->neighbor_)->edges_.end(),
+                         this->center_->edges_[this->edgeIndex_])
             - (*this->neighbor_)->edges_.begin();
     }
 
@@ -276,10 +276,10 @@ public:
 
     private:
     int neighborIndex_;
-    
+
 };
-    
-        
+
+
 
 
 /** \brief Iterator over all element neighbors
@@ -297,21 +297,21 @@ class FoamGridLeafIntersection
 
     friend class FoamGridLeafIntersectionIterator<GridImp>;
 public:
-    
+
     enum {dimworld=GridImp::dimensionworld};
-    
+
     enum {dim=GridImp::dimension};
 
     typedef typename GridImp::ctype ctype;
-    
+
     typedef typename GridImp::template Codim<1>::Geometry Geometry;
     typedef typename GridImp::template Codim<1>::LocalGeometry LocalGeometry;
 
     FoamGridLeafIntersection(const FoamGridEntityImp<2,FoamGridIntersection<GridImp>::dimworld>* center,
                              int edge)
         : FoamGridIntersection<GridImp>(center, edge)
-    {}    
-    
+    {}
+
     //! Return true if this is a conforming intersection
     bool conforming () const {
         DUNE_THROW(Dune::NotImplemented, "FoamGridLeafIntersection::conforming");
@@ -323,7 +323,7 @@ public:
         // Move to the father of the edge until its level is the same as
         // the level of the neighbor
         FoamGridEntityImp<1,dimworld>* edge=(this->center_->edges_[this->edgeIndex_]);
-        
+
         while(edge->level()<(*this->neighbor_)->level())
         {
             assert(edge->father_!=nullptr);
@@ -331,9 +331,9 @@ public:
         }
         assert(edge->level()==(*this->neighbor_)->level());
         assert(edge->elements_.size()==2);
-        return std::find((*this->neighbor_)->edges_.begin(), (*this->neighbor_)->edges_.end(), edge) 
+        return std::find((*this->neighbor_)->edges_.begin(), (*this->neighbor_)->edges_.end(), edge)
             - (*this->neighbor_)->edges_.begin();
-        
+
     }
 
     Geometry geometry () const {
@@ -347,10 +347,10 @@ public:
     LocalGeometry geometryInInside () const {
 
         std::vector<FieldVector<double, dim> > coordinates(2);
-        
+
         coordinates[0]=this->center_->globalToLocal(edgePointer_->vertex_[0]->pos_);
         coordinates[1]=this->center_->globalToLocal(edgePointer_->vertex_[1]->pos_);
-        
+
         return LocalGeometry(FoamGridGeometry<dim-1, dim, GridImp>(this->type(), coordinates));
     }
 
@@ -364,13 +364,13 @@ public:
             return FoamGridIntersection<GridImp>::geometryInOutside();
         */
         std::vector<FieldVector<double, dim> > coordinates(2);
-        
+
         coordinates[0]=(*this->neighbor_)->globalToLocal(edgePointer_->vertex_[0]->pos_);
         coordinates[1]=(*this->neighbor_)->globalToLocal(edgePointer_->vertex_[1]->pos_);
-        
+
         return LocalGeometry(FoamGridGeometry<dim-1, dim, GridImp>(this->type(), coordinates));
     }
-  
+
      //! return outer normal multiplied by the integration element
         FieldVector<ctype, dimworld> integrationOuterNormal (const FieldVector<ctype, dim-1>& local) const {
             ctype edgeLength = (edgePointer_->vertex_[0]->pos_ - edgePointer_->vertex_[1]->pos_).two_norm();

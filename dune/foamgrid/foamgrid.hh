@@ -74,14 +74,14 @@ struct FoamGridFamily
 
 
 /** \brief An implementation of the Dune grid interface: a 2d simplicial grid in an n-dimensional world
- * 
+ *
 * \tparam dimworld Dimension of the world space
 */
 template <int dimworld>
 class FoamGrid :
         public GridDefaultImplementation  <2, dimworld, double, FoamGridFamily<dimworld> >
 {
-    
+
     friend class FoamGridLevelIndexSet<const FoamGrid >;
     friend class FoamGridLeafIndexSet<const FoamGrid >;
     friend class FoamGridIdSet<const FoamGrid >;
@@ -95,7 +95,7 @@ class FoamGrid :
 
     template<int codim, PartitionIteratorType pitype, class GridImp_>
     friend class FoamGridLeafIterator;
-    
+
     template <class GridType_>
     friend class GridFactory;
 
@@ -111,33 +111,33 @@ class FoamGrid :
     friend class FoamGridLevelGridView;
 
     public:
-        
+
     /** \brief This grid is always 2-dimensional */
     enum {dimension = 2};
 
     //**********************************************************
     // The Interface Methods
     //**********************************************************
-    
+
     //! type of the used GridFamily for this grid
     typedef FoamGridFamily<dimworld>  GridFamily;
-    
+
     //! Exports various types belonging to this grid class
     typedef typename FoamGridFamily<dimworld>::Traits Traits;
-    
+
     //! The type used to store coordinates
     typedef double ctype;
-    
+
     /** \brief Constructor, constructs an empty grid
      */
-    FoamGrid() 
+    FoamGrid()
         : leafGridView_(*this),
           globalRefined(),
           numBoundarySegments_()
     {
         std::fill(freeIdCounter_.begin(), freeIdCounter_.end(), 0);
     }
-        
+
         //! Destructor
         ~FoamGrid()
         {
@@ -146,15 +146,15 @@ class FoamGrid :
                 if (levelIndexSets_[i])
                     delete (levelIndexSets_[i]);
         }
-        
-        
+
+
         //! Return maximum level defined in this grid. Levels are numbered
         //! 0 ... maxlevel with 0 the coarsest level.
         int maxLevel() const {
             return entityImps_.size()-1;
         }
-        
-        
+
+
         //! Iterator to first entity of given codim on level
         template<int codim>
         typename Traits::template Codim<codim>::LevelIterator lbegin (int level) const {
@@ -163,65 +163,65 @@ class FoamGrid :
 
             return Dune::FoamGridLevelIterator<codim,All_Partition, const Dune::FoamGrid<dimworld> >(Dune::get<dimension-codim>(entityImps_[level]).begin());
         }
-    
-        
+
+
         //! one past the end on this level
         template<int codim>
         typename Traits::template Codim<codim>::LevelIterator lend (int level) const {
             if (level<0 || level>maxLevel())
                 DUNE_THROW(GridError, "LevelIterator in nonexisting level " << level << " requested!");
-            
+
             return Dune::FoamGridLevelIterator<codim,All_Partition, const Dune::FoamGrid<dimworld> >(Dune::get<dimension-codim>(entityImps_[level]).end());
         }
-        
-        
+
+
         //! Iterator to first entity of given codim on level
         template<int codim, PartitionIteratorType PiType>
         typename Traits::template Codim<codim>::template Partition<PiType>::LevelIterator lbegin (int level) const {
             if (level<0 || level>maxLevel())
                 DUNE_THROW(Dune::GridError, "LevelIterator in nonexisting level " << level << " requested!");
-            
+
             return Dune::FoamGridLevelIterator<codim,PiType, const Dune::FoamGrid<dimworld> >(Dune::get<dimension-codim>(entityImps_[level]).begin());
         }
-        
+
 
         //! one past the end on this level
         template<int codim, PartitionIteratorType PiType>
         typename Traits::template Codim<codim>::template Partition<PiType>::LevelIterator lend (int level) const {
             if (level<0 || level>maxLevel())
                 DUNE_THROW(GridError, "LevelIterator in nonexisting level " << level << " requested!");
-            
+
             return Dune::FoamGridLevelIterator<codim,PiType, const Dune::FoamGrid<dimworld> >(Dune::get<dimension-codim>(entityImps_[level]).end());
         }
-        
-    
+
+
         //! Iterator to first leaf entity of given codim
         template<int codim>
         typename Traits::template Codim<codim>::LeafIterator leafbegin() const {
             return FoamGridLeafIterator<codim,All_Partition, const FoamGrid >(*this);
         }
-        
-    
+
+
         //! one past the end of the sequence of leaf entities
         template<int codim>
         typename Traits::template Codim<codim>::LeafIterator leafend() const {
             return FoamGridLeafIterator<codim,All_Partition, const FoamGrid >();
         }
-        
-    
+
+
         //! Iterator to first leaf entity of given codim
         template<int codim, PartitionIteratorType PiType>
         typename Traits::template Codim<codim>::template Partition<PiType>::LeafIterator leafbegin() const {
             return FoamGridLeafIterator<codim,PiType, const FoamGrid >(*this);
         }
-        
-        
+
+
         //! one past the end of the sequence of leaf entities
         template<int codim, PartitionIteratorType PiType>
         typename Traits::template Codim<codim>::template Partition<PiType>::LeafIterator leafend() const {
             return FoamGridLeafIterator<codim,PiType, const FoamGrid >();
         }
-        
+
 
         /** \brief Number of grid entities per level and codim
          */
@@ -237,44 +237,44 @@ class FoamGrid :
 
             return 0;
         }
-        
-        
+
+
         //! number of leaf entities per codim in this process
         int size (int codim) const{
             return leafIndexSet().size(codim);
         }
-        
-        
+
+
         //! number of entities per level, codim and geometry type in this process
         int size (int level, GeometryType type) const {
             return levelIndexSets_[level]->size(type);
         }
-        
-            
+
+
         //! number of leaf entities per codim and geometry type in this process
         int size (GeometryType type) const
         {
             return leafIndexSet().size(type);
         }
-        
+
         /** \brief The number of boundary edges on the coarsest level */
         size_t numBoundarySegments() const
         {
             return numBoundarySegments_;
         }
-        
+
         /** \brief Access to the GlobalIdSet */
         const typename Traits::GlobalIdSet& globalIdSet() const{
             return idSet_;
         }
-        
-        
+
+
         /** \brief Access to the LocalIdSet */
         const typename Traits::LocalIdSet& localIdSet() const{
             return idSet_;
         }
-        
-        
+
+
         /** \brief Access to the LevelIndexSets */
         const typename Traits::LevelIndexSet& levelIndexSet(int level) const
         {
@@ -282,15 +282,15 @@ class FoamGrid :
                 DUNE_THROW(GridError, "levelIndexSet of nonexisting level " << level << " requested!");
             return *levelIndexSets_[level];
         }
-        
-        
+
+
         /** \brief Access to the LeafIndexSet */
         const typename Traits::LeafIndexSet& leafIndexSet() const
         {
             return leafGridView_.indexSet();
         }
 
-        
+
         //! View for the leaf grid
         template<PartitionIteratorType pitype>
         typename Traits::template Partition<pitype>::LeafGridView
@@ -319,16 +319,16 @@ class FoamGrid :
             return EntityPointer(EntityPointerImpl(this->getRealImplementation(seed).getImplementationPointer()));
         }
 
-        
+
         /** @name Grid Refinement Methods */
         /*@{*/
-        
-        
+
+
         /** \brief Refine the grid uniformly
          * \param refCount Number of times the grid is to be refined uniformly
         */
         void globalRefine (int refCount);
-        
+
         /** \brief Mark entity for refinement
         *
         * This only works for entities of codim 0.
@@ -354,7 +354,7 @@ class FoamGrid :
 
             return true;
         }
-        
+
         /** \brief Return refinement mark for entity
         *
         * \return refinement mark (1,0,-1)
@@ -365,48 +365,48 @@ class FoamGrid :
                 return 1;
             if (this->getRealImplementation(*e).target_->markState_ == FoamGridEntityImp<2,dimworld>::COARSEN)
                 return -1;
-            
+
             return 0;
         }
 
         //! \brief Book-keeping routine to be called before adaptation
         bool preAdapt();
-        
+
         //! Triggers the grid refinement process
         bool adapt();
 
         /** \brief Clean up refinement markers */
         void postAdapt();
-        
+
         /*@}*/
-        
+
         /** @name Methods for parallel computations */
         /*@{*/
-        
+
         /** \brief Size of the overlap on the leaf level */
         unsigned int overlapSize(int codim) const {
             return 0;
         }
-        
-        
+
+
         /** \brief Size of the ghost cell layer on the leaf level */
         unsigned int ghostSize(int codim) const {
             return 0;
         }
-        
-        
+
+
         /** \brief Size of the overlap on a given level */
         unsigned int overlapSize(int level, int codim) const {
             return 0;
         }
-        
-        
+
+
         /** \brief Size of the ghost cell layer on a given level */
         unsigned int ghostSize(int level, int codim) const {
             return 0;
         }
-        
-            
+
+
 #if 0
         /** \brief Distributes this grid over the available nodes in a distributed machine
         *
@@ -416,7 +416,7 @@ class FoamGrid :
         void loadBalance(int strategy, int minlevel, int depth, int maxlevel, int minelement){
             DUNE_THROW(NotImplemented, "FoamGrid::loadBalance()");
         }
-        
+
         /** \brief The communication interface
         *  @param T: array class holding data associated with the entities
         *  @param P: type used to gather/scatter data in and out of the message buffer
@@ -430,32 +430,32 @@ class FoamGrid :
         */
         template<class T, template<class> class P, int codim>
         void communicate (T& t, InterfaceType iftype, CommunicationDirection dir, int level);
-        
+
         /*! The new communication interface
-        
+
         communicate objects for all codims on a given level
         */
         template<class DataHandle>
         void communicate (DataHandle& data, InterfaceType iftype, CommunicationDirection dir, int level) const
         {}
-        
+
         template<class DataHandle>
         void communicate (DataHandle& data, InterfaceType iftype, CommunicationDirection dir) const
         {}
 #endif
-        
+
         /** dummy collective communication */
         const typename Traits::CollectiveCommunication& comm () const
         {
             return ccobj_;
         }
         /*@}*/
-        
-        
+
+
         // **********************************************************
         // End of Interface Methods
         // **********************************************************
-        
+
     private:
 
         //! \brief erases pointers in father elements to vanished entities of the element
@@ -481,7 +481,7 @@ class FoamGrid :
     /**
      * \brief Overwrites the neighbours of this and descendant edges
      *
-     * After returning all neighbours the previously pointed to the 
+     * After returning all neighbours the previously pointed to the
      * father will point to the son element
      * \param edge The edge to start overwriting with.
      * \param son The son element to substitute the father with.
@@ -490,7 +490,7 @@ class FoamGrid :
     void overwriteFineLevelNeighbours(FoamGridEntityImp<1,dimworld>& edge,
                                       FoamGridEntityImp<2,dimworld>* son,
                                       FoamGridEntityImp<2,dimworld>* father);
-    
+
     template<class C, class T>
     void check_for_duplicates(C& cont, const T& elem, std::size_t vertexIndex)
     {
@@ -499,7 +499,7 @@ class FoamGrid :
             assert(cont[i]!=elem);
 #endif
     }
-    
+
         //! compute the grid indices and ids
     void setIndices();
 
@@ -513,7 +513,7 @@ class FoamGrid :
 
         //! Our set of level indices
         std::vector<FoamGridLevelIndexSet<const FoamGrid>*> levelIndexSets_;
-        
+
         //! The leaf index set
         //FoamGridLeafIndexSet<const FoamGrid > leafIndexSet_;
     // The leaf grid view
@@ -521,7 +521,7 @@ class FoamGrid :
 
         //! The id set
         FoamGridIdSet<const FoamGrid > idSet_;
-    
+
     /** \brief Counters that always provide the next free id for each dimension */
     array<unsigned int, dimension+1> freeIdCounter_;
 
@@ -541,7 +541,7 @@ class FoamGrid :
 namespace Capabilities
 {
     /** \brief True if the grid implements entities of a given codim.
-      * 
+      *
       * FoamGrid implements all codimensions, hence this is always true
       */
     template<int dimworld,int codim>
@@ -549,8 +549,8 @@ namespace Capabilities
     {
         static const bool v = true;
     };
-    
-    
+
+
     /** \brief True if the grid can be run on a distributed machine
       */
     template <int dimworld>
@@ -558,8 +558,8 @@ namespace Capabilities
     {
         static const bool v = false;
     };
-    
-    
+
+
     //! \todo Please doc me !
     template<int dimworld>
     struct isLevelwiseConforming< FoamGrid<dimworld> >

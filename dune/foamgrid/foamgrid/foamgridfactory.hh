@@ -19,17 +19,17 @@
 namespace Dune {
 
     /** \brief Specialization of the generic GridFactory for FoamGrid
-        
+
     */
     template <int dimworld>
-    class GridFactory<FoamGrid<dimworld> > 
+    class GridFactory<FoamGrid<dimworld> >
         : public GridFactoryInterface<FoamGrid<dimworld> > {
 
         /** \brief Type used by the grid for coordinates */
         typedef typename FoamGrid<dimworld>::ctype ctype;
 
         typedef typename std::map<FieldVector<ctype,1>, unsigned int>::iterator VertexIterator;
-        
+
         enum {dim = FoamGrid<dimworld>::dimension};
 
     public:
@@ -44,7 +44,7 @@ namespace Dune {
             grid_->entityImps_.resize(1);
         }
 
-        /** \brief Constructor for a given grid object 
+        /** \brief Constructor for a given grid object
 
         If you already have your grid object constructed you can
         hand it over using this constructor.
@@ -61,7 +61,7 @@ namespace Dune {
 
             grid_->entityImps_.resize(1);
         }
-        
+
         /** \brief Destructor */
         virtual ~GridFactory() {
             if (grid_ && factoryOwnsGrid_)
@@ -93,7 +93,7 @@ namespace Dune {
 
             Dune::get<dim>(grid_->entityImps_[0]).push_back(newElement);
 
-            
+
         }
 
         /** \brief Insert a boundary segment.
@@ -105,7 +105,7 @@ namespace Dune {
         }
 
         /** \brief Insert a boundary segment (== a line) and the boundary segment geometry
-         * 
+         *
             This influences the ordering of the boundary segments.
             Currently, the BoundarySegment object does not actually have any effect.
         */
@@ -174,9 +174,9 @@ namespace Dune {
                                                                                                     ));
 
                         existingEdge = &*Dune::get<1>(grid_->entityImps_[0]).rbegin();
-                                                                   
+
                         edgeMap.insert(std::make_pair(std::make_pair(v0,v1), existingEdge));
-                        
+
                     }
 
                     // make element know about the edge
@@ -191,7 +191,7 @@ namespace Dune {
 
             // Create the index sets
             grid_->setIndices();
-            
+
 
             // ////////////////////////////////////////////////
             //   Set the boundary ids
