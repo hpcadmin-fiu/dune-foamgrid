@@ -84,6 +84,12 @@ namespace Dune {
             return myTypes_[codim];
         }
 
+         /** \brief Deliver all geometry types used in this grid */
+        const std::vector<GeometryType>& types (int codim) const
+        {
+            return myTypes_[codim];
+        }
+
         /** \brief Return true if the given entity is contained in the index set
 
         This checks only for the level.  We assume that e belongs to the correct grid
@@ -153,7 +159,9 @@ namespace Dune {
                 myTypes_[dim].push_back(GeometryType(0));
 
         }
-
+        
+        //const GridImp& grid_;
+        
         int level_;
 
         int numQuads_;
@@ -228,6 +236,12 @@ public:
 
         /** \brief Deliver all geometry types used in this grid */
         const std::vector<GeometryType>& geomTypes (int codim) const
+        {
+            return myTypes_[codim];
+        }
+
+        /** \brief Deliver all geometry types used in this grid */
+        const std::vector<GeometryType>& types (int codim) const
         {
             return myTypes_[codim];
         }

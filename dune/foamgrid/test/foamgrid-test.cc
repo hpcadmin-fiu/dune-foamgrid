@@ -10,6 +10,7 @@
 
 #include <dune/foamgrid/foamgrid.hh>
 
+#define NDEBUG = 1
 
 int main (int argc, char *argv[]) try
 {
@@ -19,11 +20,23 @@ int main (int argc, char *argv[]) try
     const std::string dune_grid_path = std::string(DUNE_GRID_EXAMPLE_GRIDS_PATH) + "gmsh/";
     const std::string dune_foamgrid_path = std::string(DUNE_FOAMGRID_EXAMPLE_GRIDS_PATH) + "gmsh/";
 
+    /*{
+        std::cout << "Checking other FoamGrid<2> (2d in 2d grid)" << std::endl;
+
+        std::cout << "  Creating grid" << std::endl;
+        std::shared_ptr<FoamGrid<2> > grid2d( GmshReader<FoamGrid<2> >::read("bla.msh", true, false ) );
+
+        std::cout << "  Calling gridcheck" << std::endl;
+        gridcheck(*grid2d);
+
+        std::cout << "  Calling checkIntersectionIterator" << std::endl;
+        checkIntersectionIterator(*grid2d);
+    }*/
     {
         std::cout << "Checking FoamGrid<2> (2d in 2d grid)" << std::endl;
 
         std::cout << "  Creating grid" << std::endl;
-        std::auto_ptr<FoamGrid<2> > grid2d( GmshReader<FoamGrid<2> >::read( dune_grid_path + "curved2d.msh", false, false ) );
+        std::shared_ptr<FoamGrid<2> > grid2d( GmshReader<FoamGrid<2> >::read( dune_grid_path + "curved2d.msh", true, false ) );
 
         std::cout << "  Calling gridcheck" << std::endl;
         gridcheck(*grid2d);
@@ -49,7 +62,7 @@ int main (int argc, char *argv[]) try
 
         // dimworld == 3,  and a grid containing a T-Junction
         std::cout << "  Creating grid" << std::endl;
-        std::auto_ptr<FoamGrid<3> > gridTJunction( GmshReader<FoamGrid<3> >::read( dune_foamgrid_path + "tjunction-2d.msh", false, false ) );
+        std::shared_ptr<FoamGrid<3> > gridTJunction( GmshReader<FoamGrid<3> >::read( dune_foamgrid_path + "tjunction-2d.msh", true, false ) );
 
         std::cout << "  Calling gridcheck" << std::endl;
         gridcheck(*gridTJunction);
