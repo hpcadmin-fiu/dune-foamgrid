@@ -25,7 +25,7 @@ namespace Dune {
     {
 
         /** \brief Dimension of the grid */
-        enum {dim = GridImp::dimension};
+        enum {dimgrid  = GridImp::dimension};
 
         /** \brief Dimension of the space that the grid is embedded in */
         enum {dimworld = GridImp::dimensionworld};
@@ -110,9 +110,9 @@ namespace Dune {
             // ///////////////////////////////
             numTriangles_ = 0;
             numQuads_ = 0;
-            typename std::list<FoamGridEntityImp<2,dimworld> >::const_iterator eIt;
-            for (eIt =  Dune::get<dim>(grid.entityImps_[level_]).begin();
-                 eIt != Dune::get<dim>(grid.entityImps_[level_]).end();
+            typename std::list<FoamGridEntityImp<dimgrid, dimgrid, dimworld> >::const_iterator eIt;
+            for (eIt =  Dune::get<dimgrid>(grid.entityImps_[level_]).begin();
+                 eIt != Dune::get<dimgrid>(grid.entityImps_[level_]).end();
                  ++eIt)
              /** \todo Remove this const cast */
                 *const_cast<unsigned int*>(&(eIt->levelIndex_)) = (eIt->type().isTriangle()) ? numTriangles_++ : numQuads_++;
@@ -121,7 +121,7 @@ namespace Dune {
             //   Init the element indices
             // ///////////////////////////////
             numEdges_ = 0;
-            typename std::list<FoamGridEntityImp<1,dimworld> >::const_iterator edIt;
+            typename std::list<FoamGridEntityImp<1, dimgrid, dimworld> >::const_iterator edIt;
             for (edIt =  Dune::get<1>(grid.entityImps_[level_]).begin();
                  edIt != Dune::get<1>(grid.entityImps_[level_]).end();
                  ++edIt)
@@ -133,7 +133,7 @@ namespace Dune {
             // //////////////////////////////
 
             numVertices_ = 0;
-            typename std::list<FoamGridEntityImp<0,dimworld> >::const_iterator vIt;
+            typename std::list<FoamGridEntityImp<0, dimgrid, dimworld> >::const_iterator vIt;
             for (vIt =  Dune::get<0>(grid.entityImps_[level_]).begin();
                  vIt != Dune::get<0>(grid.entityImps_[level_]).end();
                  ++vIt)
@@ -143,7 +143,7 @@ namespace Dune {
             // ///////////////////////////////////////////////
             //   Update the list of geometry types present
             // ///////////////////////////////////////////////
-            for (int i=0; i<=dim; i++)
+            for (int i=0; i<=dimgrid; i++)
                 myTypes_[i].resize(0);
 
             if (numTriangles_>0)
@@ -156,7 +156,7 @@ namespace Dune {
                 myTypes_[1].push_back(GeometryType(1));
 
             if (numVertices_>0)
-                myTypes_[dim].push_back(GeometryType(0));
+                myTypes_[dimgrid].push_back(GeometryType(0));
 
         }
         
@@ -173,7 +173,7 @@ namespace Dune {
         int numVertices_;
 
         /** \brief The GeometryTypes present for each codim */
-        std::vector<GeometryType> myTypes_[dim+1];
+        std::vector<GeometryType> myTypes_[dimgrid+1];
     };
 
 
@@ -183,9 +183,8 @@ class FoamGridLeafIndexSet :
 {
 
     // Grid dimension
-    enum {dim      = remove_const<GridImp>::type::dimension};
-
-    // Grid dimension
+    enum {dimgrid  = remove_const<GridImp>::type::dimension};
+    // World dimension
     enum {dimworld = remove_const<GridImp>::type::dimensionworld};
 
 public:
@@ -223,14 +222,14 @@ public:
     //! get number of entities of given type
     int size (GeometryType type) const
     {
-        return (type.dim() < 0 || type.dim() > dim) ? 0 : size_[type.dim()];
+        return (type.dim() < 0 || type.dim() > dimgrid) ? 0 : size_[type.dim()];
     }
 
 
         //! get number of entities of given codim
         int size (int codim) const
         {
-            return (codim < 0 || codim > dim) ? 0 : size_[dim - codim];
+            return (codim < 0 || codim > dimgrid) ? 0 : size_[dimgrid - codim];
         }
 
 
@@ -260,20 +259,20 @@ public:
     {
 
 #if DUNE_VERSION_NEWER(DUNE_COMMON,2,4)
-        static_assert(dim==2, "LeafIndexSet::update() only works for 2d grids");
+        static_assert(dimgrid==2, "LeafIndexSet::update() only works for 2d grids");
 #else
-        dune_static_assert(dim==2, "LeafIndexSet::update() only works for 2d grids");
+        dune_static_assert(dimgrid==2, "LeafIndexSet::update() only works for 2d grids");
 #endif
 
         // ///////////////////////////////
         //   Init the element indices
         // ///////////////////////////////
-        size_[dim] = 0;
+        size_[dimgrid] = 0;
         typename GridImp::Traits::template Codim<0>::LeafIterator eIt    = grid.template leafbegin<0>();
         typename GridImp::Traits::template Codim<0>::LeafIterator eEndIt = grid.template leafend<0>();
 
         for (; eIt!=eEndIt; ++eIt)
-            *const_cast<unsigned int*>(&(GridImp::getRealImplementation(*eIt).target_->leafIndex_)) = size_[dim]++;
+            *const_cast<unsigned int*>(&(GridImp::getRealImplementation(*eIt).target_->leafIndex_)) = size_[dimgrid]++;
 
         // //////////////////////////////
         //   Init the edge indices
@@ -288,7 +287,7 @@ public:
 
             for (; edIt!=edEndIt; ++edIt) {
 
-                const FoamGridEntityImp<1,dimworld>* target = GridImp::getRealImplementation(*edIt).target_;
+                const FoamGridEntityImp<1, dimgrid, dimworld>* target = GridImp::getRealImplementation(*edIt).target_;
 
                 if (target->isLeaf())
                     // The is a real leaf edge.
@@ -313,12 +312,12 @@ public:
 
         for (int i=grid.maxLevel(); i>=0; i--) {
 
-            typename GridImp::Traits::template Codim<dim>::LevelIterator vIt    = grid.template lbegin<dim>(i);
-            typename GridImp::Traits::template Codim<dim>::LevelIterator vEndIt = grid.template lend<dim>(i);
+            typename GridImp::Traits::template Codim<dimgrid>::LevelIterator vIt    = grid.template lbegin<dimgrid>(i);
+            typename GridImp::Traits::template Codim<dimgrid>::LevelIterator vEndIt = grid.template lend<dimgrid>(i);
 
             for (; vIt!=vEndIt; ++vIt) {
 
-                const FoamGridEntityImp<0,dimworld>* target = GridImp::getRealImplementation(*vIt).target_;
+                const FoamGridEntityImp<0, dimgrid, dimworld>* target = GridImp::getRealImplementation(*vIt).target_;
 
                 if (target->isLeaf())
                     *const_cast<unsigned int*>(&(target->leafIndex_)) = size_[0]++;
@@ -334,11 +333,11 @@ public:
         // ///////////////////////////////////////////////
 
         /** \todo This will not work for grids with more than one element type */
-        for (int i=0; i<=dim; i++) {
+        for (int i=0; i<=dimgrid; i++) {
 
-            if (size_[dim-i]>0) {
+            if (size_[dimgrid-i]>0) {
                 myTypes_[i].resize(1);
-                myTypes_[i][0] = GeometryType(GeometryType::simplex, dim-i);
+                myTypes_[i][0] = GeometryType(GeometryType::simplex, dimgrid-i);
             } else
                 myTypes_[i].resize(0);
 
@@ -347,10 +346,10 @@ public:
     }
 
     // Number of entities per dimension
-    array<int,dim+1> size_;
+    array<int,dimgrid+1> size_;
 
     /** \brief The GeometryTypes present for each codim */
-    array<std::vector<GeometryType>, dim+1> myTypes_;
+    array<std::vector<GeometryType>, dimgrid+1> myTypes_;
 
 };
 

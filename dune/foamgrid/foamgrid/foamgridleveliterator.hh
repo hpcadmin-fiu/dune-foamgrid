@@ -18,15 +18,15 @@ namespace Dune {
 */
 template<int codim, PartitionIteratorType pitype, class GridImp>
 class FoamGridLevelIterator :
-    public Dune::FoamGridEntityPointer <codim,GridImp>
+    public Dune::FoamGridEntityPointer <codim, GridImp>
 {
-    enum {dim      = GridImp::dimension};
+    enum {dimgrid  = GridImp::dimension};
     enum {dimworld = GridImp::dimensionworld};
 
     public:
 
         //! Constructor
-    explicit FoamGridLevelIterator(const typename std::list<FoamGridEntityImp<dim-codim,dimworld> >::const_iterator& it)
+    explicit FoamGridLevelIterator(const typename std::list<FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld> >::const_iterator& it)
             : FoamGridEntityPointer<codim,GridImp>(it),
               levelIterator_(it)
         {
@@ -46,7 +46,7 @@ class FoamGridLevelIterator :
     // of the iterator, i.e. the 'pointer' to the entity.  However, that pointer can not be
     // set to its successor in the level std::list, not even by magic.  Therefore we keep the
     // same information redundantly in this iterator, which can be incremented.
-    typename std::list<FoamGridEntityImp<dim-codim,dimworld> >::const_iterator levelIterator_;
+    typename std::list<FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld> >::const_iterator levelIterator_;
 
 };
 

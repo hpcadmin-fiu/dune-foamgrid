@@ -19,7 +19,7 @@ class FoamGridEntityPointer
 {
     private:
 
-    enum { dim      = GridImp::dimension };
+    enum { dimgrid  = GridImp::dimension };
     enum { dimworld = GridImp::dimensionworld };
 
     public:
@@ -31,18 +31,18 @@ class FoamGridEntityPointer
     /** \brief Codimension of entity pointed to */
     enum { codimension = codim };
 
-        typedef typename GridImp::template Codim<codim>::Entity Entity;
+    typedef typename GridImp::template Codim<codim>::Entity Entity;
 
     //! Constructor from a FoamGrid entity
-    FoamGridEntityPointer (const FoamGridEntity<codim,dim,GridImp>& entity)
+    FoamGridEntityPointer (const FoamGridEntity<codim, dimgrid, GridImp>& entity)
         : virtualEntity_(entity.target_)
     {}
 
-    FoamGridEntityPointer (const typename std::list<FoamGridEntityImp<dim-codim,dimworld> >::const_iterator& it)
+    FoamGridEntityPointer (const typename std::list<FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld> >::const_iterator& it)
         : virtualEntity_(&(*it))
     {}
 
-    FoamGridEntityPointer (const FoamGridEntityImp<dim-codim,dimworld>* target)
+    FoamGridEntityPointer (const FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld>* target)
         : virtualEntity_(target)
     {}
 

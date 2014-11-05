@@ -22,7 +22,7 @@ namespace Dune {
 
 // Forward declarations
 
-template<int codim, int dim, class GridImp>
+template<int codim, int dimentity, class GridImp>
 class FoamGridEntity;
 
 template<int codim, class GridImp>
@@ -46,9 +46,9 @@ class FoamGridHierarchicIterator;
 *
 *
 */
-template<int codim, int dim, class GridImp>
+template<int codim, int dimgrid, class GridImp>
 class FoamGridEntity :
-    public EntityDefaultImplementation <codim,dim,GridImp,FoamGridEntity>
+    public EntityDefaultImplementation <codim, dimgrid, GridImp, FoamGridEntity>
 {
     template <class GridImp_>
     friend class FoamGridLevelIndexSet;
@@ -69,7 +69,7 @@ class FoamGridEntity :
 
         typedef typename GridImp::ctype ctype;
 
-    enum{dimworld = GridImp::dimensionworld};
+        enum{dimworld = GridImp::dimensionworld};
 
     public:
 
@@ -81,7 +81,7 @@ class FoamGridEntity :
 
 
         //! Constructor for an entity in a given grid level
-    FoamGridEntity(const FoamGridEntityImp<dim-codim,GridImp::dimensionworld>* target) :
+    FoamGridEntity(const FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld>* target) :
             target_(target)
         {}
 
@@ -126,11 +126,11 @@ class FoamGridEntity :
         //! geometry of this entity
         Geometry geometry () const
         {
-            std::vector<FieldVector<double,dimworld> > coordinates(target_->corners());
+            std::vector<FieldVector<double, dimworld> > coordinates(target_->corners());
             for (size_t i=0; i<target_->corners(); i++)
                 coordinates[i] = target_->corner(i);
 
-            return Geometry(FoamGridGeometry<dim-codim,dimworld,GridImp>(target_->type(), coordinates));
+            return Geometry(FoamGridGeometry<dimgrid-codim, dimworld, GridImp>(target_->type(), coordinates));
         }
 
         //! Create EntitySeed
@@ -139,11 +139,11 @@ class FoamGridEntity :
             return EntitySeed(target_);
         }
 
-    const FoamGridEntityImp<dim-codim,GridImp::dimensionworld>* target_;
+        const FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld>* target_;
 
 
         //! \todo Please doc me !
-        void setToTarget(const FoamGridEntityImp<dim-codim,GridImp::dimensionworld>* target)
+        void setToTarget(const FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld>* target)
         {
             target_ = target;
         }
@@ -160,9 +160,9 @@ class FoamGridEntity :
 * It has an extended interface compared to the general entity class.
 * For example, Entities of codimension 0  allow to visit all neighbors.
 */
-template<int dim, class GridImp>
-class FoamGridEntity<0,dim,GridImp> :
-    public EntityDefaultImplementation<0,dim,GridImp, FoamGridEntity>
+template<int dimgrid, class GridImp>
+class FoamGridEntity<0, dimgrid, GridImp> :
+    public EntityDefaultImplementation<0, dimgrid, GridImp, FoamGridEntity>
 {
 
     enum {dimworld = GridImp::dimensionworld};
@@ -187,7 +187,7 @@ class FoamGridEntity<0,dim,GridImp> :
 
 
         //! Constructor for an entity in a given grid level
-        FoamGridEntity(const FoamGridEntityImp<2,dimworld>* hostEntity) :
+        FoamGridEntity(const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* hostEntity) :
             target_(hostEntity)
         {}
 
@@ -229,7 +229,7 @@ class FoamGridEntity<0,dim,GridImp> :
             for (size_t i=0; i<target_->corners(); i++)
                 coordinates[i] = target_->vertex_[i]->pos_;
 
-            return Geometry(FoamGridGeometry<dim,dimworld,GridImp>(target_->type(), coordinates));
+            return Geometry(FoamGridGeometry<dimgrid, dimworld, GridImp>(target_->type(), coordinates));
         }
 
         //! Create EntitySeed
@@ -272,8 +272,8 @@ class FoamGridEntity<0,dim,GridImp> :
 
     /** \brief Return index of sub entity with codim = cc and local number i
      */
-    int subId (int i,unsigned int codim) const {
-        assert(0<=codim && codim<=dim);
+    int subId (int i, unsigned int codim) const {
+        assert(0<=codim && codim<=dimgrid);
         switch (codim) {
         case 0:
             return target_->id_;
@@ -294,13 +294,13 @@ class FoamGridEntity<0,dim,GridImp> :
         typename GridImp::template Codim<codim>::EntityPointer subEntity (int i) const{
             if (codim==0) {
                 // The cast is correct when this if clause is executed
-                return FoamGridEntityPointer<codim,GridImp>( (FoamGridEntityImp<dim-codim,dimworld>*)this->target_);
+                return FoamGridEntityPointer<codim, GridImp>( (FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld>*)this->target_);
             } else if (codim==1) {
                 // The cast is correct when this if clause is executed
-                return FoamGridEntityPointer<codim,GridImp>( (FoamGridEntityImp<dim-codim,dimworld>*)this->target_->edges_[i]);
+                return FoamGridEntityPointer<codim, GridImp>( (FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld>*)this->target_->edges_[i]);
             } else if (codim==2) {
                 // The cast is correct when this if clause is executed
-                return FoamGridEntityPointer<codim,GridImp>( (FoamGridEntityImp<dim-codim,dimworld>*)this->target_->vertex_[i]);
+                return FoamGridEntityPointer<codim, GridImp>( (FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld>*)this->target_->vertex_[i]);
             }
         }
 
@@ -353,8 +353,8 @@ class FoamGridEntity<0,dim,GridImp> :
     }
         //! Inter-level access to father element on coarser grid.
         //! Assumes that meshes are nested.
-        FoamGridEntityPointer<0,GridImp> father () const {
-            return FoamGridEntityPointer<0,GridImp>(target_->father_);
+        FoamGridEntityPointer<0, GridImp> father () const {
+            return FoamGridEntityPointer<0, GridImp>(target_->father_);
         }
 
 
@@ -368,7 +368,7 @@ class FoamGridEntity<0,dim,GridImp> :
         * Assumes that meshes are nested.
         */
         LocalGeometry geometryInFather () const {
-            FoamGridEntityImp<2,dimworld>* father = target_->father_;
+            FoamGridEntityImp<dimgrid, dimgrid, dimworld>* father = target_->father_;
             // Check whether there really is a father
             if(father==nullptr)
                 DUNE_THROW(GridError, "There is no father Element.");
@@ -392,7 +392,7 @@ class FoamGridEntity<0,dim,GridImp> :
                     { {0.5,0.0}, {0.5,0.5}, {0.0,0.5} }
                 };
 
-                std::vector<FieldVector<typename GridImp::ctype,GridImp::dimension> >
+                std::vector<FieldVector<typename GridImp::ctype, dimgrid> >
                     coordinates(3);
 
                 for(int corner=0; corner <3; ++corner)
@@ -401,7 +401,7 @@ class FoamGridEntity<0,dim,GridImp> :
                             mapping[target_->refinementIndex_][corner][entry];
 
                 // return LocalGeomety by value
-                return LocalGeometry(FoamGridGeometry<2,2,GridImp>(target_->type(),
+                return LocalGeometry(FoamGridGeometry<dimgrid, dimgrid, GridImp>(target_->type(),
                                                                         coordinates));
             }else{
                 DUNE_THROW(NotImplemented, "geometryInFather only supported for triangles!");
@@ -443,12 +443,12 @@ class FoamGridEntity<0,dim,GridImp> :
 
 
         /** \brief Make this class point to a new FoamGridEntityImp object */
-        void setToTarget(const FoamGridEntityImp<2,dimworld>* target)
+        void setToTarget(const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* target)
         {
             target_ = target;
         }
 
-        const FoamGridEntityImp<2,dimworld>* target_;
+        const FoamGridEntityImp<dimgrid, dimgrid ,dimworld>* target_;
 
     private:
 

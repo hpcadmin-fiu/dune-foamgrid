@@ -37,9 +37,8 @@ class FoamGridIntersection
     public:
 
 
-        enum {dim=GridImp::dimension};
-
-        enum {dimworld=GridImp::dimensionworld};
+        enum {dimgrid  = GridImp::dimension};
+        enum {dimworld = GridImp::dimensionworld};
 
         typedef typename GridImp::template Codim<0>::EntityPointer EntityPointer;
         typedef typename GridImp::template Codim<0>::Entity Entity;
@@ -51,7 +50,7 @@ class FoamGridIntersection
      * related to an edge.
      * \param edge The index of the edge this intersection lives on.
      */
-    FoamGridIntersection(const FoamGridEntityImp<2,dimworld>* center,
+    FoamGridIntersection(const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* center,
                          int edge)
         : center_(center), edgeIndex_(edge)
     {}
@@ -59,7 +58,7 @@ class FoamGridIntersection
         //! return EntityPointer to the Entity on the inside of this intersection
         //! (that is the Entity where we started this Iterator)
         EntityPointer inside() const {
-            return FoamGridEntityPointer<0,GridImp> (center_);
+            return FoamGridEntityPointer<0, GridImp> (center_);
         }
 
 
@@ -67,7 +66,7 @@ class FoamGridIntersection
         //! (that is the neighboring Entity)
         EntityPointer outside() const {
             // Return the 'other' element on the current edge
-            return FoamGridEntityPointer<0,GridImp> ((*neighbor_));
+            return FoamGridEntityPointer<0, GridImp> ((*neighbor_));
         }
 
 
@@ -86,7 +85,7 @@ class FoamGridIntersection
         //! Geometry type of an intersection
         GeometryType type () const 
         {
-            return GeometryType(GeometryType::simplex, dim-1);
+            return GeometryType(GeometryType::simplex, dimgrid-1);
         }
 
         //! local number of codim 1 entity in self where intersection is contained in
@@ -98,7 +97,7 @@ class FoamGridIntersection
         virtual int indexInOutside() const=0;
 
         //! return outer normal
-        FieldVector<ctype, dimworld> outerNormal (const FieldVector<ctype, dim-1>& local) const 
+        FieldVector<ctype, dimworld> outerNormal (const FieldVector<ctype, dimgrid-1>& local) const 
         {
             // The intersection normal is a vector that is orthogonal to the element normal
             // and to the intersection itself.
@@ -107,12 +106,12 @@ class FoamGridIntersection
             assert(center_->type().isTriangle());
 
             // Compute vertices
-            const Dune::ReferenceElement<double,dim>& refElement
-                = Dune::ReferenceElements<double, dim>::general(center_->type());
+            const Dune::ReferenceElement<double, dimgrid>& refElement
+                = Dune::ReferenceElements<double, dimgrid>::general(center_->type());
 
             // edge vertices, oriented
-            int v0 = refElement.subEntity(edgeIndex_, 1, 0, dim);
-            int v1 = refElement.subEntity(edgeIndex_, 1, 1, dim);
+            int v0 = refElement.subEntity(edgeIndex_, 1, 0, dimgrid);
+            int v1 = refElement.subEntity(edgeIndex_, 1, 1, dimgrid);
 
             // opposite vertex
             int v2 = (v1+1)%3;
@@ -153,15 +152,15 @@ class FoamGridIntersection
         }
 
         //! return outer normal multiplied by the integration element
-        FieldVector<ctype, dimworld> integrationOuterNormal (const FieldVector<ctype, dim-1>& local) const 
+        FieldVector<ctype, dimworld> integrationOuterNormal (const FieldVector<ctype, dimgrid-1>& local) const 
         {
 
-            const Dune::ReferenceElement<double,dim>& refElement
-                = Dune::ReferenceElements<double, dim>::general(center_->type());
+            const Dune::ReferenceElement<double, dimgrid>& refElement
+                = Dune::ReferenceElements<double, dimgrid>::general(center_->type());
 
             // edge vertices
-            int v0 = refElement.subEntity(edgeIndex_, 1, 0, dim);
-            int v1 = refElement.subEntity(edgeIndex_, 1, 1, dim);
+            int v0 = refElement.subEntity(edgeIndex_, 1, 0, dimgrid);
+            int v1 = refElement.subEntity(edgeIndex_, 1, 1, dimgrid);
 
             //edge length
             ctype edgeLength = (center_->vertex_[v0]->pos_- center_->vertex_[v1]->pos_).two_norm();
@@ -173,7 +172,7 @@ class FoamGridIntersection
         }
 
         //! return unit outer normal
-        FieldVector<ctype, dimworld> unitOuterNormal (const FieldVector<ctype, dim-1>& local) const 
+        FieldVector<ctype, dimworld> unitOuterNormal (const FieldVector<ctype, dimgrid-1>& local) const 
         {
             unitOuterNormal_ = this->outerNormal(local);
             unitOuterNormal_ /= unitOuterNormal_.two_norm();
@@ -194,13 +193,13 @@ class FoamGridIntersection
 
     protected:
 
-    const FoamGridEntityImp<2,dimworld>* center_;
+    const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* center_;
 
     /** \brief Count on which edge we are lookin' at.  */
     int edgeIndex_;
 
     /** \brief Iterator to the other neighbor of the intersection. */
-    typename std::vector<const FoamGridEntityImp<2,dimworld>*>::const_iterator neighbor_;
+    typename std::vector<const FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>::const_iterator neighbor_;
 
 };
 
@@ -210,7 +209,7 @@ class FoamGridLevelIntersection
 {
     friend class FoamGridLevelIntersectionIterator<GridImp>;
 
-    enum {dim=GridImp::dimension};
+    enum {dimgrid = GridImp::dimension};
 
     // Geometry is a CachedMultiLinearGeometry
     typedef typename GridImp::template Codim<1>::Geometry Geometry;
@@ -222,7 +221,7 @@ class FoamGridLevelIntersection
 public:
     enum{ dimworld = GridImp::dimensionworld };
 
-    FoamGridLevelIntersection(const FoamGridEntityImp<2,dimworld>* center, int edge)
+    FoamGridLevelIntersection(const FoamGridEntityImp<dimgrid, dimgrid ,dimworld>* center, int edge)
                               : FoamGridIntersection<GridImp>(center, edge)
     {}
 
@@ -254,14 +253,14 @@ public:
     //! where iteration started.
     LocalGeometry geometryInInside () const 
     {
-        std::vector<FieldVector<double, dim> > coordinates(2);
+        std::vector<FieldVector<double, dimgrid> > coordinates(2);
 
         // Get two vertices of the intersection
-        const Dune::ReferenceElement<double,dim>& refElement
-            = Dune::ReferenceElements<double, dim>::general(this->center_->type());
+        const Dune::ReferenceElement<double, dimgrid>& refElement
+            = Dune::ReferenceElements<double, dimgrid>::general(this->center_->type());
 
-        coordinates[0] = refElement.position(refElement.subEntity(this->edgeIndex_, 1, 0, dim), dim);
-        coordinates[1] = refElement.position(refElement.subEntity(this->edgeIndex_, 1, 1, dim), dim);
+        coordinates[0] = refElement.position(refElement.subEntity(this->edgeIndex_, 1, 0, dimgrid), dimgrid);
+        coordinates[1] = refElement.position(refElement.subEntity(this->edgeIndex_, 1, 1, dimgrid), dimgrid);
         
         geometryInInside_ = make_shared<LocalGeometryImpl>(this->type(), coordinates);
 
@@ -274,25 +273,25 @@ public:
     LocalGeometry geometryInOutside () const {
   
         // Get two vertices of the intersection
-        const Dune::ReferenceElement<double,dim>& refElement
-           = Dune::ReferenceElements<double, dim>::general(this->center_->type());
+        const Dune::ReferenceElement<double,dimgrid>& refElement
+           = Dune::ReferenceElements<double, dimgrid>::general(this->center_->type());
 
-        std::array<FoamGridEntityImp<0,dimworld>*, 2> vtx;
+        std::array<FoamGridEntityImp<0, dimgrid, dimworld>*, 2> vtx;
 
-        vtx[0] = this->center_->vertex_[refElement.subEntity(this->edgeIndex_, 1, 0, dim)];
-        vtx[1] = this->center_->vertex_[refElement.subEntity(this->edgeIndex_, 1, 1, dim)];
+        vtx[0] = this->center_->vertex_[refElement.subEntity(this->edgeIndex_, 1, 0, dimgrid)];
+        vtx[1] = this->center_->vertex_[refElement.subEntity(this->edgeIndex_, 1, 1, dimgrid)];
 
-        std::vector<FieldVector<double, dim> > coordinates(2);
+        std::vector<FieldVector<double, dimgrid> > coordinates(2);
 
         // Find the intersection vertices in local numbering of the outside element
         // That way we get the local orientation correctly.
-        const Dune::ReferenceElement<double,dim>& refElementOther
-            = Dune::ReferenceElements<double, dim>::general((*this->neighbor_)->type());
+        const Dune::ReferenceElement<double, dimgrid>& refElementOther
+            = Dune::ReferenceElements<double, dimgrid>::general((*this->neighbor_)->type());
 
         for (int j=0; j<2; j++)
-          for (int i=0; i<refElementOther.size(dim); i++)
-             if (vtx[j] == (*this->neighbor_)->vertex_[refElementOther.subEntity(0,0,i,dim)])
-              coordinates[j] = refElement.position(refElement.subEntity(0,0, i, dim),dim);
+          for (int i=0; i<refElementOther.size(dimgrid); i++)
+             if (vtx[j] == (*this->neighbor_)->vertex_[refElementOther.subEntity(0, 0, i, dimgrid)])
+              coordinates[j] = refElement.position(refElement.subEntity(0, 0, i, dimgrid), dimgrid);
 
         geometryInOutside_ = make_shared<LocalGeometryImpl>(this->type(), coordinates);
 
@@ -306,11 +305,11 @@ public:
         std::vector<FieldVector<double, dimworld> > coordinates(2);
 
         // Get two vertices of the intersection
-        const Dune::ReferenceElement<double,dim>& refElement
-            = Dune::ReferenceElements<double, dim>::general(this->center_->type());
+        const Dune::ReferenceElement<double, dimgrid>& refElement
+            = Dune::ReferenceElements<double, dimgrid>::general(this->center_->type());
 
-        coordinates[0] = this->center_->vertex_[refElement.subEntity(this->edgeIndex_, 1, 0, dim)]->pos_;
-        coordinates[1] = this->center_->vertex_[refElement.subEntity(this->edgeIndex_, 1, 1, dim)]->pos_;
+        coordinates[0] = this->center_->vertex_[refElement.subEntity(this->edgeIndex_, 1, 0, dimgrid)]->pos_;
+        coordinates[1] = this->center_->vertex_[refElement.subEntity(this->edgeIndex_, 1, 1, dimgrid)]->pos_;
     
         geometry_ = make_shared<GeometryImpl>(this->type(), coordinates);
 
@@ -346,9 +345,9 @@ class FoamGridLeafIntersection
     friend class FoamGridLeafIntersectionIterator<GridImp>;
 public:
 
-    enum {dimworld=GridImp::dimensionworld};
+    enum {dimworld = GridImp::dimensionworld};
 
-    enum {dim=GridImp::dimension};
+    enum {dimgrid  = GridImp::dimension};
 
     typedef typename GridImp::ctype ctype;
 
@@ -358,7 +357,7 @@ public:
     typedef typename GridImp::Traits::template Codim<1>::GeometryImpl GeometryImpl;
     typedef typename GridImp::Traits::template Codim<1>::LocalGeometryImpl LocalGeometryImpl;
 
-    FoamGridLeafIntersection(const FoamGridEntityImp<2,FoamGridIntersection<GridImp>::dimworld>* center,
+    FoamGridLeafIntersection(const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* center,
                              int edge)
         : FoamGridIntersection<GridImp>(center, edge)
     {}
@@ -374,7 +373,7 @@ public:
         assert(this->neighbor_!=neighborEnd_);
         // Move to the father of the edge until its level is the same as
         // the level of the neighbor
-        FoamGridEntityImp<1,dimworld>* edge=(this->center_->edges_[this->edgeIndex_]);
+        FoamGridEntityImp<1, dimgrid, dimworld>* edge=(this->center_->edges_[this->edgeIndex_]);
 
         while(edge->level()<(*this->neighbor_)->level())
         {
@@ -393,12 +392,12 @@ public:
         std::vector<FieldVector<double, dimworld> > coordinates(2);
 
         // Get indices of two vertices of the intersection
-        const Dune::ReferenceElement<double,dim>& refElement
-            = Dune::ReferenceElements<double, dim>::general(this->center_->type());
+        const Dune::ReferenceElement<double, dimgrid>& refElement
+            = Dune::ReferenceElements<double, dimgrid>::general(this->center_->type());
 
         // Get global coordinates of the vertices
-        coordinates[0] = this->center_->vertex_[refElement.subEntity(this->edgeIndex_, 1, 0, dim)]->pos_;
-        coordinates[1] = this->center_->vertex_[refElement.subEntity(this->edgeIndex_, 1, 1, dim)]->pos_;
+        coordinates[0] = this->center_->vertex_[refElement.subEntity(this->edgeIndex_, 1, 0, dimgrid)]->pos_;
+        coordinates[1] = this->center_->vertex_[refElement.subEntity(this->edgeIndex_, 1, 1, dimgrid)]->pos_;
 
         geometry_ = make_shared<GeometryImpl>(this->type(), coordinates);
 
@@ -414,14 +413,14 @@ public:
     LocalGeometry geometryInInside () const 
     {
   
-        std::vector<FieldVector<double, dim> > coordinates(2);
+        std::vector<FieldVector<double, dimgrid> > coordinates(2);
 
         // Get two vertices of the intersection
-        const Dune::ReferenceElement<double,dim>& refElement
-            = Dune::ReferenceElements<double, dim>::general(this->center_->type());
+        const Dune::ReferenceElement<double, dimgrid>& refElement
+            = Dune::ReferenceElements<double, dimgrid>::general(this->center_->type());
 
-        coordinates[0] = refElement.position(refElement.subEntity(this->edgeIndex_, 1, 0, dim), dim);
-        coordinates[1] = refElement.position(refElement.subEntity(this->edgeIndex_, 1, 1, dim), dim);
+        coordinates[0] = refElement.position(refElement.subEntity(this->edgeIndex_, 1, 0, dimgrid), dimgrid);
+        coordinates[1] = refElement.position(refElement.subEntity(this->edgeIndex_, 1, 1, dimgrid), dimgrid);
         
         geometryInInside_ = make_shared<LocalGeometryImpl>(this->type(), coordinates);
 
@@ -436,25 +435,25 @@ public:
     {
 
         // Get two vertices of the intersection
-        const Dune::ReferenceElement<double,dim>& refElement
-           = Dune::ReferenceElements<double, dim>::general(this->center_->type());
+        const Dune::ReferenceElement<double, dimgrid>& refElement
+           = Dune::ReferenceElements<double, dimgrid>::general(this->center_->type());
 
-        std::array<FoamGridEntityImp<0,dimworld>*, 2> vtx;
+        std::array<FoamGridEntityImp<0, dimgrid, dimworld>*, 2> vtx;
 
-        vtx[0] = this->center_->vertex_[refElement.subEntity(this->edgeIndex_, 1, 0, dim)];
-        vtx[1] = this->center_->vertex_[refElement.subEntity(this->edgeIndex_, 1, 1, dim)];
+        vtx[0] = this->center_->vertex_[refElement.subEntity(this->edgeIndex_, 1, 0, dimgrid)];
+        vtx[1] = this->center_->vertex_[refElement.subEntity(this->edgeIndex_, 1, 1, dimgrid)];
 
-        std::vector<FieldVector<double, dim> > coordinates(2);
+        std::vector<FieldVector<double, dimgrid> > coordinates(2);
 
         // Find the intersection vertices in local numbering of the outside element
         // That way we get the local orientation correctly.
-        const Dune::ReferenceElement<double,dim>& refElementOther
-            = Dune::ReferenceElements<double, dim>::general((*this->neighbor_)->type());
+        const Dune::ReferenceElement<double, dimgrid>& refElementOther
+            = Dune::ReferenceElements<double, dimgrid>::general((*this->neighbor_)->type());
           
         for (int j=0; j<2; j++) //check both vertices of the considered edge
-         for (int i=0; i<refElementOther.size(dim); i++) //against all vertices of neighbor element
-            if (vtx[j] == (*this->neighbor_)->vertex_[refElementOther.subEntity(0, 0, i, dim)])
-              coordinates[j] = refElement.position(refElement.subEntity(0, 0, i, dim), dim);
+         for (int i=0; i<refElementOther.size(dimgrid); i++) //against all vertices of neighbor element
+            if (vtx[j] == (*this->neighbor_)->vertex_[refElementOther.subEntity(0, 0, i, dimgrid)])
+              coordinates[j] = refElement.position(refElement.subEntity(0, 0, i, dimgrid), dimgrid);
 
         geometryInOutside_ = make_shared<LocalGeometryImpl>(this->type(), coordinates);
 
@@ -468,9 +467,9 @@ public:
 
 private:
 
-    FoamGridEntityImp<1,dimworld>* edgePointer_;
+    FoamGridEntityImp<1, dimgrid ,dimworld>* edgePointer_;
     /** \brief Iterator to the other neighbor of the intersection. */
-    typename std::vector<const FoamGridEntityImp<2,dimworld>*>::const_iterator neighborEnd_;
+    typename std::vector<const FoamGridEntityImp<dimgrid, dimgrid ,dimworld>*>::const_iterator neighborEnd_;
     //! pointer to global and local intersection geometries
     mutable Dune::shared_ptr<GeometryImpl> geometry_;
     mutable Dune::shared_ptr<LocalGeometryImpl> geometryInInside_;

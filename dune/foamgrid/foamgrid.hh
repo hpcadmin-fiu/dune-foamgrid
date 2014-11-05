@@ -347,11 +347,11 @@ class FoamGrid :
 
             /** \todo Why do I need those const_casts here? */
             if (refCount>=1)
-                const_cast<FoamGridEntityImp<2,dimworld>*>(this->getRealImplementation(*e).target_)->markState_ = FoamGridEntityImp<2,dimworld>::REFINE;
+                const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(*e).target_)->markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::REFINE;
             else if (refCount<0)
-                const_cast<FoamGridEntityImp<2,dimworld>*>(this->getRealImplementation(*e).target_)->markState_ = FoamGridEntityImp<2,dimworld>::COARSEN;
+                const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(*e).target_)->markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::COARSEN;
             else
-                const_cast<FoamGridEntityImp<2,dimworld>*>(this->getRealImplementation(*e).target_)->markState_ = FoamGridEntityImp<2,dimworld>::DO_NOTHING;
+                const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(*e).target_)->markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::DO_NOTHING;
 
             return true;
         }
@@ -362,9 +362,9 @@ class FoamGrid :
         */
         int getMark(const typename Traits::template Codim<0>::EntityPointer & e) const
         {
-            if (this->getRealImplementation(*e).target_->markState_ == FoamGridEntityImp<2,dimworld>::REFINE)
+            if (this->getRealImplementation(*e).target_->markState_ == FoamGridEntityImp<dimgrid, dimgrid, dimworld>::REFINE)
                 return 1;
-            if (this->getRealImplementation(*e).target_->markState_ == FoamGridEntityImp<2,dimworld>::COARSEN)
+            if (this->getRealImplementation(*e).target_->markState_ == FoamGridEntityImp<dimgrid, dimgrid, dimworld>::COARSEN)
                 return -1;
 
             return 0;
@@ -460,23 +460,23 @@ class FoamGrid :
     private:
 
         //! \brief erases pointers in father elements to vanished entities of the element
-        void erasePointersToEntities(std::list<FoamGridEntityImp<2,dimworld> >& elements);
+        void erasePointersToEntities(std::list<FoamGridEntityImp<dimgrid, dimgrid ,dimworld> >& elements);
 
         //! \brief Erase Entities from memory that vanished due to coarsening.
         //! \warning This method has to be called first for i=0.
         //! \tparam i The dimension of the entities.
         //! \param  levelEntities The vector with the level entitied
         template<int i>
-        void eraseVanishedEntities(std::list<FoamGridEntityImp<i,dimworld> >& levelEntities);
+        void eraseVanishedEntities(std::list<FoamGridEntityImp<i, dimgrid, dimworld> >& levelEntities);
 
     //! \brief Coarsen an Element
     //! \param element The element to coarsen
-    void coarsenSimplexElement(FoamGridEntityImp<2,dimworld>& element);
+    void coarsenSimplexElement(FoamGridEntityImp<dimgrid, dimgrid, dimworld>& element);
 
     //! \brief refine an Element
     //! \param element The element to refine
     //! \param refCount How many times to refine the element
-    void refineSimplexElement(FoamGridEntityImp<2,dimworld>& element,
+    void refineSimplexElement(FoamGridEntityImp<dimgrid, dimgrid, dimworld>& element,
                        int refCount);
 
     /**
@@ -488,9 +488,9 @@ class FoamGrid :
      * \param son The son element to substitute the father with.
      * \param father Pointer to the father element that is to be substituted.
      */
-    void overwriteFineLevelNeighbours(FoamGridEntityImp<1,dimworld>& edge,
-                                      FoamGridEntityImp<2,dimworld>* son,
-                                      FoamGridEntityImp<2,dimworld>* father);
+    void overwriteFineLevelNeighbours(FoamGridEntityImp<1, dimgrid, dimworld>& edge,
+                                      FoamGridEntityImp<dimgrid, dimgrid, dimworld>* son,
+                                      FoamGridEntityImp<dimgrid, dimgrid, dimworld>* father);
 
     template<class C, class T>
     void check_for_duplicates(C& cont, const T& elem, std::size_t vertexIndex)
@@ -508,9 +508,9 @@ class FoamGrid :
         typename Traits::CollectiveCommunication ccobj_;
 
     // Stores the lists of vertices, edges, elements for each level
-    std::vector<tuple<std::list<FoamGridEntityImp<0,dimworld> >,
-                      std::list<FoamGridEntityImp<1,dimworld> >,
-                      std::list<FoamGridEntityImp<2,dimworld> > > > entityImps_;
+    std::vector<tuple<std::list<FoamGridEntityImp<0, dimgrid, dimworld> >,
+                      std::list<FoamGridEntityImp<1, dimgrid, dimworld> >,
+                      std::list<FoamGridEntityImp<dimgrid, dimgrid, dimworld> > > > entityImps_;
 
         //! Our set of level indices
         std::vector<FoamGridLevelIndexSet<const FoamGrid>*> levelIndexSets_;

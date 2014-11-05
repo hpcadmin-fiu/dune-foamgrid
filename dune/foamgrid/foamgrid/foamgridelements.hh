@@ -10,8 +10,9 @@
 #include <dune/common/nullptr.hh>
 namespace Dune {
 
-    template <int dimworld>
-    class FoamGridEntityImp<2,dimworld>
+    /** \brief Element specialization of FoamGridEntityImp. Element is a grid entity of topological codimension 0 and dimension dimgrid.*/
+    template <int dimgrid, int dimworld>
+    class FoamGridEntityImp<dimgrid, dimgrid ,dimworld>
         : public FoamGridEntityBase
     {
     public:
@@ -67,7 +68,7 @@ namespace Dune {
          * \param coord The global coordinates.
          * \return The corresponding local coordinates within the element.
          */
-        FieldVector<double,2> globalToLocal(const FieldVector<double,dimworld>& coord) const
+        FieldVector<double,2> globalToLocal(const FieldVector<double, dimworld>& coord) const
         {
             // If we set up the overdetermined system matrix we have
             // A[i][0]=vertex_[1].pos_[i]-vertex_[0].pos_[i];
@@ -104,7 +105,7 @@ namespace Dune {
             }
             mat.solve(x, b);
 #ifndef NDEBUG
-            FieldVector<double,dimworld> test(vertex_[0]->pos_);
+            FieldVector<double, dimworld> test(vertex_[0]->pos_);
             test.axpy(x[0], vertex_[1]->pos_);
             test.axpy(-x[0], vertex_[0]->pos_);
             test.axpy(x[1], vertex_[2]->pos_);
@@ -153,13 +154,13 @@ namespace Dune {
          */
         int refinementIndex_;
 
-        array<FoamGridEntityImp<2,dimworld>*, 4> sons_;
+        array<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*, 4> sons_;
 
-        FoamGridEntityImp<2,dimworld>* father_;
+        FoamGridEntityImp<dimgrid, dimgrid ,dimworld>* father_;
 
-        array<FoamGridEntityImp<1,dimworld>*, 3> edges_;
+        array<FoamGridEntityImp<1, dimgrid, dimworld>*, 3> edges_;
 
-        FoamGridEntityImp<0,dimworld>* vertex_[3];
+        FoamGridEntityImp<0, dimgrid, dimworld>* vertex_[3];
 
         /** \brief Stores requests for refinement and coarsening */
         MarkState markState_;

@@ -26,12 +26,12 @@ class FoamGridEntitySeed
 
     protected:
 
-        enum {dim = GridImp::dimension};
+        enum {dimgrid = GridImp::dimension};
         enum {dimworld = GridImp::dimensionworld};
-        enum {mydim = dim-codim};
+        enum {mydim = dimgrid-codim};
 
         // Entity type of the hostgrid
-        typedef FoamGridEntityImp<mydim, dimworld> EntityImplType;
+        typedef FoamGridEntityImp<mydim, dimgrid, dimworld> EntityImplType;
 
     public:
 
@@ -78,7 +78,7 @@ class FoamGridEntitySeed
 
     private:
 
-        const FoamGridEntityImp<mydim, dimworld>* entityImplPointer_;
+        const FoamGridEntityImp<mydim, dimgrid, dimworld>* entityImplPointer_;
 };
 
 } // namespace Dune

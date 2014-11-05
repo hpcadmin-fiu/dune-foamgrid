@@ -39,15 +39,17 @@ namespace Dune {
     /**
      * \brief The actual entity implementation
      *
-     * \tparam dim The dimension of this entity
+     * \tparam dimentity The dimension of this entity
+     * \tparam dimgrid The dimension of the grid
      * \tparam dimworld The world diemnsion
      */
-    template <int dim, int dimworld>
+    template <int dimentity, int dimgrid, int dimworld>
     class FoamGridEntityImp
     {};
 
-    template <int dimworld>
-    class FoamGridEntityImp<0,dimworld>
+    /** \brief Vertex specialization of FoamGridEntityImp */
+    template <int dimgrid, int dimworld>
+    class FoamGridEntityImp<0, dimgrid, dimworld>
         : public FoamGridEntityBase
     {
     public:
@@ -82,7 +84,7 @@ namespace Dune {
         /** \brief Return level index of sub entity with codim = cc and local number i
          */
         int subLevelIndex (int i, unsigned int codim) const {
-            assert(codim==2);
+            assert(codim==dimgrid);
             return this->levelIndex_;
             DUNE_THROW(GridError, "Non-existing codimension requested!");
         }
@@ -90,7 +92,7 @@ namespace Dune {
         /** \brief Return leaf index of sub entity with codim = cc and local number i
          */
         int subLeafIndex (int i,unsigned int codim) const {
-            assert(codim==2);
+            assert(codim==dimgrid);
             return this->leafIndex_;
             DUNE_THROW(GridError, "Non-existing codimension requested!");
         }
@@ -98,7 +100,7 @@ namespace Dune {
         FieldVector<double, dimworld> pos_;
 
         //! Son vertex on the next finer grid
-        FoamGridEntityImp<0,dimworld>* son_;
+        FoamGridEntityImp<0, dimgrid, dimworld>* son_;
 
     };
 

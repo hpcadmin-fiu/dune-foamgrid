@@ -32,15 +32,16 @@ template<class GridImp>
 class FoamGridLeafIntersectionIterator
 {
 
-    enum {dimworld=GridImp::dimensionworld};
+    enum {dimworld = GridImp::dimensionworld};
+    enum {dimgrid  = GridImp::dimension};
 
-    typedef std::vector<const FoamGridEntityImp<2,dimworld>*> ElementVector;
+    typedef std::vector<const FoamGridEntityImp<dimgrid, dimgrid, dimworld>*> ElementVector;
 
     typedef std::map<int, ElementVector> MapType;
 public:
 
     //! Constructor for a given grid entity and a given neighbor
-    FoamGridLeafIntersectionIterator(const FoamGridEntityImp<2,dimworld>* center, int edge)
+    FoamGridLeafIntersectionIterator(const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* center, int edge)
         : intersection_(FoamGridLeafIntersection<GridImp>(center,edge)),
           leafEdges_(make_shared<MapType>())
     {
@@ -79,7 +80,7 @@ public:
     }
 
     /** \brief Constructor creating the 'one-after-last'-iterator */
-    FoamGridLeafIntersectionIterator(const FoamGridEntityImp<2,dimworld>* center)
+    FoamGridLeafIntersectionIterator(const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* center)
         : intersection_(FoamGridLeafIntersection<GridImp>(center,center->corners())),
           leafEdges_(make_shared<MapType>())
     {
@@ -162,7 +163,7 @@ private:
     //! of edge that do not have any children.
     //! \param edge The edge whose leafEdge we need.
     //!
-    void traverseAndPushLeafEdges(FoamGridEntityImp<1,dimworld>* edge,
+    void traverseAndPushLeafEdges(FoamGridEntityImp<1, dimgrid, dimworld>* edge,
                                   ElementVector& leafEdges)
     {
         if(edge->isLeaf())
@@ -204,18 +205,18 @@ template<class GridImp>
 class FoamGridLevelIntersectionIterator
 {
 
-    enum { dim=GridImp::dimension };
-    enum { dimworld=GridImp::dimensionworld };
+    enum { dimgrid  = GridImp::dimension };
+    enum { dimworld = GridImp::dimensionworld };
 
     // Only the codim-0 entity is allowed to call the constructors
-    friend class FoamGridEntity<0,dim,GridImp>;
+    friend class FoamGridEntity<0, dimgrid, GridImp>;
 
     /** \todo Make this private once FoamGridLeafIntersectionIterator doesn't derive from this class anymore */
 protected:
     //! \brief Constructor for a given grid entity and a given neighbor
     //! \param center Pointer to the element where the iterator was created.
     //! \param edge The index of the edge to start the investigation.
-    FoamGridLevelIntersectionIterator(const FoamGridEntityImp<2,dimworld>* center, std::size_t edge)
+    FoamGridLevelIntersectionIterator(const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* center, std::size_t edge)
         : intersection_(FoamGridLevelIntersection<GridImp>(center,edge))
     {
         if(edge==center->corners())
@@ -268,7 +269,7 @@ protected:
     }
 
     /** \brief Constructor creating the 'one-after-last'-iterator */
-    FoamGridLevelIntersectionIterator(const FoamGridEntityImp<2,dimworld>* center)
+    FoamGridLevelIntersectionIterator(const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* center)
         : intersection_(FoamGridLevelIntersection<GridImp>(center,center->corners()))
     {
         GridImp::getRealImplementation(intersection_).neighborIndex_=0;

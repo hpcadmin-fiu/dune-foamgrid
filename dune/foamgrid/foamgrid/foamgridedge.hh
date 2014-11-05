@@ -11,14 +11,15 @@
 
 namespace Dune {
 
-    template <int dimworld>
-    class FoamGridEntityImp<1,dimworld>
+    /** \brief Edge specialization of FoamGridEntityImp */
+    template <int dimgrid, int dimworld>
+    class FoamGridEntityImp<1, dimgrid, dimworld>
         : public FoamGridEntityBase
     {
     public:
 
-        FoamGridEntityImp(const FoamGridEntityImp<0,dimworld>* v0,
-                          const FoamGridEntityImp<0,dimworld>* v1,
+        FoamGridEntityImp(const FoamGridEntityImp<0, dimgrid, dimworld>* v0,
+                          const FoamGridEntityImp<0, dimgrid, dimworld>* v1,
                           int level, unsigned int id)
             : FoamGridEntityBase(level,id), elements_(), nSons_(0), father_(nullptr)
         {
@@ -28,8 +29,8 @@ namespace Dune {
         }
 
 
-        FoamGridEntityImp(const FoamGridEntityImp<0,dimworld>* v0,
-                          const FoamGridEntityImp<0,dimworld>* v1,
+        FoamGridEntityImp(const FoamGridEntityImp<0, dimgrid, dimworld>* v0,
+                          const FoamGridEntityImp<0, dimgrid, dimworld>* v1,
                           int level, unsigned int id,
                           FoamGridEntityImp* father)
             : FoamGridEntityBase(level,id), elements_(), nSons_(0), father_(father)
@@ -91,21 +92,21 @@ namespace Dune {
             DUNE_THROW(GridError, "Non-existing codimension requested!");
         }
 
-        std::vector<const FoamGridEntityImp<2,dimworld>*> elements_;
+        std::vector<const FoamGridEntityImp<dimgrid, dimgrid, dimworld>*> elements_;
 
-        const FoamGridEntityImp<0,dimworld>* vertex_[2];
+        const FoamGridEntityImp<0, dimgrid, dimworld>* vertex_[2];
 
         /** \brief The boundary id.  Only used if this edge is a boundary edge */
         unsigned int boundaryId_;
 
         /** \brief links to refinements of this edge */
-        array<FoamGridEntityImp<1,dimworld>*,2> sons_;
+        array<FoamGridEntityImp<1, dimgrid, dimworld>*,2> sons_;
 
         /** \brief The number of refined edges (0 or 2). */
         unsigned int nSons_;
 
         /** \brief Pointer to father element */
-        FoamGridEntityImp<1,dimworld>* father_;
+        FoamGridEntityImp<1, dimgrid, dimworld>* father_;
 
     };
 
