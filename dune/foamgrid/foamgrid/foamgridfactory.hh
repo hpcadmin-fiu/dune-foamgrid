@@ -21,16 +21,17 @@ namespace Dune {
     /** \brief Specialization of the generic GridFactory for FoamGrid
 
     */
-    template <int dimworld>
-    class GridFactory<FoamGrid<dimworld> >
-        : public GridFactoryInterface<FoamGrid<dimworld> > {
+    template <int dimgrid, int dimworld>
+    class GridFactory<FoamGrid<dimgrid, dimworld> >
+        : public GridFactoryInterface<FoamGrid<dimgrid, dimworld> > {
 
         /** \brief Type used by the grid for coordinates */
-        typedef typename FoamGrid<dimworld>::ctype ctype;
+        typedef typename FoamGrid<dimgrid, dimworld>::ctype ctype;
 
         typedef typename std::map<FieldVector<ctype,1>, unsigned int>::iterator VertexIterator;
 
-        enum {dim = FoamGrid<dimworld>::dimension};
+        //is template parameter now
+        //enum {dim = FoamGrid<dimgrid, dimworld>::dimension};
 
     public:
 
@@ -39,7 +40,7 @@ namespace Dune {
             : factoryOwnsGrid_(true),
               vertexIndex_(0)
         {
-            grid_ = new FoamGrid<dimworld>;
+            grid_ = new FoamGrid<dimgrid, dimworld>;
 
             grid_->entityImps_.resize(1);
         }
@@ -53,7 +54,7 @@ namespace Dune {
         the pointer handed over to you by the method createGrid() is
         the one you supplied here.
          */
-        GridFactory(FoamGrid<dimworld>* grid)
+        GridFactory(FoamGrid<dimgrid, dimworld>* grid)
             : factoryOwnsGrid_(false),
               vertexIndex_(0)
         {
@@ -86,12 +87,12 @@ namespace Dune {
             assert(type.isTriangle());
 
             FoamGridEntityImp<2,dimworld> newElement(0,   // level
-                                       grid_->freeIdCounter_[dim]++);  // id
+                                       grid_->freeIdCounter_[dimgrid]++);  // id
             newElement.vertex_[0] = vertexArray_[vertices[0]];
             newElement.vertex_[1] = vertexArray_[vertices[1]];
             newElement.vertex_[2] = vertexArray_[vertices[2]];
 
-            Dune::get<dim>(grid_->entityImps_[0]).push_back(newElement);
+            Dune::get<dimgrid>(grid_->entityImps_[0]).push_back(newElement);
 
 
         }
@@ -119,7 +120,7 @@ namespace Dune {
 
         The receiver takes responsibility of the memory allocated for the grid
         */
-        virtual FoamGrid<dimworld>* createGrid() {
+        virtual FoamGrid<dimgrid, dimworld>* createGrid() {
             // Prevent a crash when this method is called twice in a row
             // You never know who may do this...
             if (grid_==nullptr)
@@ -142,8 +143,8 @@ namespace Dune {
 
                 FoamGridEntityImp<2,dimworld>* element = &(*eIt);
 
-                const Dune::ReferenceElement<double,dim>& refElement
-                    = Dune::ReferenceElements<double, dim>::general(eIt->type());
+                const Dune::ReferenceElement<double,dimgrid>& refElement
+                    = Dune::ReferenceElements<double, dimgrid>::general(eIt->type());
 
                 // Loop over all edges of this element
                 for (size_t i=0; i<element->edges_.size(); ++i) {
@@ -211,7 +212,7 @@ namespace Dune {
             //   Hand over the new grid
             // ////////////////////////////////////////////////
 
-            Dune::FoamGrid<dimworld>* tmp = grid_;
+            Dune::FoamGrid<dimgrid, dimworld>* tmp = grid_;
             tmp->numBoundarySegments_ = boundaryIdCounter;
             grid_ = nullptr;
             return tmp;
@@ -223,7 +224,7 @@ namespace Dune {
         void createBegin();
 
         // Pointer to the grid being built
-        FoamGrid<dimworld>* grid_;
+        FoamGrid<dimgrid, dimworld>* grid_;
 
         // True if the factory allocated the grid itself, false if the
         // grid was handed over from the outside

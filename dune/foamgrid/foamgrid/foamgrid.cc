@@ -1,6 +1,6 @@
 // Refine the grid uniformly
-template <int dimworld>
-void Dune::FoamGrid<dimworld>::globalRefine (int refCount)
+template <int dimgrid, int dimworld>
+void Dune::FoamGrid<dimgrid, dimworld>::globalRefine (int refCount)
 {
   willCoarsen=false;
 
@@ -144,8 +144,8 @@ void Dune::FoamGrid<dimworld>::globalRefine (int refCount)
 
 
 //f Book-keeping routine to be called before adaptation
-template <int dimworld>
-bool Dune::FoamGrid<dimworld>::preAdapt()
+template <int dimgrid, int dimworld>
+bool Dune::FoamGrid<dimgrid, dimworld>::preAdapt()
 {
   // Loop over all leaf entities and check whether they might be
   // coarsened. If there is one return true.
@@ -194,8 +194,8 @@ bool Dune::FoamGrid<dimworld>::preAdapt()
 
 
 // Triggers the grid refinement process
-template <int dimworld>
-bool Dune::FoamGrid<dimworld>::adapt()
+template <int dimgrid, int dimworld>
+bool Dune::FoamGrid<dimgrid, dimworld>::adapt()
 {
   std::set<std::size_t> levelsChanged;
   bool haveRefined=false;
@@ -302,8 +302,8 @@ bool Dune::FoamGrid<dimworld>::adapt()
 
 
 // Clean up refinement markers
-template <int dimworld>
-void Dune::FoamGrid<dimworld>::postAdapt()
+template <int dimgrid, int dimworld>
+void Dune::FoamGrid<dimgrid, dimworld>::postAdapt()
 {
   willCoarsen=false;
 
@@ -322,8 +322,8 @@ void Dune::FoamGrid<dimworld>::postAdapt()
 
 
 // Erases pointers in father elements to vanished entities of the element
-template <int dimworld>
-void Dune::FoamGrid<dimworld>::erasePointersToEntities(std::list<FoamGridEntityImp<2,dimworld> >& elements)
+template <int dimgrid, int dimworld>
+void Dune::FoamGrid<dimgrid, dimworld>::erasePointersToEntities(std::list<FoamGridEntityImp<2,dimworld> >& elements)
 {
   typedef typename std::list<FoamGridEntityImp<2,dimworld> >::iterator EntityIterator;
   for(EntityIterator element=elements.begin();
@@ -353,9 +353,9 @@ void Dune::FoamGrid<dimworld>::erasePointersToEntities(std::list<FoamGridEntityI
 }
 
 // Erase Entities from memory that vanished due to coarsening.
-template <int dimworld>
-template<int i>
-void Dune::FoamGrid<dimworld>::eraseVanishedEntities(std::list<FoamGridEntityImp<i,dimworld> >& levelEntities)
+template <int dimgrid, int dimworld>
+template <int i>
+void Dune::FoamGrid<dimgrid, dimworld>::eraseVanishedEntities(std::list<FoamGridEntityImp<i,dimworld> >& levelEntities)
 {
   typedef typename std::list<FoamGridEntityImp<i,dimworld> >::iterator EntityIterator;
   for (EntityIterator entity=levelEntities.begin();
@@ -370,8 +370,8 @@ void Dune::FoamGrid<dimworld>::eraseVanishedEntities(std::list<FoamGridEntityImp
 
 
 // Coarsen an Element
-template <int dimworld>
-void Dune::FoamGrid<dimworld>::coarsenSimplexElement(FoamGridEntityImp<2,dimworld>& element)
+template <int dimgrid, int dimworld>
+void Dune::FoamGrid<dimgrid, dimworld>::coarsenSimplexElement(FoamGridEntityImp<2,dimworld>& element)
 {
   // If we coarsen an element, this means that we erase all chidren of its father
   // to prevent inconsistencies.
@@ -483,8 +483,8 @@ void Dune::FoamGrid<dimworld>::coarsenSimplexElement(FoamGridEntityImp<2,dimworl
 
 
 // Refine one element
-template <int dimworld>
-void Dune::FoamGrid<dimworld>::refineSimplexElement(FoamGridEntityImp<2,dimworld>& element,
+template <int dimgrid, int dimworld>
+void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<2,dimworld>& element,
                                                     int refCount)
 {
   if(refCount<0)
@@ -540,8 +540,8 @@ void Dune::FoamGrid<dimworld>::refineSimplexElement(FoamGridEntityImp<2,dimworld
 
   array<FoamGridEntityImp<1,dimworld>*, 9> nextLevelEdges;
   std::size_t edgeIndex=0;
-  const Dune::ReferenceElement<double,dimension>& refElement
-    = Dune::ReferenceElements<double, dimension>::general(element.type());
+  const Dune::ReferenceElement<double, dimgrid>& refElement
+    = Dune::ReferenceElements<double, dimgrid>::general(element.type());
 
   // I am just to dumb for a general edge to vertice mapping.
   // Therefore we just store it here
@@ -810,8 +810,8 @@ void Dune::FoamGrid<dimworld>::refineSimplexElement(FoamGridEntityImp<2,dimworld
 
 
 // Overwrites the neighbours of this and descendant edges
-template <int dimworld>
-void Dune::FoamGrid<dimworld>::overwriteFineLevelNeighbours(FoamGridEntityImp<1,dimworld>& edge,
+template <int dimgrid, int dimworld>
+void Dune::FoamGrid<dimgrid, dimworld>::overwriteFineLevelNeighbours(FoamGridEntityImp<1,dimworld>& edge,
                                                             FoamGridEntityImp<2,dimworld>* son,
                                                             FoamGridEntityImp<2,dimworld>* father)
 {
@@ -844,8 +844,8 @@ void Dune::FoamGrid<dimworld>::overwriteFineLevelNeighbours(FoamGridEntityImp<1,
 
 
 // Recompute the grid indices after the grid has changed
-template <int dimworld>
-void Dune::FoamGrid<dimworld>::setIndices()
+template <int dimgrid, int dimworld>
+void Dune::FoamGrid<dimgrid, dimworld>::setIndices()
 {
   // //////////////////////////////////////////
   //   Create the index sets

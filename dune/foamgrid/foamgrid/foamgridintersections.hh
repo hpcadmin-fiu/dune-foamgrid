@@ -6,8 +6,6 @@
 /** \file
 * \brief The FoamGridLeafIntersection and FoamGridLevelIntersection classes
 */
-#include <bitset>
-
 #include <dune/grid/common/intersection.hh>
 
 #include <dune/foamgrid/foamgrid/foamgridintersectioniterators.hh>

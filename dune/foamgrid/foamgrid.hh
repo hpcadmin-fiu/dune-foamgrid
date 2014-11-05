@@ -36,18 +36,18 @@
 namespace Dune {
 
 // Forward declaration
-template <int dimworld>
+template <int dimgrid, int dimworld>
 class FoamGrid;
 
 
 /** \brief Encapsulates loads of types exported by FoamGrid */
-template<int dimworld>
+template<int dimgrid, int dimworld>
 struct FoamGridFamily
 {
     typedef GridTraits<
-        2,   // dim
+        2,   // dimgrid
         dimworld,   // dimworld
-        Dune::FoamGrid<dimworld>,
+        Dune::FoamGrid<dimgrid, dimworld>,
         FoamGridGeometry,
         FoamGridEntity,
         FoamGridEntityPointer,
@@ -58,13 +58,13 @@ struct FoamGridFamily
         FoamGridLevelIntersectionIterator,
         FoamGridHierarchicIterator,
         FoamGridLeafIterator,
-        FoamGridLevelIndexSet< const FoamGrid<dimworld> >,
-        FoamGridLeafIndexSet< const FoamGrid<dimworld> >,
-        FoamGridIdSet< const FoamGrid<dimworld> >,  // global IdSet
+        FoamGridLevelIndexSet< const FoamGrid<dimgrid, dimworld> >,
+        FoamGridLeafIndexSet< const FoamGrid<dimgrid, dimworld> >,
+        FoamGridIdSet< const FoamGrid<dimgrid, dimworld> >,  // global IdSet
         unsigned int,   // global id type
-        FoamGridIdSet< const FoamGrid<dimworld> >,  // local IdSet
+        FoamGridIdSet< const FoamGrid<dimgrid, dimworld> >,  // local IdSet
         unsigned int,   // local id type
-        CollectiveCommunication<Dune::FoamGrid<dimworld> > ,
+        CollectiveCommunication<Dune::FoamGrid<dimgrid, dimworld> > ,
         FoamGridLevelGridViewTraits,
         FoamGridLeafGridViewTraits,
         FoamGridEntitySeed
@@ -73,13 +73,13 @@ struct FoamGridFamily
 
 
 
-/** \brief An implementation of the Dune grid interface: a 2d simplicial grid in an n-dimensional world
+/** \brief An implementation of the Dune grid interface: an n-dimensional (1 or 2) simplicial grid in an n-dimensional (1, 2, 3) world
  *
 * \tparam dimworld Dimension of the world space
 */
-template <int dimworld>
+template <int dimgrid, int dimworld>
 class FoamGrid :
-        public GridDefaultImplementation  <2, dimworld, double, FoamGridFamily<dimworld> >
+        public GridDefaultImplementation  <dimgrid, dimworld, double, FoamGridFamily<dimgrid, dimworld> >
 {
 
     friend class FoamGridLevelIndexSet<const FoamGrid >;
@@ -112,18 +112,18 @@ class FoamGrid :
 
     public:
 
-    /** \brief This grid is always 2-dimensional */
-    enum {dimension = 2};
+    /** \brief This grid is always 2-dimensional <- NOT ANYMORE */
+    //enum {dimension = 2};
 
     //**********************************************************
     // The Interface Methods
     //**********************************************************
 
     //! type of the used GridFamily for this grid
-    typedef FoamGridFamily<dimworld>  GridFamily;
+    typedef FoamGridFamily<dimgrid, dimworld>  GridFamily;
 
     //! Exports various types belonging to this grid class
-    typedef typename FoamGridFamily<dimworld>::Traits Traits;
+    typedef typename FoamGridFamily<dimgrid, dimworld>::Traits Traits;
 
     //! The type used to store coordinates
     typedef double ctype;
@@ -161,7 +161,7 @@ class FoamGrid :
             if (level<0 || level>maxLevel())
                 DUNE_THROW(Dune::GridError, "LevelIterator in nonexisting level " << level << " requested!");
 
-            return Dune::FoamGridLevelIterator<codim,All_Partition, const Dune::FoamGrid<dimworld> >(Dune::get<dimension-codim>(entityImps_[level]).begin());
+            return Dune::FoamGridLevelIterator<codim,All_Partition, const Dune::FoamGrid<dimgrid, dimworld> >(Dune::get<dimgrid-codim>(entityImps_[level]).begin());
         }
 
 
@@ -171,7 +171,7 @@ class FoamGrid :
             if (level<0 || level>maxLevel())
                 DUNE_THROW(GridError, "LevelIterator in nonexisting level " << level << " requested!");
 
-            return Dune::FoamGridLevelIterator<codim,All_Partition, const Dune::FoamGrid<dimworld> >(Dune::get<dimension-codim>(entityImps_[level]).end());
+            return Dune::FoamGridLevelIterator<codim,All_Partition, const Dune::FoamGrid<dimgrid, dimworld> >(Dune::get<dimgrid-codim>(entityImps_[level]).end());
         }
 
 
@@ -181,7 +181,7 @@ class FoamGrid :
             if (level<0 || level>maxLevel())
                 DUNE_THROW(Dune::GridError, "LevelIterator in nonexisting level " << level << " requested!");
 
-            return Dune::FoamGridLevelIterator<codim,PiType, const Dune::FoamGrid<dimworld> >(Dune::get<dimension-codim>(entityImps_[level]).begin());
+            return Dune::FoamGridLevelIterator<codim,PiType, const Dune::FoamGrid<dimgrid, dimworld> >(Dune::get<dimgrid-codim>(entityImps_[level]).begin());
         }
 
 
@@ -191,7 +191,7 @@ class FoamGrid :
             if (level<0 || level>maxLevel())
                 DUNE_THROW(GridError, "LevelIterator in nonexisting level " << level << " requested!");
 
-            return Dune::FoamGridLevelIterator<codim,PiType, const Dune::FoamGrid<dimworld> >(Dune::get<dimension-codim>(entityImps_[level]).end());
+            return Dune::FoamGridLevelIterator<codim,PiType, const Dune::FoamGrid<dimgrid, dimworld> >(Dune::get<dimgrid-codim>(entityImps_[level]).end());
         }
 
 
@@ -523,7 +523,7 @@ class FoamGrid :
         FoamGridIdSet<const FoamGrid > idSet_;
 
     /** \brief Counters that always provide the next free id for each dimension */
-    array<unsigned int, dimension+1> freeIdCounter_;
+    array<unsigned int, dimgrid+1> freeIdCounter_;
 
     /** \brief How many times was the leaf level globally refined. */
     int globalRefined;
@@ -544,8 +544,8 @@ namespace Capabilities
       *
       * FoamGrid implements all codimensions, hence this is always true
       */
-    template<int dimworld,int codim>
-    struct hasEntity< FoamGrid<dimworld>, codim>
+    template<int dimgrid, int dimworld, int codim>
+    struct hasEntity< FoamGrid<dimgrid, dimworld>, codim>
     {
         static const bool v = true;
     };
@@ -553,23 +553,23 @@ namespace Capabilities
 
     /** \brief True if the grid can be run on a distributed machine
       */
-    template <int dimworld>
-    struct isParallel< FoamGrid<dimworld> >
+    template <int dimgrid, int dimworld>
+    struct isParallel< FoamGrid<dimgrid, dimworld> >
     {
         static const bool v = false;
     };
 
 
     //! \todo Please doc me !
-    template<int dimworld>
-    struct isLevelwiseConforming< FoamGrid<dimworld> >
+    template <int dimgrid, int dimworld>
+    struct isLevelwiseConforming< FoamGrid<dimgrid, dimworld> >
     {
         static const bool v = false;
     };
 
     //! \todo Please doc me !
-    template<int dimworld>
-    struct isLeafwiseConforming< FoamGrid<dimworld> >
+    template <int dimgrid, int dimworld>
+    struct isLeafwiseConforming< FoamGrid<dimgrid, dimworld> >
     {
         static const bool v = false;
     };

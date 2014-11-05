@@ -21,7 +21,7 @@ namespace Dune {
 template<int codim, class GridImp>
 class FoamGridEntitySeed
 {
-        template<int dimworld>
+        template<int dimgrid, int dimworld>
         friend class FoamGrid;
 
     protected:
