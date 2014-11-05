@@ -45,18 +45,18 @@ int main (int argc, char *argv[]) try
         std::cout << "  Calling checkIntersectionIterator" << std::endl;
         checkIntersectionIterator(*grid3d);
     }
-    {
+    /*{
         std::cout << "Checking other FoamGrid<1, 2> (1d in 2d grid)" << std::endl;
 
         std::cout << "  Creating grid" << std::endl;
-        std::shared_ptr<FoamGrid<2> > grid2d( GmshReader<FoamGrid<2> >::read(dune_foamgrid_path + "line1d2d.msh", true, false ) );
+        std::shared_ptr<FoamGrid<1, 2> > grid1d( GmshReader<FoamGrid<1, 2> >::read(dune_foamgrid_path + "line1d2d.msh", true, false ) );
 
         std::cout << "  Calling gridcheck" << std::endl;
-        gridcheck(*grid2d);
+        gridcheck(*grid1d);
 
         std::cout << "  Calling checkIntersectionIterator" << std::endl;
-        checkIntersectionIterator(*grid2d);
-    }
+        checkIntersectionIterator(*grid1d);
+    }*/
 
     {
         std::cout << "Checking FoamGrid<2, 3> (2d in 3d grid)" << std::endl;
