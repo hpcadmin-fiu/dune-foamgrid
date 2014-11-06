@@ -11,13 +11,15 @@
 
 namespace Dune {
 
-    /** \brief Edge specialization of FoamGridEntityImp */
-    template <int dimgrid, int dimworld>
-    class FoamGridEntityImp<1, dimgrid, dimworld>
+    /** \brief Edge specialization of FoamGridEntityImp. Edges only exist for dimgrid == 2. */
+    template <int dimworld>
+    class FoamGridEntityImp<1, 2, dimworld>
         : public FoamGridEntityBase
     {
     public:
-
+        /** \brief Dimension of the grid is always 2 if edges exist. */
+        enum {dimgrid = 2};
+        
         FoamGridEntityImp(const FoamGridEntityImp<0, dimgrid, dimworld>* v0,
                           const FoamGridEntityImp<0, dimgrid, dimworld>* v1,
                           int level, unsigned int id)
