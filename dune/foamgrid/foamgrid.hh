@@ -99,6 +99,9 @@ class FoamGrid :
     template <class GridType_>
     friend class GridFactory;
 
+    template <int dimgrid_, int dimworld_>
+    friend class GridFactoryBase;
+
     template<int codim_, int dim_, class GridImp_>
     friend class FoamGridEntity;
 
@@ -501,27 +504,27 @@ class FoamGrid :
 #endif
     }
 
-        //! compute the grid indices and ids
+    //! compute the grid indices and ids
     void setIndices();
 
-        //! Collective communication interface
-        typename Traits::CollectiveCommunication ccobj_;
+    //! Collective communication interface
+    typename Traits::CollectiveCommunication ccobj_;
 
     // Stores the lists of vertices, edges, elements for each level
     std::vector<tuple<std::list<FoamGridEntityImp<0, dimgrid, dimworld> >,
-                      std::list<FoamGridEntityImp<1, dimgrid, dimworld> >,
-                      std::list<FoamGridEntityImp<dimgrid, dimgrid, dimworld> > > > entityImps_;
+    std::list<FoamGridEntityImp<1, dimgrid, dimworld> >,
+    std::list<FoamGridEntityImp<dimgrid, dimgrid, dimworld> > > > entityImps_;
 
-        //! Our set of level indices
-        std::vector<FoamGridLevelIndexSet<const FoamGrid>*> levelIndexSets_;
+    //! Our set of level indices
+    std::vector<FoamGridLevelIndexSet<const FoamGrid>*> levelIndexSets_;
 
-        //! The leaf index set
-        //FoamGridLeafIndexSet<const FoamGrid > leafIndexSet_;
+    //! The leaf index set
+    //FoamGridLeafIndexSet<const FoamGrid > leafIndexSet_;
     // The leaf grid view
     FoamGridLeafGridView<const FoamGrid, All_Partition> leafGridView_;
 
-        //! The id set
-        FoamGridIdSet<const FoamGrid > idSet_;
+    //! The id set
+    FoamGridIdSet<const FoamGrid > idSet_;
 
     /** \brief Counters that always provide the next free id for each dimension */
     array<unsigned int, dimgrid+1> freeIdCounter_;
