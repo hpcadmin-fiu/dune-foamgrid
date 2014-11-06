@@ -44,8 +44,7 @@ namespace Dune {
      * \tparam dimworld The world diemnsion
      */
     template <int dimentity, int dimgrid, int dimworld>
-    class FoamGridEntityImp
-    {};
+    class FoamGridEntityImp {};
 
     /** \brief Vertex specialization of FoamGridEntityImp */
     template <int dimgrid, int dimworld>
@@ -97,7 +96,15 @@ namespace Dune {
             DUNE_THROW(GridError, "Non-existing codimension requested!");
         }
 
+        //! Position vector of this vertex
         FieldVector<double, dimworld> pos_;
+
+        //! Elements the vertex is related to
+        std::vector<const FoamGridEntityImp<dimgrid, dimgrid ,dimworld>*> elements_;
+
+        //! Boundary ID if vertex is on boundary
+        //  only used if the vertex is a boundary vertex
+        unsigned int boundaryId_;
 
         //! Son vertex on the next finer grid
         FoamGridEntityImp<0, dimgrid, dimworld>* son_;
