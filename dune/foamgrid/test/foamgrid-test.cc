@@ -45,7 +45,7 @@ int main (int argc, char *argv[]) try
         std::cout << "  Calling checkIntersectionIterator" << std::endl;
         checkIntersectionIterator(*grid3d);
     }
-    /*{
+/*    {
         std::cout << "Checking other FoamGrid<1, 2> (1d in 2d grid)" << std::endl;
 
         std::cout << "  Creating grid" << std::endl;
