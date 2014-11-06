@@ -8,18 +8,129 @@
 #include <dune/foamgrid/foamgrid/foamgridvertex.hh>
 #include <dune/foamgrid/foamgrid/foamgridedge.hh>
 #include <dune/common/nullptr.hh>
+
 namespace Dune {
 
     /** \brief Element specialization of FoamGridEntityImp. Element is a grid entity of topological codimension 0 and dimension dimgrid.*/
     template <int dimgrid, int dimworld>
-    class FoamGridEntityImp<dimgrid, dimgrid ,dimworld>
+    class FoamGridEntityImp<dimgrid, dimgrid, dimworld> {};
+
+    /** \brief Element specialization of FoamGridEntityImp for 1d grids. Element is a grid entity of topological codimension 0 and dimension dimgrid.*/
+    template <int dimworld>
+    class FoamGridEntityImp<1, 1, dimworld>
         : public FoamGridEntityBase
     {
+        /** \brief Grid dimension */
+        enum {dimgrid = 1};
+        
     public:
 
         /** \brief The different ways to mark an element for grid changes */
         enum MarkState { DO_NOTHING , COARSEN , REFINE, IS_COARSENED };
 
+        FoamGridEntityImp(const FoamGridEntityImp<0, dimgrid, dimworld>* v0,
+                          const FoamGridEntityImp<0, dimgrid, dimworld>* v1,
+                          int level, unsigned int id)
+            : FoamGridEntityBase(level,id), nSons_(0), father_(nullptr)
+        {
+            vertex_[0] = v0;
+            vertex_[1] = v1;
+        }
+
+
+        FoamGridEntityImp(const FoamGridEntityImp<0, dimgrid, dimworld>* v0,
+                          const FoamGridEntityImp<0, dimgrid, dimworld>* v1,
+                          int level, unsigned int id,
+                          FoamGridEntityImp* father)
+
+            : FoamGridEntityBase(level,id), nSons_(0), father_(father)
+        {
+            vertex_[0] = v0;
+            vertex_[1] = v1;
+            sons_[0] =sons_[1] = nullptr;
+        }
+
+        /** \todo Implement this method! */
+        bool isLeaf() const {
+            return sons_[0]==nullptr;
+        }
+
+
+        GeometryType type() const {
+            return GeometryType(GeometryType::simplex, 1);
+        }
+
+        /** \brief Number of corners (==2) */
+        unsigned int corners() const {
+            return 2;
+        }
+
+        FieldVector<double, dimworld> corner(int i) const {
+            return vertex_[i]->pos_;
+        }
+
+        PartitionType partitionType() const {
+            return InteriorEntity;
+        }
+
+        /** \brief Return level index of sub entity with codim = cc and local number i
+         */
+        int subLevelIndex (int i, unsigned int codim) const {
+            assert(1<=codim && codim<=2);
+            switch (codim) {
+            case 1:
+                return this->levelIndex_;
+            case 2:
+                return vertex_[i]->levelIndex_;
+            }
+            DUNE_THROW(GridError, "Non-existing codimension requested!");
+        }
+
+        /** \brief Return leaf index of sub entity with codim = cc and local number i
+         */
+        int subLeafIndex (int i,unsigned int codim) const {
+            assert(1<=codim && codim<=2);
+            switch (codim) {
+            case 1:
+                return this->leafIndex_;
+            case 2:
+                return vertex_[i]->leafIndex_;
+            }
+            DUNE_THROW(GridError, "Non-existing codimension requested!");
+        }
+
+        int refinementIndex_;
+
+        bool isNew_;
+
+        MarkState markState_;
+
+        const FoamGridEntityImp<0, dimgrid, dimworld>* vertex_[2];
+
+        /** \brief links to refinements of this edge */
+        array<FoamGridEntityImp<1, dimgrid, dimworld>*,2> sons_;
+
+        /** \brief The number of refined edges (0 or 2). */
+        unsigned int nSons_;
+
+        /** \brief Pointer to father element */
+        FoamGridEntityImp<1, dimgrid, dimworld>* father_;
+
+    };
+
+    /** \brief Element specialization of FoamGridEntityImp for 2d grids. Element is a grid entity of topological codimension 0 and dimension dimgrid.*/
+    template <int dimworld>
+    class FoamGridEntityImp<2, 2, dimworld>
+        : public FoamGridEntityBase
+    {
+        /** \brief Grid dimension */
+        enum {dimgrid = 2};
+
+    public:
+
+         /** \brief The different ways to mark an element for grid changes */
+        enum MarkState { DO_NOTHING , COARSEN , REFINE, IS_COARSENED };
+        
         FoamGridEntityImp(int level, unsigned int id)
             : FoamGridEntityBase(level,id),
               nSons_(0), refinementIndex_(-1),
@@ -28,6 +139,16 @@ namespace Dune {
           sons_[0]= sons_[1] = sons_[2] = sons_[3] = nullptr;
           father_ = nullptr;
         }
+
+
+        unsigned int corners() const {
+            return 3;
+        }
+
+        GeometryType type() const {
+            return GeometryType(GeometryType::simplex, 2);
+        }
+       
 
         bool hasFather() const
         {
@@ -49,14 +170,6 @@ namespace Dune {
             return isNew_;
         }
 
-        unsigned int corners() const {
-            return 3;
-        }
-
-        GeometryType type() const {
-            return GeometryType(GeometryType::simplex, 2);
-        }
-
         /** \todo Implement me! */
         unsigned int nSons() const {
             return nSons_;
@@ -68,6 +181,7 @@ namespace Dune {
          * \param coord The global coordinates.
          * \return The corresponding local coordinates within the element.
          */
+
         FieldVector<double,2> globalToLocal(const FieldVector<double, dimworld>& coord) const
         {
             // If we set up the overdetermined system matrix we have
@@ -169,7 +283,6 @@ namespace Dune {
         bool isNew_;
 
     };
-
 }
 
 #endif
