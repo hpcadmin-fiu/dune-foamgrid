@@ -249,7 +249,10 @@ class FoamGridEntity<0, dimgrid, GridImp> :
 #else
             dune_static_assert(0<=cc && cc<=2, "Only codimensions with 0 <= cc <= 2 are valid!");
 #endif
-            return (cc==0) ? 1 : 3;
+            if(dimgrid == 2)
+                return (cc==0) ? 1 : 3;
+            else 
+                return (cc==0) ? 1 : 2;
         }
 
         /** \brief Return the number of subEntities of codimension cc.
@@ -257,7 +260,10 @@ class FoamGridEntity<0, dimgrid, GridImp> :
         unsigned int count (unsigned int codim) const
         {
             assert(0<=codim && codim<=2);
-            return (codim==0) ? 1 : 3;
+            if(dimgrid == 2)
+                return (codim==0) ? 1 : 3;
+            else 
+                return (codim==0) ? 1 : 2;
         }
 
         /*! Return number of subentities with codimension cc.
@@ -267,20 +273,32 @@ class FoamGridEntity<0, dimgrid, GridImp> :
     	unsigned int subEntities (unsigned int codim) const
     	{
       		assert(0<=codim && codim<=2);
-            return (codim==0) ? 1 : 3;
+            if(dimgrid == 2)
+                return (codim==0) ? 1 : 3;
+            else 
+                return (codim==0) ? 1 : 2;
     	}
 
     /** \brief Return index of sub entity with codim = cc and local number i
      */
     int subId (int i, unsigned int codim) const {
         assert(0<=codim && codim<=dimgrid);
-        switch (codim) {
-        case 0:
-            return target_->id_;
-        case 1:
-            return target_->edges_[i]->id_;
-        case 2:
-            return target_->vertex_[i]->id_;
+        if(dimgrid == 2) {
+            switch (codim) {
+            case 0:
+                return target_->id_;
+            case 1:
+                return target_->edges_[i]->id_;
+            case 2:
+                return target_->vertex_[i]->id_;
+           }
+        } else {
+            switch (codim) {
+            case 0:
+                return target_->id_;
+            case 1:
+                return target_->vertex_[i]->id_;
+        }
         }
         DUNE_THROW(GridError, "Non-existing codimension requested!");
     }
