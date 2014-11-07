@@ -138,7 +138,7 @@ class FoamGrid :
           globalRefined(),
           numBoundarySegments_()
     {
-        static_assert(dimgrid == 2, "FoamGrid currently only works for 2D in nD");
+        //static_assert(dimgrid == 2, "FoamGrid currently only works for 2D in nD");
         std::fill(freeIdCounter_.begin(), freeIdCounter_.end(), 0);
     }
 
