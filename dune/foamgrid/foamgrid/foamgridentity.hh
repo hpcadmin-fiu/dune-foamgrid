@@ -313,10 +313,13 @@ class FoamGridEntity<0, dimgrid, GridImp> :
             if (codim==0) {
                 // The cast is correct when this if clause is executed
                 return FoamGridEntityPointer<codim, GridImp>( (FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld>*)this->target_);
-            } else if (codim==1) {
+            } else if (codim==1 && dimgrid ==2) {
                 // The cast is correct when this if clause is executed
                 return FoamGridEntityPointer<codim, GridImp>( (FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld>*)this->target_->edges_[i]);
-            } else if (codim==2) {
+            } else if (codim==1 && dimgrid ==1) {
+                // The cast is correct when this if clause is executed
+                return FoamGridEntityPointer<codim, GridImp>( (FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld>*)this->target_->vertex_[i]);
+            } else if (codim==2 && dimgrid ==2) {
                 // The cast is correct when this if clause is executed
                 return FoamGridEntityPointer<codim, GridImp>( (FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld>*)this->target_->vertex_[i]);
             }
