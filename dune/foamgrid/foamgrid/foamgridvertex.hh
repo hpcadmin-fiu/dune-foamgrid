@@ -55,16 +55,22 @@ namespace Dune {
 
         FoamGridEntityImp(int level, const FieldVector<double, dimworld>& pos, unsigned int id)
             : FoamGridEntityBase(level, id),
-              pos_(pos), son_(nullptr)
-        {}
+              pos_(pos), father_(nullptr)
+        {
+            sons_[0] = nullptr;
+        }
 
         //private:
         bool isLeaf() const {
-            return son_==nullptr;
+            return sons_[0]==nullptr;
         }
 
         GeometryType type() const {
             return GeometryType(0);
+        }
+
+        unsigned int boundarySegmentIndex() const {
+            return boundaryId_;
         }
 
         /** \brief Number of corners (==1) */
@@ -107,7 +113,11 @@ namespace Dune {
         unsigned int boundaryId_;
 
         //! Son vertex on the next finer grid
-        FoamGridEntityImp<0, dimgrid, dimworld>* son_;
+        array<FoamGridEntityImp<0, dimgrid, dimworld>*, 1> sons_;
+
+
+        //! Pointer to father vertex on next coarser grid */
+        FoamGridEntityImp<0, dimgrid, dimworld>* father_;
 
     };
 

@@ -28,18 +28,21 @@ namespace Dune {
         /** \brief The different ways to mark an element for grid changes */
         enum MarkState { DO_NOTHING , COARSEN , REFINE, IS_COARSENED };
 
-        FoamGridEntityImp(const FoamGridEntityImp<0, dimgrid, dimworld>* v0,
-                          const FoamGridEntityImp<0, dimgrid, dimworld>* v1,
+        FoamGridEntityImp(FoamGridEntityImp<0, dimgrid, dimworld>* v0,
+                          FoamGridEntityImp<0, dimgrid, dimworld>* v1,
                           int level, unsigned int id)
             : FoamGridEntityBase(level,id), nSons_(0), father_(nullptr)
         {
             vertex_[0] = v0;
             vertex_[1] = v1;
+            facet_[0] = v0;
+            facet_[1] = v1;
+            sons_[0] =sons_[1] = nullptr;
         }
 
 
-        FoamGridEntityImp(const FoamGridEntityImp<0, dimgrid, dimworld>* v0,
-                          const FoamGridEntityImp<0, dimgrid, dimworld>* v1,
+        FoamGridEntityImp(FoamGridEntityImp<0, dimgrid, dimworld>* v0,
+                          FoamGridEntityImp<0, dimgrid, dimworld>* v1,
                           int level, unsigned int id,
                           FoamGridEntityImp* father)
 
@@ -47,6 +50,8 @@ namespace Dune {
         {
             vertex_[0] = v0;
             vertex_[1] = v1;
+            facet_[0] = v0;
+            facet_[1] = v1;
             sons_[0] =sons_[1] = nullptr;
         }
 
@@ -55,6 +60,20 @@ namespace Dune {
             return sons_[0]==nullptr;
         }
 
+        /** \todo Implement me! */
+        unsigned int nSons() const {
+            return nSons_;
+        }
+
+        bool mightVanish() const
+        {
+            return markState_==COARSEN;
+        }
+
+        bool isNew() const
+        {
+            return isNew_;
+        }
 
         GeometryType type() const {
             return GeometryType(GeometryType::simplex, 1);
@@ -105,16 +124,18 @@ namespace Dune {
 
         MarkState markState_;
 
-        const FoamGridEntityImp<0, dimgrid, dimworld>* vertex_[2];
+        FoamGridEntityImp<0, dimgrid, dimworld>* vertex_[2];
+        
+        array<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>*, 2> facet_;
 
         /** \brief links to refinements of this edge */
-        array<FoamGridEntityImp<1, dimgrid, dimworld>*,2> sons_;
+        array<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*, 2> sons_;
 
         /** \brief The number of refined edges (0 or 2). */
         unsigned int nSons_;
 
         /** \brief Pointer to father element */
-        FoamGridEntityImp<1, dimgrid, dimworld>* father_;
+        FoamGridEntityImp<dimgrid, dimgrid, dimworld>* father_;
 
     };
 
@@ -174,8 +195,6 @@ namespace Dune {
         unsigned int nSons() const {
             return nSons_;
         }
-
-        unsigned int nSons_;
 
         /** \brief Compute local cordinates from global ones.
          * \param coord The global coordinates.
@@ -237,7 +256,7 @@ namespace Dune {
             case 0:
                 return this->levelIndex_;
             case 1:
-                return edges_[i]->levelIndex_;
+                return facet_[i]->levelIndex_;
             case 2:
                 return vertex_[i]->levelIndex_;
             }
@@ -252,7 +271,7 @@ namespace Dune {
             case 0:
                 return this->leafIndex_;
             case 1:
-                return edges_[i]->leafIndex_;
+                return facet_[i]->leafIndex_;
             case 2:
                 return vertex_[i]->leafIndex_;
             }
@@ -268,11 +287,13 @@ namespace Dune {
          */
         int refinementIndex_;
 
+        unsigned int nSons_;
+
         array<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*, 4> sons_;
 
         FoamGridEntityImp<dimgrid, dimgrid ,dimworld>* father_;
 
-        array<FoamGridEntityImp<1, dimgrid, dimworld>*, 3> edges_;
+        array<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>*, 3> facet_;
 
         FoamGridEntityImp<0, dimgrid, dimworld>* vertex_[3];
 

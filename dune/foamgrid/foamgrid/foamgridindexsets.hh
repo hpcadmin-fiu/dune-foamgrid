@@ -321,7 +321,7 @@ public:
                 if (target->isLeaf())
                     *const_cast<unsigned int*>(&(target->leafIndex_)) = size_[0]++;
                 else
-                    *const_cast<unsigned int*>(&(target->leafIndex_)) = target->son_->leafIndex_;
+                    *const_cast<unsigned int*>(&(target->leafIndex_)) = target->sons_[0]->leafIndex_;
 
             }
 

@@ -107,7 +107,7 @@ namespace Dune {
         /** \brief The number of refined edges (0 or 2). */
         unsigned int nSons_;
 
-        /** \brief Pointer to father element */
+        /** \brief Pointer to father edge */
         FoamGridEntityImp<1, dimgrid, dimworld>* father_;
 
     };

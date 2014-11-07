@@ -71,24 +71,6 @@ template <int dimgrid, int dimworld>
             vertexArray_.push_back(&*Dune::get<0>(grid_->entityImps_[0]).rbegin());
         }
 
-        /** \brief Insert an element into the coarse grid
-            \param type The GeometryType of the new element
-            \param vertices The vertices of the new element, using the DUNE numbering
-        */
-        virtual void insertElement(const GeometryType& type,
-                                   const std::vector<unsigned int>& vertices) {
-
-            assert(type.isTriangle());
-
-            FoamGridEntityImp<dimgrid, dimgrid, dimworld> newElement(0,   // level
-                                       grid_->freeIdCounter_[dimgrid]++);  // id
-            newElement.vertex_[0] = vertexArray_[vertices[0]];
-            newElement.vertex_[1] = vertexArray_[vertices[1]];
-            newElement.vertex_[2] = vertexArray_[vertices[2]];
-
-            Dune::get<dimgrid>(grid_->entityImps_[0]).push_back(newElement);
-        }
-
 
         /** \brief Insert a boundary segment.
 
@@ -147,6 +129,22 @@ template <int dimworld>
         GridFactory() {}
 
         GridFactory(FoamGrid<1, dimworld>* grid) {}
+
+        /** \brief Insert an element into the coarse grid
+            \param type The GeometryType of the new element
+            \param vertices The vertices of the new element, using the DUNE numbering
+        */
+        virtual void insertElement(const GeometryType& type,
+                                   const std::vector<unsigned int>& vertices) {
+            assert(type.isLine());
+            FoamGridEntityImp<1, dimgrid, dimworld> newElement(this->vertexArray_[vertices[0]], 
+                                                               this->vertexArray_[vertices[1]],
+                                                               0,
+                                                               this->grid_->freeIdCounter_[1]++);
+
+            Dune::get<1>(this->grid_->entityImps_[0]).push_back(newElement);
+
+        }
 
         /** \brief Finalize grid creation and hand over the grid
 
@@ -219,6 +217,24 @@ template <int dimworld>
 
         GridFactory(FoamGrid<2, dimworld>* grid) {}
 
+        /** \brief Insert an element into the coarse grid
+            \param type The GeometryType of the new element
+            \param vertices The vertices of the new element, using the DUNE numbering
+        */
+        virtual void insertElement(const GeometryType& type,
+                                   const std::vector<unsigned int>& vertices) {
+
+            assert(type.isTriangle());
+
+            FoamGridEntityImp<dimgrid, dimgrid, dimworld> newElement(0,   // level
+                                       this->grid_->freeIdCounter_[dimgrid]++);  // id
+            newElement.vertex_[0] = this->vertexArray_[vertices[0]];
+            newElement.vertex_[1] = this->vertexArray_[vertices[1]];
+            newElement.vertex_[2] = this->vertexArray_[vertices[2]];
+
+            Dune::get<dimgrid>(this->grid_->entityImps_[0]).push_back(newElement);
+        }
+
         /** \brief Finalize grid creation and hand over the grid
         The receiver takes responsibility of the memory allocated for the grid
         */
@@ -249,7 +265,7 @@ template <int dimworld>
                     = Dune::ReferenceElements<double, dimgrid>::general(eIt->type());
 
                 // Loop over all edges of this element
-                for (size_t i=0; i<element->edges_.size(); ++i) {
+                for (size_t i=0; i<element->facet_.size(); ++i) {
 
                     // Get two vertices of the potential edge
                     const FoamGridVertex* v0 = element->vertex_[refElement.subEntity(i, 1, 0, 2)];
@@ -282,7 +298,7 @@ template <int dimworld>
                     }
 
                     // make element know about the edge
-                    element->edges_[i] = existingEdge;
+                    element->facet_[i] = existingEdge;
 
                     // make edge know about the element
                     existingEdge->elements_.push_back(element);
