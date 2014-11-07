@@ -248,7 +248,7 @@ public:
 
     //! local number of codim 1 entity in neighbor where intersection is contained
     int indexInOutside () const {
-        //Not necessary 2 anymore for foamgrid t-junctions
+        //Not necessarily 2 anymore for foamgrid t-junctions
     	//assert(this->center_->facet_[this->facetIndex_]->elements_.size()==2);
         assert(this->neighborIndex_!=this->center_->facet_[this->facetIndex_]->elements_.size());
 
