@@ -99,73 +99,91 @@ public:
             // The intersection normal is a vector that is orthogonal to the element normal
             // and to the intersection itself.
 
-            // only works for triangles
-            assert(center_->type().isTriangle());
+            // only works for triangles and lines
+            assert(center_->type().isTriangle() || center_->type().isLine());
 
             // Compute vertices
             const Dune::ReferenceElement<double, dimgrid>& refElement
                 = Dune::ReferenceElements<double, dimgrid>::general(center_->type());
 
-            // facet vertices, oriented
+            // facet vertices (vertex in 1d, edge in 2d)
             int v0 = refElement.subEntity(facetIndex_, 1, 0, dimgrid);
-            int v1 = refElement.subEntity(facetIndex_, 1, 1, dimgrid);
 
-            // opposite vertex
-            int v2 = (v1+1)%3;
-            if (v2==v0)
-              v2 = (v0+1)%3;
-            assert(v2!=v0 and v2!=v1);
+            if(dimgrid == 2) {
+                //second vertex only exists for an edge
+                int v1 = refElement.subEntity(facetIndex_, 1, 1, dimgrid);
+                // opposite vertex
+                int v2 = (v1+1)%3;
+                if (v2==v0)
+                    v2 = (v0+1)%3;
+                assert(v2!=v0 and v2!=v1);
 
-            FieldVector<ctype, dimworld> facet = center_->vertex_[v0]->pos_ - center_->vertex_[v1]->pos_;
-            FieldVector<ctype, dimworld> otherEdge = center_->vertex_[v2]->pos_ - center_->vertex_[v1]->pos_;
+                FieldVector<ctype, dimworld> facet = center_->vertex_[v0]->pos_ - center_->vertex_[v1]->pos_;
+                FieldVector<ctype, dimworld> otherEdge = center_->vertex_[v2]->pos_ - center_->vertex_[v1]->pos_;
 
-            //Cross product of facet and otherEdge is a scaled element normal
-            FieldVector<ctype, dimworld> scaledElementNormal;
+                //Cross product of facet and otherEdge is a scaled element normal
+                FieldVector<ctype, dimworld> scaledElementNormal;
 
-            if(dimworld == 3) //dimworld==3
-            {
-                scaledElementNormal[0] = facet[1]*otherEdge[2] - facet[2]*otherEdge[1];
-                scaledElementNormal[1] = facet[2]*otherEdge[0] - facet[0]*otherEdge[2];
-                scaledElementNormal[2] = facet[0]*otherEdge[1] - facet[1]*otherEdge[0];
-                outerNormal_[0] = facet[1]*scaledElementNormal[2] - facet[2]*scaledElementNormal[1];
-                outerNormal_[1] = facet[2]*scaledElementNormal[0] - facet[0]*scaledElementNormal[2];
-                outerNormal_[2] = facet[0]*scaledElementNormal[1] - facet[1]*scaledElementNormal[0];
-            } 
-            else //dimworld==2
-            {
-                outerNormal_[0] = facet[1];
-                outerNormal_[1] = -facet[0];
+                if(dimworld == 3) //dimworld==3
+                {
+                    scaledElementNormal[0] = facet[1]*otherEdge[2] - facet[2]*otherEdge[1];
+                    scaledElementNormal[1] = facet[2]*otherEdge[0] - facet[0]*otherEdge[2];
+                    scaledElementNormal[2] = facet[0]*otherEdge[1] - facet[1]*otherEdge[0];
+                    outerNormal_[0] = facet[1]*scaledElementNormal[2] - facet[2]*scaledElementNormal[1];
+                    outerNormal_[1] = facet[2]*scaledElementNormal[0] - facet[0]*scaledElementNormal[2];
+                    outerNormal_[2] = facet[0]*scaledElementNormal[1] - facet[1]*scaledElementNormal[0];
+                } 
+                else //dimworld==2
+                {
+                    outerNormal_[0] = facet[1];
+                    outerNormal_[1] = -facet[0];
+                }
+
+                //Check if scaled EdgeNormal is inner normal, if yes flip
+                otherEdge = center_->vertex_[v0]->pos_ - center_->vertex_[v2]->pos_;
+                if(otherEdge*outerNormal_ < 0)
+                    outerNormal_ *= -1.0;
+                
+                return outerNormal_;
             }
+            else //dimgrid ==1
+            {
+                int v1 = 1-v0;
+                assert(v0!=v1);
+                //automatically has right orientation
+                outerNormal_ = center_->vertex_[v0]->pos_ - center_->vertex_[v1]->pos_;
 
-            //Check if scaled EdgeNormal is inner normal, if yes flip
-            otherEdge = center_->vertex_[v0]->pos_ - center_->vertex_[v2]->pos_;
-            if(otherEdge*outerNormal_ < 0)
-                outerNormal_ *= -1.0;
-                        
-            //Scale to unit normal vector
-            //outerNormal_ /= outerNormal_.two_norm();
-
-            return outerNormal_;
+                return outerNormal_;
+            }
+            DUNE_THROW(GridError, "Non-existing grid dimension requested! Has to be 1 or 2!");
         }
 
         //! return outer normal multiplied by the integration element
         FieldVector<ctype, dimworld> integrationOuterNormal (const FieldVector<ctype, dimgrid-1>& local) const 
         {
 
-            const Dune::ReferenceElement<double, dimgrid>& refElement
-                = Dune::ReferenceElements<double, dimgrid>::general(center_->type());
+            if(dimgrid == 2)
+            {
+                const Dune::ReferenceElement<double, dimgrid>& refElement
+                    = Dune::ReferenceElements<double, dimgrid>::general(center_->type());
 
-            // facet vertices
-            int v0 = refElement.subEntity(facetIndex_, 1, 0, dimgrid);
-            int v1 = refElement.subEntity(facetIndex_, 1, 1, dimgrid);
+                // facet vertices
+                int v0 = refElement.subEntity(facetIndex_, 1, 0, dimgrid);
+                int v1 = refElement.subEntity(facetIndex_, 1, 1, dimgrid);
 
-            //facet length
-            ctype facetLength = (center_->vertex_[v0]->pos_- center_->vertex_[v1]->pos_).two_norm();
+                //facet length
+                ctype facetLength = (center_->vertex_[v0]->pos_- center_->vertex_[v1]->pos_).two_norm();
 
-            FieldVector<ctype, dimworld> integrationOuterNormal_ = unitOuterNormal(local);
-            integrationOuterNormal_ *= facetLength;
-           
-            return integrationOuterNormal_;
+                FieldVector<ctype, dimworld> integrationOuterNormal_ = unitOuterNormal(local);
+                integrationOuterNormal_ *= facetLength;
+                return integrationOuterNormal_;
+            } 
+            else //dimgrid == 1
+            {
+                integrationOuterNormal_ = this->outerNormal(local);
+                return integrationOuterNormal_;
+            }
+            DUNE_THROW(GridError, "Non-existing grid dimension requested! Has to be 1 or 2!");
         }
 
         //! return unit outer normal
