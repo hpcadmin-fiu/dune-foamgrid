@@ -10,7 +10,6 @@
 
 #include <dune/foamgrid/foamgrid.hh>
 
-#define NDEBUG = 1
 
 int main (int argc, char *argv[]) try
 {
@@ -34,7 +33,6 @@ int main (int argc, char *argv[]) try
     }
     {
         std::cout << "Checking FoamGrid<2, 3> (2d in 3d grid)" << std::endl;
-
         // dimworld == 3
         std::cout << "  Creating grid" << std::endl;
         FoamGrid<2, 3>* grid3d = make2Din3DHybridTestGrid<FoamGrid<2, 3> >();
@@ -45,7 +43,7 @@ int main (int argc, char *argv[]) try
         std::cout << "  Calling checkIntersectionIterator" << std::endl;
         checkIntersectionIterator(*grid3d);
     }
-/*    {
+    {
         std::cout << "Checking other FoamGrid<1, 2> (1d in 2d grid)" << std::endl;
 
         std::cout << "  Creating grid" << std::endl;
@@ -56,7 +54,7 @@ int main (int argc, char *argv[]) try
 
         std::cout << "  Calling checkIntersectionIterator" << std::endl;
         checkIntersectionIterator(*grid1d);
-    }*/
+    }
 
     {
         std::cout << "Checking FoamGrid<2, 3> (2d in 3d grid)" << std::endl;
