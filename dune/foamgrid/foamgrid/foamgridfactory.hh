@@ -166,7 +166,7 @@ template <int dimworld>
                 const FoamGridEntityImp<0, dimgrid, dimworld>* v1 = eIt->vertex_[1];
 
                 // make vertices know about edge
-                // using const_cast because of the implementation of FoamGridEntityImp<1,dimworld>
+                // using const_cast because of the implementation of FoamGridEntityImp<1,dimgrid,dimworld>
                 // the member variable vertex_ is an array with pointers to const vertices
                 const_cast <FoamGridEntityImp<0, dimgrid, dimworld>*> (v0)->elements_.push_back(&*eIt);
                 const_cast <FoamGridEntityImp<0, dimgrid, dimworld>*> (v1)->elements_.push_back(&*eIt);
