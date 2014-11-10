@@ -66,6 +66,10 @@ public:
             return FoamGridEntityPointer<0, GridImp> ((*neighbor_));
         }
 
+        //! equality
+        bool equals(const FoamGridIntersection<GridImp>& i) const {
+            return center_==i.center_; //TODO also check for neighbour count
+        }
 
         /** \brief return true if intersection is with boundary.
         */
