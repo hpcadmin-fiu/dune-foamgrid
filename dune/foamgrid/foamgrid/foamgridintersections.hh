@@ -61,8 +61,8 @@ public:
 
         //! return EntityPointer to the Entity on the outside of this intersection
         //! (that is the neighboring Entity)
-        EntityPointer outside() const {
-            // Return the 'other' element on the current facet
+        EntityPointer outside(std::size_t neighborIndex = 0) const {
+            // Return the 'other' element of index neighborIndex on the current facet
             return FoamGridEntityPointer<0, GridImp> ((*neighbor_));
         }
 
@@ -95,7 +95,7 @@ public:
             return facetIndex_;
         }
 
-        virtual int indexInOutside() const=0;
+        virtual int indexInOutside(std::size_t neighborIndex = 0) const=0;
 
         //! return outer normal
         FieldVector<ctype, dimworld> outerNormal (const FieldVector<ctype, dimgrid-1>& local) const 
@@ -251,7 +251,7 @@ public:
     }
 
     //! local number of codim 1 entity in neighbor where intersection is contained
-    int indexInOutside () const {
+    int indexInOutside (std::size_t neighborIndex = 0) const {
         //Not necessarily 2 anymore for foamgrid t-junctions
     	//assert(this->center_->facet_[this->facetIndex_]->elements_.size()==2);
         assert(this->neighborIndex_!=this->center_->facet_[this->facetIndex_]->elements_.size());
@@ -261,7 +261,7 @@ public:
             - (*this->neighbor_)->facet_.begin();
     }
 
-    //! return true if across the facet an neighbor on this level exists
+    //! return true if across the facet a neighbor on this level exists
     bool neighbor () const {
       return this->neighborIndex_!=this->center_->facet_[this->facetIndex_]->elements_.size();
     }
@@ -289,7 +289,7 @@ public:
     //! intersection of codimension 1 of this neighbor with element where iteration started.
     //! Here returned element is in LOCAL coordinates of neighbor
     //! In the LevelIntersection we know that the intersection is conforming
-    LocalGeometry geometryInOutside () const {
+    LocalGeometry geometryInOutside (std::size_t neighborIndex = 0) const {
   
         // Get two vertices of the intersection
         const Dune::ReferenceElement<double,dimgrid>& refElement
@@ -388,7 +388,7 @@ class FoamGridLeafIntersection
     }
 
     //! local number of codim 1 entity in neighbor where intersection is contained
-    int indexInOutside () const {
+    int indexInOutside (std::size_t neighborIndex = 0) const {
         assert(this->neighbor_!=neighborEnd_);
         // Move to the father of the facet until its level is the same as
         // the level of the neighbor
@@ -400,7 +400,8 @@ class FoamGridLeafIntersection
             facet=facet->father_;
         }
         assert(facet->level()==(*this->neighbor_)->level());
-        //assert(facet->elements_.size()==2); not necessarily anymore for tjunctions
+        //std::cout << "number elements: " << facet->elements_.size() << std::endl;
+        //assert(facet->elements_.size()==2); //not necessarily anymore for tjunctions
         return std::find((*this->neighbor_)->facet_.begin(), (*this->neighbor_)->facet_.end(), facet)
             - (*this->neighbor_)->facet_.begin();
 
@@ -429,7 +430,7 @@ class FoamGridLeafIntersection
     //! intersection of codimension 1 of this neighbor with element where iteration started.
     //! Here returned element is in LOCAL coordinates of neighbor
     //! In the LevelIntersection we know that the intersection is conforming
-    LocalGeometry geometryInOutside () const {
+    LocalGeometry geometryInOutside (std::size_t neighborIndex = 0) const {
   
         // Get two vertices of the intersection
         const Dune::ReferenceElement<double,dimgrid>& refElement
