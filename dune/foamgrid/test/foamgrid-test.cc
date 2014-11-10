@@ -23,7 +23,7 @@ int main (int argc, char *argv[]) try
         std::cout << "Checking FoamGrid<2, 2> (2d in 2d grid)" << std::endl;
 
         std::cout << "  Creating grid" << std::endl;
-        std::shared_ptr<FoamGrid<2, 2> > grid2d( GmshReader<FoamGrid<2, 2> >::read(dune_grid_path + "curved2d.msh", true, false ) );
+        std::shared_ptr<FoamGrid<2, 2> > grid2d( GmshReader<FoamGrid<2, 2> >::read(dune_grid_path + "curved2d.msh", /*verbose*/ true, false ) );
 
         std::cout << "  Calling gridcheck" << std::endl;
         gridcheck(*grid2d);
@@ -47,7 +47,7 @@ int main (int argc, char *argv[]) try
         std::cout << "Checking FoamGrid<1, 2> (1d in 2d grid)" << std::endl;
 
         std::cout << "  Creating grid" << std::endl;
-        std::shared_ptr<FoamGrid<1, 2> > grid12( GmshReader<FoamGrid<1, 2> >::read(dune_foamgrid_path + "line1d2d.msh", true, false ) );
+        std::shared_ptr<FoamGrid<1, 2> > grid12( GmshReader<FoamGrid<1, 2> >::read(dune_foamgrid_path + "line1d2d.msh", /*verbose*/ true, false ) );
 
         std::cout << "  Calling gridcheck" << std::endl;
         gridcheck(*grid12);
@@ -59,7 +59,7 @@ int main (int argc, char *argv[]) try
         std::cout << "Checking FoamGrid<1, 3> (1d in 3d grid)" << std::endl;
 
         std::cout << "  Creating grid" << std::endl;
-        std::shared_ptr<FoamGrid<1, 3> > grid13( GmshReader<FoamGrid<1, 3> >::read(dune_foamgrid_path + "line1d3d.msh", true, false ) );
+        std::shared_ptr<FoamGrid<1, 3> > grid13( GmshReader<FoamGrid<1, 3> >::read(dune_foamgrid_path + "line1d3d.msh", /*verbose*/ true, false ) );
 
         std::cout << "  Calling gridcheck" << std::endl;
         gridcheck(*grid13);
@@ -72,7 +72,7 @@ int main (int argc, char *argv[]) try
 
         // dimworld == 3,  and a grid containing a T-Junction
         std::cout << "  Creating grid" << std::endl;
-        std::shared_ptr<FoamGrid<2, 3> > gridTJunction( GmshReader<FoamGrid<2, 3> >::read(dune_foamgrid_path + "tjunction2d.msh", true, false ) );
+        std::shared_ptr<FoamGrid<2, 3> > gridTJunction( GmshReader<FoamGrid<2, 3> >::read(dune_foamgrid_path + "tjunction2d.msh", /*verbose*/ true, false ) );
 
         std::cout << "  Calling gridcheck" << std::endl;
         gridcheck(*gridTJunction);
@@ -84,7 +84,7 @@ int main (int argc, char *argv[]) try
         std::cout << "Checking FoamGrid<1, 3> (1d in 3d grid)" << std::endl;
 
         std::cout << "  Creating grid" << std::endl;
-        std::shared_ptr<FoamGrid<1, 3> > gridStar( GmshReader<FoamGrid<1, 3> >::read(dune_foamgrid_path + "bifurcation1d3d.msh", true, false ) );
+        std::shared_ptr<FoamGrid<1, 3> > gridStar( GmshReader<FoamGrid<1, 3> >::read(dune_foamgrid_path + "bifurcation1d3d.msh", /*verbose*/ true, false ) );
 
         std::cout << "  Calling gridcheck" << std::endl;
         gridcheck(*gridStar);
