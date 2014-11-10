@@ -37,7 +37,7 @@ namespace Dune {
             vertex_[1] = v1;
             facet_[0] = v0;
             facet_[1] = v1;
-            sons_[0] =sons_[1] = nullptr;
+            sons_[0] = sons_[1] = nullptr;
         }
 
 
@@ -95,11 +95,11 @@ namespace Dune {
         /** \brief Return level index of sub entity with codim = cc and local number i
          */
         int subLevelIndex (int i, unsigned int codim) const {
-            assert(1<=codim && codim<=2);
+            assert(0<=codim && codim<=1);
             switch (codim) {
-            case 1:
+            case 0:
                 return this->levelIndex_;
-            case 2:
+            case 1:
                 return vertex_[i]->levelIndex_;
             }
             DUNE_THROW(GridError, "Non-existing codimension requested!");
@@ -108,11 +108,11 @@ namespace Dune {
         /** \brief Return leaf index of sub entity with codim = cc and local number i
          */
         int subLeafIndex (int i,unsigned int codim) const {
-            assert(1<=codim && codim<=2);
+            assert(0<=codim && codim<=1);
             switch (codim) {
-            case 1:
+            case 0:
                 return this->leafIndex_;
-            case 2:
+            case 1:
                 return vertex_[i]->leafIndex_;
             }
             DUNE_THROW(GridError, "Non-existing codimension requested!");
