@@ -44,18 +44,29 @@ int main (int argc, char *argv[]) try
         checkIntersectionIterator(*grid3d);
     }
     {
-        std::cout << "Checking other FoamGrid<1, 2> (1d in 2d grid)" << std::endl;
+        std::cout << "Checking FoamGrid<1, 2> (1d in 2d grid)" << std::endl;
 
         std::cout << "  Creating grid" << std::endl;
-        std::shared_ptr<FoamGrid<1, 2> > grid1d( GmshReader<FoamGrid<1, 2> >::read(dune_foamgrid_path + "line1d2d.msh", true, false ) );
+        std::shared_ptr<FoamGrid<1, 2> > grid12( GmshReader<FoamGrid<1, 2> >::read(dune_foamgrid_path + "line1d2d.msh", true, false ) );
 
         std::cout << "  Calling gridcheck" << std::endl;
-        gridcheck(*grid1d);
+        gridcheck(*grid12);
 
         std::cout << "  Calling checkIntersectionIterator" << std::endl;
-        checkIntersectionIterator(*grid1d);
+        checkIntersectionIterator(*grid12);
     }
+    {
+        std::cout << "Checking FoamGrid<1, 3> (1d in 3d grid)" << std::endl;
 
+        std::cout << "  Creating grid" << std::endl;
+        std::shared_ptr<FoamGrid<1, 3> > grid13( GmshReader<FoamGrid<1, 3> >::read(dune_foamgrid_path + "line1d3d.msh", true, false ) );
+
+        std::cout << "  Calling gridcheck" << std::endl;
+        gridcheck(*grid13);
+
+        std::cout << "  Calling checkIntersectionIterator" << std::endl;
+        checkIntersectionIterator(*grid13);
+    }
     {
         std::cout << "Checking FoamGrid<2, 3> (2d in 3d grid)" << std::endl;
 
