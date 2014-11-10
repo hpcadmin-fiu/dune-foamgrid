@@ -563,14 +563,14 @@ class FoamGridEntity<0, 1, GridImp> :
          */
         unsigned int subEntities (unsigned int codim) const
         {
-            assert(0<=codim && codim<=2);
+            assert(0<=codim && codim<=1);
             return (codim==0) ? 1 : 2;
         }
 
         /** \brief Return index of sub entity with codim = cc and local number i
         */
         int subId (int i,unsigned int codim) const {
-            assert(0<=codim && codim<=dimgrid);
+            assert(0<=codim && codim<=1);
             switch (codim) {
             case 0:
                 return target_->id_;
