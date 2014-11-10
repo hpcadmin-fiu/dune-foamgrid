@@ -548,7 +548,7 @@ class FoamGridEntity<0, 1, GridImp> :
         {
             std::vector<FieldVector<double, dimworld> > coordinates(target_->corners());
             for (size_t i=0; i<target_->corners(); i++)
-                coordinates[i] = target_->vertex_[i]->pos_;
+                coordinates[i] = target_->corner(i);
 
             return Geometry(FoamGridGeometry<dimgrid, dimworld, GridImp>(target_->type(), coordinates));
         }
