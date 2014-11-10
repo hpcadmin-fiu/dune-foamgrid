@@ -80,6 +80,18 @@ int main (int argc, char *argv[]) try
         std::cout << "  Calling checkIntersectionIterator" << std::endl;
         checkIntersectionIterator(*gridTJunction);
     }
+    {
+        std::cout << "Checking FoamGrid<1, 3> (1d in 3d grid)" << std::endl;
+
+        std::cout << "  Creating grid" << std::endl;
+        std::shared_ptr<FoamGrid<1, 3> > gridStar( GmshReader<FoamGrid<1, 3> >::read(dune_foamgrid_path + "bifurcation1d3d.msh", true, false ) );
+
+        std::cout << "  Calling gridcheck" << std::endl;
+        gridcheck(*gridStar);
+
+        std::cout << "  Calling checkIntersectionIterator" << std::endl;
+        checkIntersectionIterator(*gridStar);
+    }
 }
 // //////////////////////////////////
 //   Error handler

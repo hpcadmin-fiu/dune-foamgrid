@@ -396,7 +396,7 @@ class FoamGridLeafIntersection
             facet=facet->father_;
         }
         assert(facet->level()==(*this->neighbor_)->level());
-        assert(facet->elements_.size()==2);
+        //assert(facet->elements_.size()==2); not necessarily anymore for tjunctions
         return std::find((*this->neighbor_)->facet_.begin(), (*this->neighbor_)->facet_.end(), facet)
             - (*this->neighbor_)->facet_.begin();
 
