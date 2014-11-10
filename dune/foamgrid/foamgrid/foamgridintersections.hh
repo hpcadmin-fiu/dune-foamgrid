@@ -180,7 +180,7 @@ public:
             } 
             else //dimgrid == 1
             {
-                integrationOuterNormal_ = this->outerNormal(local);
+                integrationOuterNormal_ = this->unitOuterNormal(local);
                 return integrationOuterNormal_;
             }
             DUNE_THROW(GridError, "Non-existing grid dimension requested! Has to be 1 or 2!");
@@ -268,14 +268,14 @@ public:
     //! where iteration started.
     LocalGeometry geometryInInside () const 
     {
-        std::vector<FieldVector<double, dimgrid> > coordinates(2);
+        std::vector<FieldVector<double, dimgrid> > coordinates(dimgrid);
 
-        // Get two vertices of the intersection
+        // Get reference element
         const Dune::ReferenceElement<double, dimgrid>& refElement
             = Dune::ReferenceElements<double, dimgrid>::general(this->center_->type());
 
-        coordinates[0] = refElement.position(refElement.subEntity(this->facetIndex_, 1, 0, dimgrid), dimgrid);
-        coordinates[1] = refElement.position(refElement.subEntity(this->facetIndex_, 1, 1, dimgrid), dimgrid);
+        for (int idx = 0; idx < dimgrid; ++idx)
+            coordinates[idx] = refElement.position(refElement.subEntity(this->facetIndex_, 1, idx, dimgrid), dimgrid);
         
         geometryInInside_ = make_shared<LocalGeometryImpl>(this->type(), coordinates);
 
@@ -291,12 +291,12 @@ public:
         const Dune::ReferenceElement<double,dimgrid>& refElement
            = Dune::ReferenceElements<double, dimgrid>::general(this->center_->type());
 
-        std::array<FoamGridEntityImp<0, dimgrid, dimworld>*, 2> vtx;
+        std::array<FoamGridEntityImp<0, dimgrid, dimworld>*, dimgrid> vtx;
 
-        vtx[0] = this->center_->vertex_[refElement.subEntity(this->facetIndex_, 1, 0, dimgrid)];
-        vtx[1] = this->center_->vertex_[refElement.subEntity(this->facetIndex_, 1, 1, dimgrid)];
+        for (int idx = 0; idx < dimgrid; ++idx)
+            vtx[idx] = this->center_->vertex_[refElement.subEntity(this->facetIndex_, 1, idx, dimgrid)];
 
-        std::vector<FieldVector<double, dimgrid> > coordinates(2);
+        std::vector<FieldVector<double, dimgrid> > coordinates(dimgrid);
 
         // Find the intersection vertices in local numbering of the outside element
         // That way we get the local orientation correctly.
@@ -313,23 +313,23 @@ public:
         return LocalGeometry(*geometryInOutside_);
     }
 
-  //! intersection of codimension 1 of this neighbor with element where iteration started.
-  //! Here returned element is in GLOBAL coordinates of the element where iteration started.
-  Geometry geometry () const {
+    //! intersection of codimension 1 of this neighbor with element where iteration started.
+    //! Here returned element is in GLOBAL coordinates of the element where iteration started.
+    Geometry geometry () const {
 
-        std::vector<FieldVector<double, dimworld> > coordinates(2);
+        std::vector<FieldVector<double, dimworld> > coordinates(dimgrid);
 
         // Get two vertices of the intersection
         const Dune::ReferenceElement<double, dimgrid>& refElement
             = Dune::ReferenceElements<double, dimgrid>::general(this->center_->type());
 
-        coordinates[0] = this->center_->vertex_[refElement.subEntity(this->facetIndex_, 1, 0, dimgrid)]->pos_;
-        coordinates[1] = this->center_->vertex_[refElement.subEntity(this->facetIndex_, 1, 1, dimgrid)]->pos_;
+        for (int idx = 0; idx < dimgrid; ++idx)
+            coordinates[idx] = this->center_->vertex_[refElement.subEntity(this->facetIndex_, 1, idx, dimgrid)]->pos_;
     
         geometry_ = make_shared<GeometryImpl>(this->type(), coordinates);
 
         return Geometry(*geometry_);
-  }
+    }
 
 
     private:
@@ -402,77 +402,73 @@ class FoamGridLeafIntersection
 
     }
 
-    Geometry geometry () const 
-    {
-        std::vector<FieldVector<double, dimworld> > coordinates(2);
-
-        // Get indices of two vertices of the intersection
-        const Dune::ReferenceElement<double, dimgrid>& refElement
-            = Dune::ReferenceElements<double, dimgrid>::general(this->center_->type());
-
-        // Get global coordinates of the vertices
-        coordinates[0] = this->center_->vertex_[refElement.subEntity(this->facetIndex_, 1, 0, dimgrid)]->pos_;
-        coordinates[1] = this->center_->vertex_[refElement.subEntity(this->facetIndex_, 1, 1, dimgrid)]->pos_;
-
-        geometry_ = make_shared<GeometryImpl>(this->type(), coordinates);
-
-        return Geometry(*geometry_);
-      
-        //DUNE_THROW(Dune::NotImplemented, "FoamGridLeafIntersection::geometry()");
-    }
-
     //! intersection of codimension 1 of this neighbor with element where
     //! iteration started.
     //! Here returned element is in LOCAL coordinates of the element
     //! where iteration started.
     LocalGeometry geometryInInside () const 
     {
-  
-        std::vector<FieldVector<double, dimgrid> > coordinates(2);
+        std::vector<FieldVector<double, dimgrid> > coordinates(dimgrid);
 
-        // Get two vertices of the intersection
+        // Get reference element
         const Dune::ReferenceElement<double, dimgrid>& refElement
             = Dune::ReferenceElements<double, dimgrid>::general(this->center_->type());
 
-        coordinates[0] = refElement.position(refElement.subEntity(this->facetIndex_, 1, 0, dimgrid), dimgrid);
-        coordinates[1] = refElement.position(refElement.subEntity(this->facetIndex_, 1, 1, dimgrid), dimgrid);
+        for (int idx = 0; idx < dimgrid; ++idx)
+            coordinates[idx] = refElement.position(refElement.subEntity(this->facetIndex_, 1, idx, dimgrid), dimgrid);
         
         geometryInInside_ = make_shared<LocalGeometryImpl>(this->type(), coordinates);
 
-        return LocalGeometry(*geometryInInside_);
+      return LocalGeometry(*geometryInInside_);
     }
 
-    //! intersection of codimension 1 of this neighbor with element where
-    //! iteration started.
-    //! Here returned element is in LOCAL coordinates of the element
-    //! where iteration started.
-    LocalGeometry geometryInOutside () const 
-    {
-
+    //! intersection of codimension 1 of this neighbor with element where iteration started.
+    //! Here returned element is in LOCAL coordinates of neighbor
+    //! In the LevelIntersection we know that the intersection is conforming
+    LocalGeometry geometryInOutside () const {
+  
         // Get two vertices of the intersection
-        const Dune::ReferenceElement<double, dimgrid>& refElement
+        const Dune::ReferenceElement<double,dimgrid>& refElement
            = Dune::ReferenceElements<double, dimgrid>::general(this->center_->type());
 
-        std::array<FoamGridEntityImp<0, dimgrid, dimworld>*, 2> vtx;
+        std::array<FoamGridEntityImp<0, dimgrid, dimworld>*, dimgrid> vtx;
 
-        vtx[0] = this->center_->vertex_[refElement.subEntity(this->facetIndex_, 1, 0, dimgrid)];
-        vtx[1] = this->center_->vertex_[refElement.subEntity(this->facetIndex_, 1, 1, dimgrid)];
+        for (int idx = 0; idx < dimgrid; ++idx)
+            vtx[idx] = this->center_->vertex_[refElement.subEntity(this->facetIndex_, 1, idx, dimgrid)];
 
-        std::vector<FieldVector<double, dimgrid> > coordinates(2);
+        std::vector<FieldVector<double, dimgrid> > coordinates(dimgrid);
 
         // Find the intersection vertices in local numbering of the outside element
         // That way we get the local orientation correctly.
         const Dune::ReferenceElement<double, dimgrid>& refElementOther
             = Dune::ReferenceElements<double, dimgrid>::general((*this->neighbor_)->type());
-          
-        for (int j=0; j<2; j++) //check both vertices of the considered facet
-         for (int i=0; i<refElementOther.size(dimgrid); i++) //against all vertices of neighbor element
-            if (vtx[j] == (*this->neighbor_)->vertex_[refElementOther.subEntity(0, 0, i, dimgrid)])
+
+        for (int j=0; j<2; j++)
+          for (int i=0; i<refElementOther.size(dimgrid); i++)
+             if (vtx[j] == (*this->neighbor_)->vertex_[refElementOther.subEntity(0, 0, i, dimgrid)])
               coordinates[j] = refElement.position(refElement.subEntity(0, 0, i, dimgrid), dimgrid);
 
         geometryInOutside_ = make_shared<LocalGeometryImpl>(this->type(), coordinates);
 
         return LocalGeometry(*geometryInOutside_);
+    }
+
+    //! intersection of codimension 1 of this neighbor with element where iteration started.
+    //! Here returned element is in GLOBAL coordinates of the element where iteration started.
+    Geometry geometry () const {
+
+        std::vector<FieldVector<double, dimworld> > coordinates(dimgrid);
+
+        // Get two vertices of the intersection
+        const Dune::ReferenceElement<double, dimgrid>& refElement
+            = Dune::ReferenceElements<double, dimgrid>::general(this->center_->type());
+
+        for (int idx = 0; idx < dimgrid; ++idx)
+            coordinates[idx] = this->center_->vertex_[refElement.subEntity(this->facetIndex_, 1, idx, dimgrid)]->pos_;
+    
+        geometry_ = make_shared<GeometryImpl>(this->type(), coordinates);
+
+        return Geometry(*geometry_);
     }
 
     //! return true if across the facet a neighbor on this level exists

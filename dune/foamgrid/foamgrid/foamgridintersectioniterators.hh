@@ -47,11 +47,11 @@ public:
     {
         if(facet==center->corners())
         {
-            // This is the end iterator
+            // This is the end facet.
             return;
         }
 
-        for(std::size_t i=0; i<3; ++i)
+        for(std::size_t i=0; i<=dimgrid; ++i) //two facets in 1d, three facets in 2d
             traverseAndPushLeafFacet(center->facet_[i], (*leafFacet_)[i]);
 
 
@@ -157,7 +157,7 @@ public:
 
 private:
 
-    //! \brief Pushes all leaf Facet into leafFacet_
+    //! \brief Pushes all leaf facets into leafFacet_
     //!
     //! On returning leafFacet_ will contain the children
     //! of facet that do not have any children.
