@@ -56,19 +56,19 @@ public:
 
 
         // Search for the first intersection.
-        // For each facet there is either one or it is a boundary intersection
-        topLevelEdgeIter_=leafFacet_->find(facet);
-        assert(topLevelEdgeIter_!=leafFacet_->end());
-        assert(facet>0 || topLevelEdgeIter_ == leafFacet_->begin());
-        GridImp::getRealImplementation(intersection_).neighbor_=topLevelEdgeIter_->second.begin();
+        // For each facet there is either one or it is a boundary intersection -> not anymore
+        topLevelFacetIter_=leafFacet_->find(facet);
+        assert(topLevelFacetIter_!=leafFacet_->end());
+        assert(facet>0 || topLevelFacetIter_ == leafFacet_->begin());
+        GridImp::getRealImplementation(intersection_).neighbor_=topLevelFacetIter_->second.begin();
         GridImp::getRealImplementation(intersection_).facetIndex_=facet;
-        GridImp::getRealImplementation(intersection_).neighborEnd_=topLevelEdgeIter_->second.end();
+        GridImp::getRealImplementation(intersection_).neighborEnd_=topLevelFacetIter_->second.end();
         assert(*GridImp::getRealImplementation(intersection_).neighbor_);
 
         if(center->facet_[facet]->elements_.size()==1){
             // This is a boundary facet.
             GridImp::getRealImplementation(intersection_).neighbor_=
-                topLevelEdgeIter_->second.end();
+                topLevelFacetIter_->second.end();
             return;
         }
 
@@ -106,7 +106,7 @@ public:
             DUNE_THROW(InvalidStateException, "Cannot increment a one past the end iterator");
             return;
         }
-        assert(topLevelEdgeIter_!=leafFacet_->end());
+        assert(topLevelFacetIter_!=leafFacet_->end());
 
         if(GridImp::getRealImplementation(intersection_).neighbor_ !=
            GridImp::getRealImplementation(intersection_).neighborEnd_)
@@ -123,16 +123,16 @@ public:
         if(GridImp::getRealImplementation(intersection_).neighbor_ ==
            GridImp::getRealImplementation(intersection_).neighborEnd_)
         {
-            assert(topLevelEdgeIter_!=leafFacet_->end());
-            ++topLevelEdgeIter_;
+            assert(topLevelFacetIter_!=leafFacet_->end());
+            ++topLevelFacetIter_;
             ++GridImp::getRealImplementation(intersection_).facetIndex_;
-            if(topLevelEdgeIter_==leafFacet_->end())
+            if(topLevelFacetIter_==leafFacet_->end())
                 return;
 
             GridImp::getRealImplementation(intersection_).neighbor_
-                = topLevelEdgeIter_->second.begin();
+                = topLevelFacetIter_->second.begin();
             GridImp::getRealImplementation(intersection_).neighborEnd_=
-                topLevelEdgeIter_->second.end();
+                topLevelFacetIter_->second.end();
             if(GridImp::getRealImplementation(intersection_).center_->facet_[GridImp::getRealImplementation(intersection_).facetIndex_]->elements_.size()==1){
                 // This is a boundary facet.
                 GridImp::getRealImplementation(intersection_).neighbor_=
@@ -193,8 +193,7 @@ private:
     shared_ptr<MapType> leafFacet_;
 
     //! \brief Iterator pointing to the elements of the current facet.
-    typename std::map<int, ElementVector>::const_iterator
-    topLevelEdgeIter_;
+    typename std::map<int, ElementVector>::const_iterator topLevelFacetIter_;
 };
 
 
