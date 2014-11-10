@@ -55,7 +55,7 @@ namespace Dune {
 
         FoamGridEntityImp(int level, const FieldVector<double, dimworld>& pos, unsigned int id)
             : FoamGridEntityBase(level, id),
-              pos_(pos), nSons_(0), father_(nullptr)
+              pos_(pos), nSons_(0), father_(nullptr), elements_()
         {
             sons_[0] = nullptr;
         }
