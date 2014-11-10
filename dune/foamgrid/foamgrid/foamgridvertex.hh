@@ -55,12 +55,11 @@ namespace Dune {
 
         FoamGridEntityImp(int level, const FieldVector<double, dimworld>& pos, unsigned int id)
             : FoamGridEntityBase(level, id),
-              pos_(pos), father_(nullptr)
+              pos_(pos), nSons_(0), father_(nullptr)
         {
             sons_[0] = nullptr;
         }
 
-        //private:
         bool isLeaf() const {
             return sons_[0]==nullptr;
         }
@@ -96,7 +95,7 @@ namespace Dune {
 
         /** \brief Return leaf index of sub entity with codim = cc and local number i
          */
-        int subLeafIndex (int i,unsigned int codim) const {
+        int subLeafIndex (int i, unsigned int codim) const {
             assert(codim==dimgrid);
             return this->leafIndex_;
             DUNE_THROW(GridError, "Non-existing codimension requested!");
@@ -112,9 +111,11 @@ namespace Dune {
         //  only used if the vertex is a boundary vertex
         unsigned int boundaryId_;
 
+        //! The number of refined vertices */
+        unsigned int nSons_;
+
         //! Son vertex on the next finer grid
         array<FoamGridEntityImp<0, dimgrid, dimworld>*, 1> sons_;
-
 
         //! Pointer to father vertex on next coarser grid */
         FoamGridEntityImp<0, dimgrid, dimworld>* father_;
