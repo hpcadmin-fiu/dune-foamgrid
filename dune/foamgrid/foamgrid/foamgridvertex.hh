@@ -54,8 +54,7 @@ namespace Dune {
     public:
 
         FoamGridEntityImp(int level, const FieldVector<double, dimworld>& pos, unsigned int id)
-            : FoamGridEntityBase(level, id),
-              pos_(pos), nSons_(0), father_(nullptr), elements_()
+            : FoamGridEntityBase(level, id), pos_(pos), nSons_(0), elements_(), father_(nullptr)
         {
             sons_[0] = nullptr;
         }
@@ -78,6 +77,7 @@ namespace Dune {
         }
 
         FieldVector<double, dimworld> corner(int i) const {
+            assert(i<this->corners());
             return pos_;
         }
 
@@ -104,6 +104,9 @@ namespace Dune {
         //! Position vector of this vertex
         FieldVector<double, dimworld> pos_;
 
+         //! The number of refined vertices */
+        unsigned int nSons_;
+
         //! Elements the vertex is related to
         std::vector<const FoamGridEntityImp<dimgrid, dimgrid ,dimworld>*> elements_;
 
@@ -111,15 +114,11 @@ namespace Dune {
         //  only used if the vertex is a boundary vertex
         unsigned int boundaryId_;
 
-        //! The number of refined vertices */
-        unsigned int nSons_;
-
-        //! Son vertex on the next finer grid
-        array<FoamGridEntityImp<0, dimgrid, dimworld>*, 1> sons_;
-
         //! Pointer to father vertex on next coarser grid */
         FoamGridEntityImp<0, dimgrid, dimworld>* father_;
 
+        //! Son vertex on the next finer grid
+        array<FoamGridEntityImp<0, dimgrid, dimworld>*, 1> sons_;
     };
 
 }
