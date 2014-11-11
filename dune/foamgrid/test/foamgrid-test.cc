@@ -129,6 +129,7 @@ void traversal (G& grid)
     for (LevelIntersectionIterator is = levelView.ibegin(*it); 
             is!=levelView.iend(*it); ++is)
     {
+        if(is->neighbor()) {    
             std::cout << "found neighbor with first vertex at: " 
                       << is->outside()->geometry().corner(0) << " and second vertex at: " 
                       << is->outside()->geometry().corner(1);
@@ -136,6 +137,9 @@ void traversal (G& grid)
                 std::cout << " and third vertex at " << is->outside()->geometry().corner(2); 
             std::cout << std::endl; 
             ++count;
+        } else if(is->boundary()) {
+            std::cout << "    this is a boundary intersection." << std::endl;
+        }
     }
     std::cout << "This element knows about " << count << " neighbors." << std::endl << std::endl;
   }
@@ -162,7 +166,8 @@ void traversal (G& grid)
     for (LeafIntersectionIterator is = leafView.ibegin(*it); 
             is!=leafView.iend(*it); ++is)
     {
-            std::cout << "found neighbor with first vertex at: " 
+        if(is->neighbor()){    
+            std::cout << "    found neighbor with first vertex at: " 
                       << is->outside()->geometry().corner(0) 
                       << " and second vertex at: " 
                       << is->outside()->geometry().corner(1);
@@ -170,6 +175,9 @@ void traversal (G& grid)
                 std::cout << " and third vertex at " << is->outside()->geometry().corner(2); 
             std::cout << std::endl; 
             ++count;
+        } else if(is->boundary()) {
+            std::cout << "    this is a boundary intersection." << std::endl;
+        }
     }
     std::cout << "This element knows about " << count << " neighbors." << std::endl << std::endl;
   }
@@ -270,8 +278,8 @@ int main (int argc, char *argv[]) try
         std::cout << "  Calling checkIntersectionIterator" << std::endl;
         checkIntersectionIterator(*gridStar);
 
-        //std::cout << "  Check if has multiple neighbor functionality" << std::endl;
-        //traversal(*gridStar);
+        std::cout << "  Check if has multiple neighbor functionality" << std::endl;
+        traversal(*gridStar);
     }
 }
 // //////////////////////////////////
