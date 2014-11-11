@@ -26,7 +26,7 @@ class FoamGridLevelIntersectionIterator;
 * a neighbor is an entity of codimension 0 which has a common entity of codimension 1
 * These neighbors are accessed via a IntersectionIterator. This allows the implement
 * non-matching meshes. The number of neighbors may be different from the number
-* of an element!
+* of corners of an element!
 */
 template<class GridImp>
 class FoamGridLeafIntersectionIterator
@@ -51,7 +51,7 @@ public:
             return;
         }
 
-        for(std::size_t i=0; i<=dimgrid; ++i) //two facets in 1d, three facets in 2d
+        for(std::size_t i=0; i<center->corners(); ++i) 
             traverseAndPushLeafFacet(center->facet_[i], (*leafFacet_)[i]);
 
 
@@ -67,8 +67,7 @@ public:
 
         if(center->facet_[facet]->elements_.size()==1){
             // This is a boundary facet.
-            GridImp::getRealImplementation(intersection_).neighbor_=
-                topLevelFacetIter_->second.end();
+            GridImp::getRealImplementation(intersection_).neighbor_= topLevelFacetIter_->second.end();
             return;
         }
 
@@ -93,8 +92,8 @@ public:
         return GridImp::getRealImplementation(intersection_).center_   == GridImp::getRealImplementation(other.intersection_).center_ &&
             GridImp::getRealImplementation(intersection_).facetIndex_ == GridImp::getRealImplementation(other.intersection_).facetIndex_ &&
             (GridImp::getRealImplementation(intersection_).facetIndex_ == GridImp::getRealImplementation(intersection_).center_->corners()  ||
-             (*GridImp::getRealImplementation(intersection_).neighbor_ ==
-              *GridImp::getRealImplementation(other.intersection_).neighbor_));
+             (GridImp::getRealImplementation(intersection_).neighbor_ ==
+              GridImp::getRealImplementation(other.intersection_).neighbor_));
     }
 
     //! prefix increment
@@ -168,18 +167,18 @@ private:
     {
         if(facet->isLeaf())
         {
-            leafFacet.insert(leafFacet.end(), facet->elements_.begin(),
-                              facet->elements_.end());
+            typedef typename ElementVector::const_iterator iter;
+            for(iter eIt = facet->elements_.begin(); eIt!=facet->elements_.end(); ++eIt) 
+                leafFacet.push_back(*eIt);
+            //leafFacet.insert(leafFacet.end(), facet->elements_.begin(), facet->elements_.end());
 #ifndef NDEBUG
-            typedef typename ElementVector::const_iterator
-                iter;
-            for(iter i=leafFacet.begin(); i!=leafFacet.end(); ++i)
-                assert(*i);
+            for(iter k=leafFacet.begin(); k!=leafFacet.end(); ++k)
+                assert(*k);
 #endif
         }
         else
         {
-            for (int i = 0; i < dimgrid; ++i)
+            for (std::size_t i = 0; i < dimgrid; ++i)
                 traverseAndPushLeafFacet(facet->sons_[i], leafFacet);
         }
     }
@@ -225,7 +224,8 @@ protected:
             return;
         }
 
-        if(center->facet_[GridImp::getRealImplementation(intersection_).facetIndex_]->elements_.size()==1){
+        if(center->facet_[GridImp::getRealImplementation(intersection_).facetIndex_]->elements_.size()==1)
+        {
             // This is a boundary facet.
             GridImp::getRealImplementation(intersection_).neighborIndex_=
                 GridImp::getRealImplementation(intersection_).center_->facet_[GridImp::getRealImplementation(intersection_).facetIndex_]->elements_.size();
@@ -233,8 +233,8 @@ protected:
         }
 
         // Search for the first intersection.
-        // An intersection has either two neighbor elements on the same level
-        // or is a boundary intersection
+        // An intersection can have multiple neighbor elements on the same level
+        // or is a boundary intersection 
         while(GridImp::getRealImplementation(intersection_).facetIndex_ != center->corners()) // not an  end iterator
         {
             GridImp::getRealImplementation(intersection_).neighbor_=GridImp::getRealImplementation(intersection_).center_->facet_[GridImp::getRealImplementation(intersection_).facetIndex_]->elements_.begin();

@@ -48,7 +48,7 @@ public:
      * \param facet The index of the facet this intersection lives on.
      */
     FoamGridIntersection(const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* center,
-                         int facet)
+                         std::size_t facet)
         : center_(center), facetIndex_(facet)
     {}
 
@@ -61,14 +61,14 @@ public:
 
         //! return EntityPointer to the Entity on the outside of this intersection
         //! (that is the neighboring Entity)
-        EntityPointer outside(std::size_t neighborIndex = 0) const {
-            // Return the 'other' element of index neighborIndex on the current facet
+        EntityPointer outside(/*std::size_t neighborIndex = 0*/) const {
+            // Return the 'other' element on the current facet
             return FoamGridEntityPointer<0, GridImp> ((*neighbor_));
         }
 
         //! equality
         bool equals(const FoamGridIntersection<GridImp>& i) const {
-            return center_==i.center_; //TODO also check for neighbour count
+            return center_==i.center_ && neighbor_ == i.neighbor_; 
         }
 
         /** \brief return true if intersection is with boundary.
@@ -205,20 +205,20 @@ public:
         }
     private:
 
-    //! vector storing the outer normal
-    mutable FieldVector<typename GridImp::ctype, dimworld> outerNormal_;
-    mutable FieldVector<typename GridImp::ctype, dimworld> unitOuterNormal_;
-    mutable FieldVector<typename GridImp::ctype, dimworld> integrationOuterNormal_;
+        //! vector storing the outer normal
+        mutable FieldVector<typename GridImp::ctype, dimworld> outerNormal_;
+        mutable FieldVector<typename GridImp::ctype, dimworld> unitOuterNormal_;
+        mutable FieldVector<typename GridImp::ctype, dimworld> integrationOuterNormal_;
 
     protected:
 
-    const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* center_;
+        const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* center_;
 
-    /** \brief Count on which facet we are lookin' at.  */
-    int facetIndex_;
+        /** \brief Count on which facet we are lookin' at.  */
+        int facetIndex_;
 
-    /** \brief Iterator to the other neighbor of the intersection. */
-    typename std::vector<const FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>::const_iterator neighbor_;
+        /** \brief Iterator to the other neighbor of the intersection. */
+        typename std::vector<const FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>::const_iterator neighbor_;
 
 };
 
@@ -240,7 +240,7 @@ class FoamGridLevelIntersection
 public:
     enum{ dimworld = GridImp::dimensionworld };
 
-    FoamGridLevelIntersection(const FoamGridEntityImp<dimgrid, dimgrid ,dimworld>* center, int facet)
+    FoamGridLevelIntersection(const FoamGridEntityImp<dimgrid, dimgrid ,dimworld>* center, std::size_t facet)
                               : FoamGridIntersection<GridImp>(center, facet)
     {}
 
@@ -248,6 +248,11 @@ public:
     bool conforming () const {
         // FoamGrid level intersections are always conforming
         return true;
+    }
+
+    //! Return number of elements connected to this intersection
+    std::size_t numNeighbors () const {
+        return this->center_->facet_[this->facetIndex_]->elements_.size();
     }
 
     //! local number of codim 1 entity in neighbor where intersection is contained
@@ -307,8 +312,8 @@ public:
         const Dune::ReferenceElement<double, dimgrid>& refElementOther
             = Dune::ReferenceElements<double, dimgrid>::general((*this->neighbor_)->type());
 
-        for (int j=0; j<2; j++)
-          for (int i=0; i<refElementOther.size(dimgrid); i++)
+        for (std::size_t j=0; j<dimgrid; j++)
+          for (std::size_t i=0; i<refElementOther.size(dimgrid); i++)
              if (vtx[j] == (*this->neighbor_)->vertex_[refElementOther.subEntity(0, 0, i, dimgrid)])
               coordinates[j] = refElement.position(refElement.subEntity(0, 0, i, dimgrid), dimgrid);
 
@@ -327,7 +332,7 @@ public:
         const Dune::ReferenceElement<double, dimgrid>& refElement
             = Dune::ReferenceElements<double, dimgrid>::general(this->center_->type());
 
-        for (int idx = 0; idx < dimgrid; ++idx)
+        for (std::size_t idx = 0; idx < dimgrid; ++idx)
             coordinates[idx] = this->center_->vertex_[refElement.subEntity(this->facetIndex_, 1, idx, dimgrid)]->pos_;
     
         geometry_ = make_shared<GeometryImpl>(this->type(), coordinates);
@@ -377,7 +382,7 @@ class FoamGridLeafIntersection
     typedef typename GridImp::Traits::template Codim<1>::LocalGeometryImpl LocalGeometryImpl;
 
     FoamGridLeafIntersection(const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* center,
-                             int facet)
+                             std::size_t facet)
         : FoamGridIntersection<GridImp>(center, facet)
     {}
 
@@ -419,7 +424,7 @@ class FoamGridLeafIntersection
         const Dune::ReferenceElement<double, dimgrid>& refElement
             = Dune::ReferenceElements<double, dimgrid>::general(this->center_->type());
 
-        for (int idx = 0; idx < dimgrid; ++idx)
+        for (std::size_t idx = 0; idx < dimgrid; ++idx)
             coordinates[idx] = refElement.position(refElement.subEntity(this->facetIndex_, 1, idx, dimgrid), dimgrid);
         
         geometryInInside_ = make_shared<LocalGeometryImpl>(this->type(), coordinates);
@@ -438,7 +443,7 @@ class FoamGridLeafIntersection
 
         std::array<FoamGridEntityImp<0, dimgrid, dimworld>*, dimgrid> vtx;
 
-        for (int idx = 0; idx < dimgrid; ++idx)
+        for (std::size_t idx = 0; idx < dimgrid; ++idx)
             vtx[idx] = this->center_->vertex_[refElement.subEntity(this->facetIndex_, 1, idx, dimgrid)];
 
         std::vector<FieldVector<double, dimgrid> > coordinates(dimgrid);
@@ -448,8 +453,8 @@ class FoamGridLeafIntersection
         const Dune::ReferenceElement<double, dimgrid>& refElementOther
             = Dune::ReferenceElements<double, dimgrid>::general((*this->neighbor_)->type());
 
-        for (int j=0; j<2; j++)
-          for (int i=0; i<refElementOther.size(dimgrid); i++)
+        for (std::size_t j=0; j< dimgrid; j++)
+          for (std::size_t i=0; i<refElementOther.size(dimgrid); i++)
              if (vtx[j] == (*this->neighbor_)->vertex_[refElementOther.subEntity(0, 0, i, dimgrid)])
               coordinates[j] = refElement.position(refElement.subEntity(0, 0, i, dimgrid), dimgrid);
 
@@ -468,7 +473,7 @@ class FoamGridLeafIntersection
         const Dune::ReferenceElement<double, dimgrid>& refElement
             = Dune::ReferenceElements<double, dimgrid>::general(this->center_->type());
 
-        for (int idx = 0; idx < dimgrid; ++idx)
+        for (std::size_t idx = 0; idx < dimgrid; ++idx)
             coordinates[idx] = this->center_->vertex_[refElement.subEntity(this->facetIndex_, 1, idx, dimgrid)]->pos_;
     
         geometry_ = make_shared<GeometryImpl>(this->type(), coordinates);
