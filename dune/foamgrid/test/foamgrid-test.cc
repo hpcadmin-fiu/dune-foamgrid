@@ -14,7 +14,8 @@ template<class G>
 void traversal (G& grid)
 {
   // first we extract the dimensions of the grid
-  const int dim = G::dimension;                        
+  const int dimgrid = G::dimension;                        
+  const int dimworld = G::dimensionworld;                        
 
   // type used for coordinates in the grid
   // such a type is exported by every grid implementation
@@ -50,17 +51,17 @@ void traversal (G& grid)
 
   // Leafwise traversal of codim dim
   std::cout << std::endl;
-  std::cout << "*** Traverse codim " << dim << " leaves" << std::endl;
+  std::cout << "*** Traverse codim " << dimgrid << " leaves" << std::endl;
 
   // Get the iterator type
   // Note the use of the typename and template keywords
-  typedef typename LeafGridView :: template Codim<dim>
+  typedef typename LeafGridView :: template Codim<dimgrid>
   :: Iterator VertexLeafIterator;                
 
   // iterate through all entities of codim 0 on the given level
   count = 0;
-  for (VertexLeafIterator it = leafView.template begin<dim>(); 
-       it!=leafView.template end<dim>(); ++it)
+  for (VertexLeafIterator it = leafView.template begin<dimgrid>(); 
+       it!=leafView.template end<dimgrid>(); ++it)
   {
     Dune::GeometryType gt = it->type();
     std::cout << "visiting " << gt
@@ -108,26 +109,32 @@ void traversal (G& grid)
   std::cout << std::endl;
   std::cout << "*** Traverse intersections with level iterator" << std::endl;
   LevelGridView levelView = grid.levelGridView(0);
+  
   typedef typename LevelGridView::IntersectionIterator LevelIntersectionIterator;
-  typedef typename G::template Codim<0>::EntityPointer EntityPointer;
   typedef typename LevelGridView::template Codim<0>::Iterator ElementLevelIterator;
   
-  ElementLevelIterator endlevelit = levelView.template end<0>();
-  for(ElementLevelIterator itlevel = levelView.template begin<0>(); itlevel!=endlevelit; ++itlevel)
+  for(ElementLevelIterator it = levelView.template begin<0>(); 
+        it!=levelView.template end<0>(); ++it)
   {
-    Dune::GeometryType gt = itlevel->type();       
+    Dune::GeometryType gt = it->type();       
     std::cout << "visiting leaf " << gt                
-              << " with first vertex at " << itlevel->geometry().corner(0)
-              << " and second vertex at " << itlevel->geometry().corner(1)
-              << std::endl;
+              << " with first vertex at " << it->geometry().corner(0)
+              << " and second vertex at " << it->geometry().corner(1);
+    if(dimgrid==2)
+        std::cout << " and third vertex at " << it->geometry().corner(2);
+    std::cout << std::endl;
+
+
     count = 0;
-    LevelIntersectionIterator isend = levelView.iend(*itlevel);
-    for (LevelIntersectionIterator is = levelView.ibegin(*itlevel); is!=isend; ++is)
+    for (LevelIntersectionIterator is = levelView.ibegin(*it); 
+            is!=levelView.iend(*it); ++is)
     {
-            EntityPointer neighbor = is->outside();
             std::cout << "found neighbor with first vertex at: " 
-                      << neighbor->geometry().corner(0) << " and second vertex at: " 
-                      << neighbor->geometry().corner(1) << std::endl; 
+                      << is->outside()->geometry().corner(0) << " and second vertex at: " 
+                      << is->outside()->geometry().corner(1);
+            if(dimgrid==2)
+                std::cout << " and third vertex at " << is->outside()->geometry().corner(2); 
+            std::cout << std::endl; 
             ++count;
     }
     std::cout << "This element knows about " << count << " neighbors." << std::endl << std::endl;
@@ -136,25 +143,32 @@ void traversal (G& grid)
   // Iterate over all intersections
   std::cout << std::endl;
   std::cout << "*** Traverse intersections with leaf iterator" << std::endl;
+  
   typedef typename LeafGridView::IntersectionIterator LeafIntersectionIterator;
   typedef typename LeafGridView::template Codim<0>::Iterator ElementLeafIterator;
   
-  ElementLeafIterator endleafit = leafView.template end<0>();
-  for(ElementLeafIterator itleaf = leafView.template begin<0>(); itleaf!=endleafit; ++itleaf)
+  for(ElementLeafIterator it = leafView.template begin<0>(); 
+        it!=leafView.template end<0>(); ++it)
   {
-    Dune::GeometryType gt = itleaf->type();       
+    Dune::GeometryType gt = it->type();       
     std::cout << "visiting leaf " << gt                
-              << " with first vertex at " << itleaf->geometry().corner(0)
-              << " and second vertex at " << itleaf->geometry().corner(1)
-              << std::endl;
+              << " with first vertex at " << it->geometry().corner(0)
+              << " and second vertex at " << it->geometry().corner(1);
+    if(dimgrid==2)
+        std::cout << " and third vertex at " << it->geometry().corner(2);
+    std::cout << std::endl;
+
     count = 0;
-    LeafIntersectionIterator isend = leafView.iend(*itleaf);
-    for (LeafIntersectionIterator is = leafView.ibegin(*itleaf); is!=isend; ++is)
+    for (LeafIntersectionIterator is = leafView.ibegin(*it); 
+            is!=leafView.iend(*it); ++is)
     {
-            EntityPointer neighbor = is->outside();
             std::cout << "found neighbor with first vertex at: " 
-                      << neighbor->geometry().corner(0) << " and second vertex at: " 
-                      << neighbor->geometry().corner(1) << std::endl; 
+                      << is->outside()->geometry().corner(0) 
+                      << " and second vertex at: " 
+                      << is->outside()->geometry().corner(1);
+            if(dimgrid==2)
+                std::cout << " and third vertex at " << is->outside()->geometry().corner(2); 
+            std::cout << std::endl; 
             ++count;
     }
     std::cout << "This element knows about " << count << " neighbors." << std::endl << std::endl;
@@ -179,6 +193,9 @@ int main (int argc, char *argv[]) try
 
         std::cout << "  Calling checkIntersectionIterator" << std::endl;
         checkIntersectionIterator(*grid2d);
+
+        //std::cout << "  Check if has multiple neighbor functionality" << std::endl;
+        //traversal(*grid2d);
     }
     {
         std::cout << "Checking FoamGrid<2, 3> (2d in 3d grid)" << std::endl;
@@ -191,6 +208,9 @@ int main (int argc, char *argv[]) try
 
         std::cout << "  Calling checkIntersectionIterator" << std::endl;
         checkIntersectionIterator(*grid3d);
+
+        //std::cout << "  Check if has multiple neighbor functionality" << std::endl;
+        //traversal(*grid3d);
     }
     {
         std::cout << "Checking FoamGrid<1, 2> (1d in 2d grid)" << std::endl;
@@ -203,6 +223,9 @@ int main (int argc, char *argv[]) try
 
         std::cout << "  Calling checkIntersectionIterator" << std::endl;
         checkIntersectionIterator(*grid12);
+
+        //std::cout << "  Check if has multiple neighbor functionality" << std::endl;
+        //traversal(*grid12);
     }
     {
         std::cout << "Checking FoamGrid<1, 3> (1d in 3d grid)" << std::endl;
@@ -215,6 +238,9 @@ int main (int argc, char *argv[]) try
 
         std::cout << "  Calling checkIntersectionIterator" << std::endl;
         checkIntersectionIterator(*grid13);
+
+        //std::cout << "  Check if has multiple neighbor functionality" << std::endl;
+        //traversal(*grid13);
     }
     {
         std::cout << "Checking FoamGrid<2, 3> (2d in 3d grid)" << std::endl;
@@ -228,6 +254,9 @@ int main (int argc, char *argv[]) try
 
         std::cout << "  Calling checkIntersectionIterator" << std::endl;
         checkIntersectionIterator(*gridTJunction);
+
+        //std::cout << "  Check if has multiple neighbor functionality" << std::endl;
+        //traversal(*gridTJunction);
     }
     {
         std::cout << "Checking FoamGrid<1, 3> (1d in 3d grid)" << std::endl;
@@ -241,8 +270,8 @@ int main (int argc, char *argv[]) try
         std::cout << "  Calling checkIntersectionIterator" << std::endl;
         checkIntersectionIterator(*gridStar);
 
-        std::cout << "  Check if has multiple neighbor functionality" << std::endl;
-        traversal(*gridStar);
+        //std::cout << "  Check if has multiple neighbor functionality" << std::endl;
+        //traversal(*gridStar);
     }
 }
 // //////////////////////////////////
