@@ -127,7 +127,7 @@ class FoamGridEntity :
         Geometry geometry () const
         {
             std::vector<FieldVector<double, dimworld> > coordinates(target_->corners());
-            for (size_t i=0; i<target_->corners(); i++)
+            for (std::size_t i=0; i<target_->corners(); i++)
                 coordinates[i] = target_->corner(i);
 
             return Geometry(FoamGridGeometry<dimgrid-codim, dimworld, GridImp>(target_->type(), coordinates));
@@ -239,7 +239,7 @@ class FoamGridEntity<0, 2, GridImp> :
         Geometry geometry () const
         {
             std::vector<FieldVector<double, dimworld> > coordinates(target_->corners());
-            for (size_t i=0; i<target_->corners(); i++)
+            for (std::size_t i=0; i<target_->corners(); i++)
                 coordinates[i] = target_->vertex_[i]->pos_;
 
             return Geometry(FoamGridGeometry<dimgrid, dimworld, GridImp>(target_->type(), coordinates));
@@ -431,7 +431,7 @@ class FoamGridEntity<0, 2, GridImp> :
 
             // Load sons of old target onto the iterator stack
             if (level()<=maxLevel && !isLeaf())
-                for (size_t i=0; i<target_->nSons(); i++)
+                for (std::size_t i=0; i<target_->nSons(); i++)
                     it.elemStack.push(target_->sons_[i]);
 
             GridImp::getRealImplementation(it.virtualEntity_).setToTarget((it.elemStack.empty())
@@ -547,7 +547,7 @@ class FoamGridEntity<0, 1, GridImp> :
         Geometry geometry () const
         {
             std::vector<FieldVector<double, dimworld> > coordinates(target_->corners());
-            for (size_t i=0; i<target_->corners(); i++)
+            for (std::size_t i=0; i<target_->corners(); i++)
                 coordinates[i] = target_->corner(i);
 
             return Geometry(FoamGridGeometry<dimgrid, dimworld, GridImp>(target_->type(), coordinates));
@@ -702,7 +702,7 @@ class FoamGridEntity<0, 1, GridImp> :
 
             // Load sons of old target onto the iterator stack
             if (level()<=maxLevel && !isLeaf())
-                for (size_t i=0; i<target_->nSons(); i++)
+                for (std::size_t i=0; i<target_->nSons(); i++)
                     it.elemStack.push(target_->sons_[i]);
 
             GridImp::getRealImplementation(it.virtualEntity_).setToTarget((it.elemStack.empty())
