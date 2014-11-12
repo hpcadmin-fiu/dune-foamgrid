@@ -1,12 +1,14 @@
 #ifndef DUNE_FOAMGRID_LEAFITERATOR_HH
 #define DUNE_FOAMGRID_LEAFITERATOR_HH
 
+#include <dune/foamgrid/foamgrid/foamgridentitypointer.hh>
+#include <dune/common/parallel/collectivecommunication.hh>
+
 /** \file
 * \brief The FoamGridLeafIterator class
 */
 
 namespace Dune {
-
 
 /** \brief Iterator over all entities of a given codimension and level of a grid.
 *  \ingroup FoamGrid

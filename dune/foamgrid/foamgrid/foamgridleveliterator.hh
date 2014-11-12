@@ -1,14 +1,13 @@
 #ifndef DUNE_FOAMGRID_LEVELITERATOR_HH
 #define DUNE_FOAMGRID_LEVELITERATOR_HH
 
+#include <dune/foamgrid/foamgrid/foamgridentitypointer.hh>
+
 /** \file
 * \brief The FoamGridLevelIterator class
 */
 
 namespace Dune {
-
-
-
 
 //**********************************************************************
 //

@@ -4,10 +4,10 @@
 #define DUNE_FOAMGRID_INTERSECTIONITERATORS_HH
 
 #include <dune/foamgrid/foamgrid/foamgridintersections.hh>
+#include <dune/foamgrid/foamgrid/foamgridentity.hh>
 #include <dune/foamgrid/foamgrid/foamgridvertex.hh>
 
 #include <map>
-
 #include <dune/common/shared_ptr.hh>
 
 /** \file
@@ -19,6 +19,11 @@ namespace Dune {
 template<class GridImp>
 class FoamGridLevelIntersectionIterator;
 
+template <class GridImp>
+class FoamGridLeafIntersection;
+
+template <class GridImp>
+class FoamGridLevelIntersection;
 
 /** \brief Iterator over all element neighbors
 * \ingroup FoamGrid
