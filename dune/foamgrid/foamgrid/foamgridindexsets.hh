@@ -31,9 +31,9 @@ namespace Dune {
         enum {dimworld = GridImp::dimensionworld};
 
     public:
-        /** \brief Default constructor */
+
         FoamGridLevelIndexSet()
-        : myTypes_{}
+        : level_(0), numQuads_(0), numTriangles_(0), numEdges_(0), numVertices_(0)
         {}
 
         //! get index of an entity
@@ -98,8 +98,9 @@ namespace Dune {
         }
 
          /** \brief Deliver all geometry types used in this grid */
-        const std::vector<GeometryType>& types (int codim) const
+        std::vector<GeometryType> types (int codim) const
         {
+            assert(codim<=dimgrid);
             return myTypes_[codim];
         }
 
@@ -116,16 +117,20 @@ namespace Dune {
         /** \brief Set up the index set */
         void update(const GridImp& grid, int level)
         {
+            grid_ = &grid;
             level_ = level;
+
+            numQuads_ = 0;
+            numTriangles_ = 0;
+            numEdges_ = 0;
+            numVertices_ = 0;
 
             // //////////////////////////////
             //   Init the vertex indices
             // //////////////////////////////
-
-            numVertices_ = 0;
             typename std::list<FoamGridEntityImp<0, dimgrid, dimworld> >::const_iterator vIt;
-            for (vIt =  Dune::get<0>(grid.entityImps_[level_]).begin();
-                 vIt != Dune::get<0>(grid.entityImps_[level_]).end();
+            for (vIt =  Dune::get<0>(grid_->entityImps_[level_]).begin();
+                 vIt != Dune::get<0>(grid_->entityImps_[level_]).end();
                  ++vIt)
                 /** \todo Remove this const cast */
                 *const_cast<unsigned int*>(&(vIt->levelIndex_)) = numVertices_++;
@@ -133,10 +138,9 @@ namespace Dune {
              // ///////////////////////////////
             //   Init the edges(2d) / element(1d) indices
             // ///////////////////////////////
-            numEdges_ = 0;
             typename std::list<FoamGridEntityImp<1, dimgrid, dimworld> >::const_iterator edIt;
-            for (edIt =  Dune::get<1>(grid.entityImps_[level_]).begin();
-                 edIt != Dune::get<1>(grid.entityImps_[level_]).end();
+            for (edIt =  Dune::get<1>(grid_->entityImps_[level_]).begin();
+                 edIt != Dune::get<1>(grid_->entityImps_[level_]).end();
                  ++edIt)
              /** \todo Remove this const cast */
                  *const_cast<unsigned int*>(&(edIt->levelIndex_)) = numEdges_++;
@@ -145,14 +149,11 @@ namespace Dune {
             // ///////////////////////////////
             //   Init the element (2d) indices
             // ///////////////////////////////
-            numTriangles_ = 0;
-            numQuads_ = 0;
-
             if(dimgrid == 2) {
 
                 typename std::list<FoamGridEntityImp<dimgrid, dimgrid, dimworld> >::const_iterator eIt;
-                for (eIt =  Dune::get<dimgrid>(grid.entityImps_[level_]).begin();
-                    eIt != Dune::get<dimgrid>(grid.entityImps_[level_]).end();
+                for (eIt =  Dune::get<dimgrid>(grid_->entityImps_[level_]).begin();
+                    eIt != Dune::get<dimgrid>(grid_->entityImps_[level_]).end();
                     ++eIt)
                     /** \todo Remove this const cast */
                     *const_cast<unsigned int*>(&(eIt->levelIndex_)) = (eIt->type().isTriangle()) ? numTriangles_++ : numQuads_++;
@@ -161,13 +162,10 @@ namespace Dune {
             // ///////////////////////////////////////////////
             //   Update the list of geometry types present
             // ///////////////////////////////////////////////
-            for (int i=0; i<=dimgrid; i++)
-                myTypes_[i].resize(0);
-
-            if (numTriangles_>0)
+            if (numTriangles_>0 && dimgrid == 2)
                 myTypes_[0].push_back(GeometryType(GeometryType::simplex, 2));
 
-            if (numQuads_>0)
+            if (numQuads_>0 && dimgrid == 2)
                 myTypes_[0].push_back(GeometryType(GeometryType::cube, 2));
 
             if (numEdges_>0 && dimgrid == 2)
@@ -179,8 +177,8 @@ namespace Dune {
                 myTypes_[dimgrid].push_back(GeometryType(GeometryType::simplex, 0));
         }
   
-        //const GridImp& grid_;
-        
+    private:
+        const GridImp* grid_;
         int level_;
 
         int numQuads_;
@@ -206,15 +204,8 @@ class FoamGridLeafIndexSet :
 
 public:
 
-    /** \brief Default constructor */
-    FoamGridLeafIndexSet()
-    : size_{}, myTypes_{}
-    {}
-
     /** \brief Copy constructor */
-    FoamGridLeafIndexSet(const FoamGridLeafIndexSet& other)
-    : size_(other.size_),
-      myTypes_(other.myTypes_)
+    FoamGridLeafIndexSet(const GridImp& g)
     {}
 
         //! get index of an entity
@@ -237,17 +228,42 @@ public:
             return GridImp::getRealImplementation(e).target_->subLevelIndex(i,codim);
         }
 
-        //! get number of entities of given type
-        int size (GeometryType type) const
-        {
-            return (type.dim() < 0 || type.dim() > dimgrid) ? 0 : size_[type.dim()];
+        //! get number of entities of given codim, type and on this level
+        int size (int codim) const {
+            if(dimgrid == 2) {
+                switch (codim) {
+                case 0:
+                    return numTriangles_ + numQuads_;
+                case 1:
+                    return numEdges_;
+                case 2:
+                    return numVertices_;
+                }
+            } else { //if dimgrid==1
+                switch (codim) {
+                case 0:
+                    return numEdges_;
+                case 1:
+                    return numVertices_;
+                }
+            }
+
+            return 0;
         }
 
 
-        //! get number of entities of given codim
-        int size (int codim) const
+        //! get number of entities of given codim, type and on this level
+        int size (GeometryType type) const
         {
-            return (codim < 0 || codim > dimgrid) ? 0 : size_[dimgrid - codim];
+            if (type.isVertex())
+                return numVertices_;
+            if (type.isLine())
+                return numEdges_;
+            if (type.isTriangle())
+                return numTriangles_;
+            if (type.isQuadrilateral())
+                return numQuads_;
+            return 0;
         }
 
 
@@ -258,8 +274,9 @@ public:
         }
 
         /** \brief Deliver all geometry types used in this grid */
-        const std::vector<GeometryType>& types (int codim) const
+        std::vector<GeometryType> types (int codim) const
         {
+            assert(codim<=dimgrid);
             return myTypes_[codim];
         }
 
@@ -270,97 +287,112 @@ public:
             return GridImp::getRealImplementation(e).target_->isLeaf();
         }
 
-
-
         /** Recompute the leaf numbering */
         void update(const GridImp& grid)
         {
 
-          
+        numQuads_ = 0;
+        numTriangles_ = 0;
+        numEdges_ = 0;
+        numVertices_ = 0;
+
         // ///////////////////////////////
-        //   Init the element indices
+        //  Init codim 0 entity indices
         // ///////////////////////////////
-        size_[dimgrid] = 0;
         typename GridImp::Traits::template Codim<0>::LeafIterator eIt    = grid.template leafbegin<0>();
         typename GridImp::Traits::template Codim<0>::LeafIterator eEndIt = grid.template leafend<0>();
 
-        for (; eIt!=eEndIt; ++eIt)
-            *const_cast<unsigned int*>(&(GridImp::getRealImplementation(*eIt).target_->leafIndex_)) = size_[dimgrid]++;
+        for (; eIt!=eEndIt; ++eIt){
+            if(eIt->type().isTriangle() && dimgrid == 2)
+                *const_cast<unsigned int*>(&(GridImp::getRealImplementation(*eIt).target_->leafIndex_)) = numTriangles_++;
+            if(eIt->type().isQuadrilateral() && dimgrid == 2)
+                *const_cast<unsigned int*>(&(GridImp::getRealImplementation(*eIt).target_->leafIndex_)) = numQuads_++;
+            if(eIt->type().isLine() && dimgrid == 1)
+                *const_cast<unsigned int*>(&(GridImp::getRealImplementation(*eIt).target_->leafIndex_)) = numEdges_++;
+        }
         
         // //////////////////////////////
-        //   Init the edges indices (only in 2d)
+        //   Init the codim 1 entitiy indices 
         // //////////////////////////////
 
-        if(dimgrid==2) {
-            
-            size_[1] = 0;
+        for (int i=grid.maxLevel(); i>=0; i--) {
 
-            for (int i=grid.maxLevel(); i>=0; i--) {
+            typename GridImp::Traits::template Codim<1>::LevelIterator edIt    = grid.template lbegin<1>(i);
+            typename GridImp::Traits::template Codim<1>::LevelIterator edEndIt = grid.template lend<1>(i);
 
-                typename GridImp::Traits::template Codim<1>::LevelIterator edIt    = grid.template lbegin<1>(i);
-                typename GridImp::Traits::template Codim<1>::LevelIterator edEndIt = grid.template lend<1>(i);
+            for (; edIt!=edEndIt; ++edIt) {
 
-                for (; edIt!=edEndIt; ++edIt) {
+            const FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>* target = GridImp::getRealImplementation(*edIt).target_;
 
-                    const FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>* target = GridImp::getRealImplementation(*edIt).target_;
-
-                    if (target->isLeaf())
-                        // The is a real leaf edge.
-                        *const_cast<unsigned int*>(&(target->leafIndex_)) = size_[1]++;
-                    else
-                    {
-                        if(target->nSons_==1)
-                            // If there is green refinement an edge might only have
-                            // one son. In this case son and father are identical and
-                            // we inherit the leafIndex from the son.
-                            *const_cast<unsigned int*>(&(target->leafIndex_)) = target->sons_[0]->leafIndex_;
-                    }
+            if (target->isLeaf()){
+                // The is a real leaf edge.
+                if(edIt->type().isLine() && dimgrid==2)
+                    *const_cast<unsigned int*>(&(target->leafIndex_)) = numEdges_++;
+                if(edIt->type().isVertex() && dimgrid==1)
+                    *const_cast<unsigned int*>(&(target->leafIndex_)) = numVertices_++;
+            }
+            else
+            {
+                if(target->nSons_==1)
+                    // If there is green refinement an edge might only have
+                    // one son. In this case son and father are identical and
+                    // we inherit the leafIndex from the son.
+                    *const_cast<unsigned int*>(&(target->leafIndex_)) = target->sons_[0]->leafIndex_;
                 }
             }
         }
 
-        // //////////////////////////////
-        //   Init the vertex indices
-        // //////////////////////////////
+        // //////////////////////////////////////////////
+        //   Init the codim 2 entity indices (only in 2d)
+        // //////////////////////////////////////////////
 
-        size_[0] = 0;
+        if(dimgrid==2){
 
-        for (int i=grid.maxLevel(); i>=0; i--) {
+            for (int i=grid.maxLevel(); i>=0; i--) {
 
-            typename GridImp::Traits::template Codim<dimgrid>::LevelIterator vIt    = grid.template lbegin<dimgrid>(i);
-            typename GridImp::Traits::template Codim<dimgrid>::LevelIterator vEndIt = grid.template lend<dimgrid>(i);
+                typename GridImp::Traits::template Codim<dimgrid>::LevelIterator vIt    = grid.template lbegin<dimgrid>(i);
+                typename GridImp::Traits::template Codim<dimgrid>::LevelIterator vEndIt = grid.template lend<dimgrid>(i);
 
-            for (; vIt!=vEndIt; ++vIt) {
+                for (; vIt!=vEndIt; ++vIt) {
 
-                const FoamGridEntityImp<0, dimgrid, dimworld>* target = GridImp::getRealImplementation(*vIt).target_;
+                    const FoamGridEntityImp<0, dimgrid, dimworld>* target = GridImp::getRealImplementation(*vIt).target_;
 
-                if (target->isLeaf())
-                    *const_cast<unsigned int*>(&(target->leafIndex_)) = size_[0]++;
-                else
-                    *const_cast<unsigned int*>(&(target->leafIndex_)) = target->sons_[0]->leafIndex_;
+                    if (target->isLeaf())
+                    {
+                        if(vIt->type().isVertex() && dimgrid==2)
+                            *const_cast<unsigned int*>(&(target->leafIndex_)) = numVertices_++;
+                    }
+                    else
+                        *const_cast<unsigned int*>(&(target->leafIndex_)) = target->sons_[0]->leafIndex_;
 
+                }
             }
-
         }
 
         // ///////////////////////////////////////////////
         //   Update the list of geometry types present
         // ///////////////////////////////////////////////
+        if (numTriangles_>0 && dimgrid == 2)
+            myTypes_[0].push_back(GeometryType(GeometryType::simplex, 2));
 
-        /** \todo This will not work for grids with more than one element type */
-        for (int i=0; i<=dimgrid; i++) {
-            if (size_[dimgrid-i]>0) {
-                myTypes_[i].resize(1);
-                myTypes_[i][0] = GeometryType(GeometryType::simplex, dimgrid-i);
-            } else
-                myTypes_[i].resize(0);
+        if (numQuads_>0 && dimgrid == 2)
+            myTypes_[0].push_back(GeometryType(GeometryType::cube, 2));
 
+        if (numEdges_>0 && dimgrid == 2)
+            myTypes_[1].push_back(GeometryType(1));
+        if (numEdges_>0 && dimgrid == 1)
+            myTypes_[0].push_back(GeometryType(1));
+
+        if (numVertices_>0)
+            myTypes_[dimgrid].push_back(GeometryType(0));
         }
 
-    }
+private:
 
-    // Number of entities per dimension
-    array<int,dimgrid+1> size_;
+    int numQuads_;
+    int numTriangles_;
+    int numEdges_;
+    int numVertices_;
 
     /** \brief The GeometryTypes present for each codim */
     array<std::vector<GeometryType>, dimgrid+1> myTypes_;

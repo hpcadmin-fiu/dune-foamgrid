@@ -182,6 +182,19 @@ void traversal (G& grid)
     std::cout << "This element knows about " << count << " neighbors." << std::endl << std::endl;
   }
 
+  // //Check IndexSet
+  // for (unsigned int codim = 0; codim <= LevelGridView::dimension; ++codim)
+  // {
+  //       // walk over all geometry types in the codimension
+  //       typedef typename LevelGridView::IndexSet::Types GTV;
+  //       GTV gtv = leafView.indexSet().types(codim);
+  //       for (typename GTV::const_iterator it = gtv.begin(); it != gtv.end(); ++it)
+  //       {
+  //         std::cout << "gtv[0]= " << gtv[0] << std::endl;
+  //       }
+  // }
+
+
 }                                                    
 
 int main (int argc, char *argv[]) try

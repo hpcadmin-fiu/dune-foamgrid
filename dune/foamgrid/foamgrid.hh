@@ -115,8 +115,8 @@ class FoamGrid :
 
     public:
 
-    /** \brief This grid is always 2-dimensional <- NOT ANYMORE */
-    //enum {dimension = 2};
+    /** \brief FoamGrid is only implemented for 1 and 2 dimension */
+    static_assert(dimgrid==1 || dimgrid==2, "Use FoamGrid only for 1d and 2d in nd!");
 
     //**********************************************************
     // The Interface Methods
@@ -136,7 +136,8 @@ class FoamGrid :
     FoamGrid()
         : leafGridView_(*this),
           globalRefined(),
-          numBoundarySegments_()
+          leafIndexSet_(*this),
+          numBoundarySegments_(0)
     {
         //static_assert(dimgrid == 2, "FoamGrid currently only works for 2D in nD");
         std::fill(freeIdCounter_.begin(), freeIdCounter_.end(), 0);
@@ -251,14 +252,14 @@ class FoamGrid :
 
         //! number of entities per level, codim and geometry type in this process
         int size (int level, GeometryType type) const {
-            return levelIndexSets_[level]->size(type);
+            return this->levelIndexSet(level).size(type);
         }
 
 
         //! number of leaf entities per codim and geometry type in this process
         int size (GeometryType type) const
         {
-            return leafIndexSet().size(type);
+            return this->leafIndexSet().size(type);
         }
 
         /** \brief The number of boundary edges on the coarsest level */
@@ -291,7 +292,7 @@ class FoamGrid :
         /** \brief Access to the LeafIndexSet */
         const typename Traits::LeafIndexSet& leafIndexSet() const
         {
-            return leafGridView_.indexSet();
+            return leafIndexSet_;
         }
 
 
@@ -519,9 +520,11 @@ class FoamGrid :
     std::vector<FoamGridLevelIndexSet<const FoamGrid>*> levelIndexSets_;
 
     //! The leaf index set
-    //FoamGridLeafIndexSet<const FoamGrid > leafIndexSet_;
+    FoamGridLeafIndexSet<const FoamGrid > leafIndexSet_;
+    
     // The leaf grid view
     FoamGridLeafGridView<const FoamGrid, All_Partition> leafGridView_;
+
 
     //! The id set
     FoamGridIdSet<const FoamGrid > idSet_;

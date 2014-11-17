@@ -291,12 +291,6 @@ namespace Dune
       : grid_( &grid )
       {}
 
-      /** \brief Copy constructor */
-      FoamGridLeafGridView ( const FoamGridLeafGridView<GridImp,pitype>& other )
-      : grid_( other.grid_ ),
-        indexSet_(other.indexSet_)
-      {}
-
       /** \brief obtain a const reference to the underlying hierarchic grid */
       const Grid &grid () const
       {
@@ -307,19 +301,19 @@ namespace Dune
       /** \brief obtain the index set */
       const IndexSet &indexSet () const
       {
-        return indexSet_;
+        return grid().leafIndexSet();
       }
 
       /** \brief obtain number of entities in a given codimension */
       int size ( int codim ) const
       {
-        return indexSet_.size( codim );
+        return grid().size( codim );
       }
 
       /** \brief obtain number of entities with a given geometry type */
       int size ( const GeometryType &type ) const
       {
-        return indexSet_.size( type );
+        return grid().size( type );
       }
 
       /** \brief obtain begin iterator for this view */
@@ -393,7 +387,6 @@ namespace Dune
 
     private:
       const Grid *grid_;
-      FoamGridLeafIndexSet<GridImp> indexSet_;
     };
 
 }
