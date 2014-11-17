@@ -134,9 +134,9 @@ class FoamGrid :
     /** \brief Constructor, constructs an empty grid
      */
     FoamGrid()
-        : leafGridView_(*this),
-          globalRefined(),
-          leafIndexSet_(*this),
+        : leafIndexSet_(*this),
+          leafGridView_(*this),
+          globalRefined(0),
           numBoundarySegments_(0)
     {
         //static_assert(dimgrid == 2, "FoamGrid currently only works for 2D in nD");
