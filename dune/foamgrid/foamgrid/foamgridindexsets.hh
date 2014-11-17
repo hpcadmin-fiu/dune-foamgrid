@@ -31,6 +31,10 @@ namespace Dune {
         enum {dimworld = GridImp::dimensionworld};
 
     public:
+        /** \brief Default constructor */
+        FoamGridLevelIndexSet()
+        : myTypes_{}
+        {}
 
         //! get index of an entity
         template<int codim>
@@ -173,9 +177,8 @@ namespace Dune {
 
             if (numVertices_>0)
                 myTypes_[dimgrid].push_back(GeometryType(GeometryType::simplex, 0));
-
         }
-        
+  
         //const GridImp& grid_;
         
         int level_;
@@ -186,7 +189,7 @@ namespace Dune {
         int numVertices_;
 
         /** \brief The GeometryTypes present for each codim */
-        std::vector<GeometryType> myTypes_[dimgrid+1];
+        array<std::vector<GeometryType>, dimgrid+1> myTypes_;
 
     };
 
@@ -205,6 +208,7 @@ public:
 
     /** \brief Default constructor */
     FoamGridLeafIndexSet()
+    : size_{}, myTypes_{}
     {}
 
     /** \brief Copy constructor */
@@ -345,7 +349,6 @@ public:
 
         /** \todo This will not work for grids with more than one element type */
         for (int i=0; i<=dimgrid; i++) {
-
             if (size_[dimgrid-i]>0) {
                 myTypes_[i].resize(1);
                 myTypes_[i][0] = GeometryType(GeometryType::simplex, dimgrid-i);
