@@ -90,7 +90,24 @@ template <int dimgrid, int dimworld>
         {
             insertBoundarySegment(vertices);
         }
+        
+        /** \brief Return the number of the element in the order of insertion into the factory
+         */
+        virtual unsigned int
+        insertionIndex ( const typename FoamGrid<dimgrid, dimworld>::Traits::template Codim< 0 >::Entity &entity ) const
+        {
+            return grid_->getRealImplementation(entity).target_->leafIndex_;
+        }
+        
+        /** \brief Return the number of the vertex in the order of insertion into the factory
+         */
+        virtual unsigned int
+        insertionIndex ( const typename FoamGrid<dimgrid, dimworld>::Traits::template Codim< dimgrid >::Entity &vertex ) const
+        {
+            return grid_->getRealImplementation(vertex).target_->leafIndex_;
 
+        }
+        
     protected:
 
         // Initialize the grid structure in UG
