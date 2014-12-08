@@ -47,8 +47,9 @@ namespace Dune {
             return sons_[0]==nullptr;
         }
 
+        //! This has no function yet in Foamgrid
         unsigned int boundarySegmentIndex() const {
-            return boundaryId_;
+            return boundarySegmentIndex_;
         }
 
         GeometryType type() const {
@@ -99,7 +100,7 @@ namespace Dune {
         const FoamGridEntityImp<0, dimgrid, dimworld>* vertex_[2];
 
         /** \brief The boundary id.  Only used if this edge is a boundary edge */
-        unsigned int boundaryId_;
+        unsigned int boundarySegmentIndex_;
 
         /** \brief links to refinements of this edge */
         array<FoamGridEntityImp<1, dimgrid, dimworld>*,2> sons_;

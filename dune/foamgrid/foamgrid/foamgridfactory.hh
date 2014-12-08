@@ -71,7 +71,6 @@ template <int dimgrid, int dimworld>
             vertexArray_.push_back(&*Dune::get<0>(grid_->entityImps_[0]).rbegin());
         }
 
-
         /** \brief Insert a boundary segment.
 
         This is only needed if you want to control the numbering of the boundary segments
@@ -91,27 +90,24 @@ template <int dimgrid, int dimworld>
             insertBoundarySegment(vertices);
         }
         
-        /** \brief Return the number of the element in the order of insertion into the factory
+        /** \brief Return the number of the element to insert parameters
          */
         virtual unsigned int
-        insertionIndex ( const typename FoamGrid<dimgrid, dimworld>::Traits::template Codim< 0 >::Entity &entity ) const
+        insertionIndex(const typename FoamGrid<dimgrid, dimworld>::Traits::template Codim<0>::Entity &entity) const
         {
             return grid_->getRealImplementation(entity).target_->leafIndex_;
         }
         
-        /** \brief Return the number of the vertex in the order of insertion into the factory
+        /** \brief Return the number of the vertex to insert parameters
          */
         virtual unsigned int
-        insertionIndex ( const typename FoamGrid<dimgrid, dimworld>::Traits::template Codim< dimgrid >::Entity &vertex ) const
+        insertionIndex(const typename FoamGrid<dimgrid, dimworld>::Traits::template Codim<dimgrid>::Entity &vertex) const
         {
             return grid_->getRealImplementation(vertex).target_->leafIndex_;
 
         }
         
     protected:
-
-        // Initialize the grid structure in UG
-        void createBegin();
 
         // Pointer to the grid being built
         FoamGrid<dimgrid, dimworld>* grid_;
@@ -140,6 +136,7 @@ template <int dimworld>
     {
         /** \brief Grid dimension */
         enum {dimgrid = 1}; 
+        typedef typename std::list<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld> >::iterator FacetIterator;
 
     public:
 
@@ -193,26 +190,25 @@ template <int dimworld>
             // Create the index sets
             this->grid_->setIndices();
 
-
             // ////////////////////////////////////////////////
             //   Set the boundary ids
-            //  \todo It must be possible to set them by hand
             // ////////////////////////////////////////////////
 
-            unsigned int boundaryIdCounter = 0;
+            unsigned int boundaryFacetCounter = 0;
 
-            for (typename std::list<FoamGridEntityImp<0, dimgrid, dimworld> >::iterator it = Dune::get<0>(this->grid_->entityImps_[0]).begin();
-                 it != Dune::get<0>(this->grid_->entityImps_[0]).end();
-                 ++it)
-                if(it->elements_.size()==1)
-                    it->boundaryId_ = boundaryIdCounter++;
+            // Iterate over all facets (=vertices in 1d)
+            FacetIterator fIt = Dune::get<0>(this->grid_->entityImps_[0]).begin();
+            const FacetIterator fEndIt = Dune::get<0>(this->grid_->entityImps_[0]).end();
+            for (; fIt != fEndIt; ++fIt)
+                if(fIt->elements_.size()==1) // if boundary facet
+                    fIt->boundarySegmentIndex_ = boundaryFacetCounter++;
 
             // ////////////////////////////////////////////////
             //   Hand over the new grid
             // ////////////////////////////////////////////////
 
             Dune::FoamGrid<dimgrid, dimworld>* tmp = this->grid_;
-            tmp->numBoundarySegments_ = boundaryIdCounter;
+            tmp->numBoundarySegments_ = boundaryFacetCounter;
             this->grid_ = nullptr;
             return tmp;
         }
@@ -227,6 +223,7 @@ template <int dimworld>
     {
         /** \brief Grid dimension */
         enum {dimgrid = 2}; 
+        typedef typename std::list<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld> >::iterator FacetIterator;
         
     public:
 
@@ -328,16 +325,16 @@ template <int dimworld>
 
             // ////////////////////////////////////////////////
             //   Set the boundary ids
-            //  \todo It must be possible to set them by hand
             // ////////////////////////////////////////////////
 
-            unsigned int boundaryIdCounter = 0;
+            unsigned int boundaryFacetCounter = 0;
 
-            for (typename std::list<FoamGridEntityImp<1, dimgrid, dimworld> >::iterator it = Dune::get<1>(this->grid_->entityImps_[0]).begin();
-                 it != Dune::get<1>(this->grid_->entityImps_[0]).end();
-                 ++it)
-                if(it->elements_.size()==1)
-                    it->boundaryId_ = boundaryIdCounter++;
+            // Iterate over all facets (=edges in 2D)
+            FacetIterator fIt = Dune::get<1>(this->grid_->entityImps_[0]).begin();
+            const FacetIterator fEndIt = Dune::get<1>(this->grid_->entityImps_[0]).end();
+            for (; fIt!=fEndIt; ++fIt)
+                if(fIt->elements_.size()==1) //if boundary facet
+                    fIt->boundarySegmentIndex_ = boundaryFacetCounter++;
 
 
             // ////////////////////////////////////////////////
@@ -345,7 +342,7 @@ template <int dimworld>
             // ////////////////////////////////////////////////
 
             Dune::FoamGrid<dimgrid, dimworld>* tmp = this->grid_;
-            tmp->numBoundarySegments_ = boundaryIdCounter;
+            tmp->numBoundarySegments_ = boundaryFacetCounter;
             this->grid_ = nullptr;
             return tmp;
         }
