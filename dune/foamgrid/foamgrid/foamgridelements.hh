@@ -55,6 +55,15 @@ namespace Dune {
             sons_[0] =sons_[1] = nullptr;
         }
 
+        FoamGridEntityImp(int level, unsigned int id)
+            : FoamGridEntityBase(level, id),
+              nSons_(0), refinementIndex_(-1),
+              markState_(DO_NOTHING), isNew_(false)
+        {
+          sons_[0] = sons_[1] = nullptr;
+          father_ = nullptr;
+        }
+
         /** \todo Implement this method! */
         bool isLeaf() const {
             return sons_[0]==nullptr;
