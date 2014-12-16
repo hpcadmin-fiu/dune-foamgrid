@@ -72,6 +72,11 @@ namespace Dune {
             return boundarySegmentIndex_;
         }
 
+        //! This has no function yet in Foamgrid
+        unsigned int boundaryId() const {
+            return boundaryId_;
+        }
+
         /** \brief Number of corners (==1) */
         unsigned int corners() const {
             return 1;
@@ -114,6 +119,7 @@ namespace Dune {
         //! Boundary index if vertex is on boundary
         //  only used if the vertex is a boundary vertex
         unsigned int boundarySegmentIndex_;
+        unsigned int boundaryId_;
 
         //! Pointer to father vertex on next coarser grid */
         FoamGridEntityImp<0, dimgrid, dimworld>* father_;

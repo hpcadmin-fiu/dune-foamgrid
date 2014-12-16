@@ -52,6 +52,11 @@ namespace Dune {
             return boundarySegmentIndex_;
         }
 
+        //! This has no function yet in Foamgrid
+        unsigned int boundaryId() const {
+            return boundaryId_;
+        }
+
         GeometryType type() const {
             return GeometryType(1);
         }
@@ -101,6 +106,7 @@ namespace Dune {
 
         /** \brief The boundary id.  Only used if this edge is a boundary edge */
         unsigned int boundarySegmentIndex_;
+        unsigned int boundaryId_;
 
         /** \brief links to refinements of this edge */
         array<FoamGridEntityImp<1, dimgrid, dimworld>*,2> sons_;
