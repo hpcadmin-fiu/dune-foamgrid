@@ -688,7 +688,32 @@ class FoamGridEntity<0, 1, GridImp> :
             if(father==nullptr)
                 DUNE_THROW(GridError, "There is no father Element.");
 
-            DUNE_THROW(NotImplemented, "geometryInFather only supported for triangles!");
+            // Sanity check
+            if(target_->type().isLine()){
+                // Lookup the coordinates within the father
+                // As in the refinement routine the children
+                // are number as follows:
+                // First come the ones located in the corner
+                // ascending with the corner index.
+                // Their first corner (origin in the reference simplex)
+                // is always the corner that is also a corner of the father.
+                // For the element with all corners on the edge midpoints of
+                // the father, the corner are numbered according to the edge indices
+                // of the father.
+                double mapping[2][2] = {{0.0, 0.5}, {1.0, 0.5}};
+
+                std::vector<FieldVector<typename GridImp::ctype, dimgrid> > coordinates(2);
+
+                for(int corner=0; corner <2; ++corner)
+                    coordinates[corner][0] = mapping[target_->refinementIndex_][corner];
+
+                // return LocalGeomety by value
+                return LocalGeometry(FoamGridGeometry<dimgrid, dimgrid, GridImp>(target_->type(), coordinates));
+            }
+            else
+            {
+                DUNE_THROW(NotImplemented, "geometryInFather only supported for lines!");
+            }
         }
 
 
