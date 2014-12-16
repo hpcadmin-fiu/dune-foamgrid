@@ -233,12 +233,12 @@ class FoamGrid :
         int size (int level, int codim) const {
 
             // Turn dynamic index into static index
-            if (codim==2)
+            if ((codim==2 && dimgrid==2) || (codim==1 && dimgrid==1))
                 return Dune::get<0>(entityImps_[level]).size();
-            if (codim==1)
+            if ((codim==1 && dimgrid==2))
                 return Dune::get<1>(entityImps_[level]).size();
             if (codim==0)
-                return Dune::get<2>(entityImps_[level]).size();
+                return Dune::get<dimgrid>(entityImps_[level]).size();
 
             return 0;
         }
@@ -480,7 +480,10 @@ class FoamGrid :
     //! \brief refine an Element
     //! \param element The element to refine
     //! \param refCount How many times to refine the element
-    void refineSimplexElement(FoamGridEntityImp<dimgrid, dimgrid, dimworld>& element,
+    void refineSimplexElement(FoamGridEntityImp<2, dimgrid, dimworld>& element,
+                       int refCount);
+    //! Overloaded function for the 1d case
+    void refineSimplexElement(FoamGridEntityImp<1, dimgrid, dimworld>& element,
                        int refCount);
 
     /**
@@ -492,7 +495,7 @@ class FoamGrid :
      * \param son The son element to substitute the father with.
      * \param father Pointer to the father element that is to be substituted.
      */
-    void overwriteFineLevelNeighbours(FoamGridEntityImp<1, dimgrid, dimworld>& edge,
+    void overwriteFineLevelNeighbours(FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>& edge,
                                       FoamGridEntityImp<dimgrid, dimgrid, dimworld>* son,
                                       FoamGridEntityImp<dimgrid, dimgrid, dimworld>* father);
 
@@ -512,9 +515,30 @@ class FoamGrid :
     typename Traits::CollectiveCommunication ccobj_;
 
     // Stores the lists of vertices, edges, elements for each level
-    std::vector<tuple<std::list<FoamGridEntityImp<0, dimgrid, dimworld> >,
-    std::list<FoamGridEntityImp<1, dimgrid, dimworld> >,
-    std::list<FoamGridEntityImp<dimgrid, dimgrid, dimworld> > > > entityImps_;
+    // std::vector<tuple<std::list<FoamGridEntityImp<0, dimgrid, dimworld> >,
+    // std::list<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld> >,
+    // std::list<FoamGridEntityImp<dimgrid, dimgrid, dimworld> > > > entityImps_;
+
+    // conditional typename depending on dimension of grid (1 or 2)
+    typedef typename std::conditional<
+                      dimgrid==2, 
+                      typename std::vector<std::tuple<std::list<FoamGridEntityImp<0, dimgrid, dimworld> >,
+                                                 std::list<FoamGridEntityImp<1, dimgrid, dimworld> >,
+                                                 std::list<FoamGridEntityImp<2, dimgrid, dimworld> > > >,
+                      typename std::vector<std::tuple<std::list<FoamGridEntityImp<0, dimgrid, dimworld> >,
+                                                 std::list<FoamGridEntityImp<1, dimgrid, dimworld> > > >
+                   >::type EntityImps;
+
+    EntityImps entityImps_;
+
+    typedef typename std::conditional<
+                        dimgrid==2, 
+                        std::tuple<std::list<FoamGridEntityImp<0, dimgrid, dimworld> >,
+                                     std::list<FoamGridEntityImp<1, dimgrid, dimworld> >,
+                                     std::list<FoamGridEntityImp<2, dimgrid, dimworld> > >,
+                        std::tuple<std::list<FoamGridEntityImp<0, dimgrid, dimworld> >,
+                                     std::list<FoamGridEntityImp<1, dimgrid, dimworld> > >
+                   >::type EntityTuple;
 
     //! Our set of level indices
     std::vector<FoamGridLevelIndexSet<const FoamGrid>*> levelIndexSets_;
