@@ -16,7 +16,7 @@
 
 int main (int argc, char *argv[]) try
 {
-	const std::string dune_foamgrid_path = std::string(DUNE_FOAMGRID_EXAMPLE_GRIDS_PATH) + "gmsh/";
+	const std::string dune_foamgrid_path = "/home/timokoch/dumux/dune-foamgrid/doc/grids/gmsh/";
 
     std::cout << "Checking FoamGrid<2, 2> (2d in 2d grid)" << std::endl;
     Dune::GridFactory<FoamGrid<2, 2> > factory;
@@ -65,49 +65,45 @@ int main (int argc, char *argv[]) try
     gridcheck(*grid2d);
     checkIntersectionIterator(*grid2d);
 
- //    std::cout << "Checking FoamGrid<1, 2> (1d in 2d grid)" << std::endl;
-	// std::cout << "  Creating grid" << std::endl;
- //    std::shared_ptr<FoamGrid<1, 2> > grid1d( GmshReader<FoamGrid<1, 2> >::read(dune_foamgrid_path + "line1d2d.msh", /*verbose*/ true, false ) );
-	// {
- //        Dune::VTKWriter<typename FoamGrid<1, 2>::LeafGridView >
- //            writer(grid1d->leafGridView(), VTK::nonconforming);
- //        writer.write("1d_refined0");
- //    }
+    std::cout << "Checking FoamGrid<1, 2> (1d in 2d grid)" << std::endl;
+	std::cout << "  Creating grid" << std::endl;
+    std::shared_ptr<FoamGrid<1, 3> > grid1d( GmshReader<FoamGrid<1, 3> >::read(dune_foamgrid_path + "line1d3d.msh", /*verbose*/ true, false ) );
+	{
+        Dune::VTKWriter<typename FoamGrid<1, 3>::LeafGridView > writer(grid1d->leafGridView(), VTK::nonconforming);
+        writer.write("1d_refined0");
+    }
 
- //    gridcheck(*grid1d);
- //    grid1d->globalRefine(1);
- //    Dune::gridinfo(*grid1d);
- //    {
- //        Dune::VTKWriter<typename FoamGrid<1, 2>::LeafGridView >
- //            writer(grid1d->leafGridView(), VTK::nonconforming);
- //        writer.write("1d_refined1");
- //    }
- //    checkGeometryInFather(*grid1d);
- //    grid1d->globalRefine(-1);
+    gridcheck(*grid1d);
+    grid1d->globalRefine(1);
+    Dune::gridinfo(*grid1d);
+    {
+        Dune::VTKWriter<typename FoamGrid<1, 3>::LeafGridView > writer(grid1d->leafGridView(), VTK::nonconforming);
+        writer.write("1d_refined1");
+    }
+    checkGeometryInFather(*grid1d);
+    // grid1d->globalRefine(-1);
 
- //    {
- //        Dune::VTKWriter<typename FoamGrid<1, 2>::LeafGridView >
- //            writer(grid1d->leafGridView(), VTK::nonconforming);
- //        writer.write("1d_refined-1");
- //    }
- //    checkGeometryInFather(*grid1d);
- //    Dune::gridinfo(*grid1d);
- //    grid1d->globalRefine(2);
- //    {
- //        Dune::VTKWriter<typename FoamGrid<1, 2>::LeafGridView >
- //            writer(grid1d->leafGridView(), VTK::nonconforming);
- //        writer.write("1d_refined2");
- //    }
- //    Dune::gridinfo(*grid1d);
- //    gridcheck(*grid1d);
- //    grid1d->globalRefine(3);
- //    {
- //        Dune::VTKWriter<typename FoamGrid<1, 2>::LeafGridView >
- //            writer(grid1d->leafGridView(), VTK::nonconforming);
- //        writer.write("1d_refined3");
- //    }
- //    gridcheck(*grid1d);
- //    checkIntersectionIterator(*grid1d);
+    // {
+    //     Dune::VTKWriter<typename FoamGrid<1, 3>::LeafGridView >
+    //         writer(grid1d->leafGridView(), VTK::nonconforming);
+    //     writer.write("1d_refined-1");
+    // }
+    // checkGeometryInFather(*grid1d);
+    Dune::gridinfo(*grid1d);
+    grid1d->globalRefine(2);
+    {
+        Dune::VTKWriter<typename FoamGrid<1, 3>::LeafGridView > writer(grid1d->leafGridView(), VTK::nonconforming);
+        writer.write("1d_refined2");
+    }
+    Dune::gridinfo(*grid1d);
+    gridcheck(*grid1d);
+    grid1d->globalRefine(3);
+    {
+        Dune::VTKWriter<typename FoamGrid<1, 3>::LeafGridView > writer(grid1d->leafGridView(), VTK::nonconforming);
+        writer.write("1d_refined3");
+    }
+    gridcheck(*grid1d);
+    checkIntersectionIterator(*grid1d);
 
 }
 // //////////////////////////////////
