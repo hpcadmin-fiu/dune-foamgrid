@@ -162,6 +162,10 @@ namespace Dune {
             // ///////////////////////////////////////////////
             //   Update the list of geometry types present
             // ///////////////////////////////////////////////
+
+            for (int i = 0; i < dimgrid+1; ++i)
+                myTypes_[i].clear();
+
             if (numTriangles_>0 && dimgrid == 2)
                 myTypes_[0].push_back(GeometryType(GeometryType::simplex, 2));
 
@@ -372,6 +376,10 @@ public:
         // ///////////////////////////////////////////////
         //   Update the list of geometry types present
         // ///////////////////////////////////////////////
+        for (int i = 0; i < dimgrid+1; ++i)
+            myTypes_[i].clear();
+
+        
         if (numTriangles_>0 && dimgrid == 2)
             myTypes_[0].push_back(GeometryType(GeometryType::simplex, 2));
 
