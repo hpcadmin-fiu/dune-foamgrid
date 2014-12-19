@@ -507,11 +507,11 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<2
   unsigned int nextLevel=element.level()+1;
 
 
-  std::cout << "Vertices " << nextLevel << ": " << Dune::get<0>(entityImps_[nextLevel]).size()
+  dvverb << "Vertices " << nextLevel << ": " << Dune::get<0>(entityImps_[nextLevel]).size()
             << std::endl;
-  std::cout << "Facets " << nextLevel << ": " <<Dune::get<dimgrid-1>(entityImps_[nextLevel]).size()
+  dvverb << "Facets " << nextLevel << ": " <<Dune::get<dimgrid-1>(entityImps_[nextLevel]).size()
             << std::endl;
-  std::cout << "Elements " << nextLevel << ": " << Dune::get<dimgrid>(entityImps_[nextLevel]).size()
+  dvverb << "Elements " << nextLevel << ": " << Dune::get<dimgrid>(entityImps_[nextLevel]).size()
             << std::endl;
 
   array<FoamGridEntityImp<0, dimgrid, dimworld>*, 3*dimgrid> nextLevelVertices;
@@ -802,12 +802,12 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<2
     }
   }
 
-  std::cout << "end refineSimplex" << std::endl;
-  std::cout << "Vertices " << nextLevel << ": " << Dune::get<0>(entityImps_[nextLevel]).size()
+  dvverb << "end refineSimplex" << std::endl;
+  dvverb << "Vertices " << nextLevel << ": " << Dune::get<0>(entityImps_[nextLevel]).size()
             << std::endl;
-  std::cout << "Facets " << nextLevel << ": " << Dune::get<1>(entityImps_[nextLevel]).size()
+  dvverb << "Facets " << nextLevel << ": " << Dune::get<1>(entityImps_[nextLevel]).size()
             << std::endl;
-  std::cout << "Elements " << nextLevel << ": " << Dune::get<dimgrid>(entityImps_[nextLevel]).size()
+  dvverb << "Elements " << nextLevel << ": " << Dune::get<dimgrid>(entityImps_[nextLevel]).size()
             << std::endl;
 }
 
@@ -835,8 +835,8 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<1
   unsigned int nextLevel=element.level()+1;
 
 
-  std::cout << "Vertices " << nextLevel << ": " << Dune::get<0>(entityImps_[nextLevel]).size() << std::endl;
-  std::cout << "Elements " << nextLevel << ": " << Dune::get<dimgrid>(entityImps_[nextLevel]).size() << std::endl;
+  dvverb << "Vertices " << nextLevel << ": " << Dune::get<0>(entityImps_[nextLevel]).size() << std::endl;
+  dvverb << "Elements " << nextLevel << ": " << Dune::get<dimgrid>(entityImps_[nextLevel]).size() << std::endl;
 
   array<FoamGridEntityImp<0, dimgrid, dimworld>*, 3*dimgrid> nextLevelVertices;
   std::size_t vertexIndex=0;
@@ -915,10 +915,10 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<1
   newElement = &(Dune::get<dimgrid>(entityImps_[nextLevel]).back());
   newElement->isNew_=true;
   newElement->father_=&element;
-  newElement->vertex_[0]=nextLevelVertices[1];
-  newElement->vertex_[1]=nextLevelVertices[2];
-  newElement->facet_[0]=nextLevelVertices[1]; // are equal to vertices but are 
-  newElement->facet_[1]=nextLevelVertices[2]; // set for consistent interface
+  newElement->vertex_[0]=nextLevelVertices[2];
+  newElement->vertex_[1]=nextLevelVertices[1];
+  newElement->facet_[0]=nextLevelVertices[2]; // are equal to vertices but are 
+  newElement->facet_[1]=nextLevelVertices[1]; // set for consistent interface
   newElement->refinementIndex_=1;
   nextLevelElements[1]=newElement;
   element.sons_[1]=newElement;
@@ -955,9 +955,9 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<1
     }
   }
 
-  std::cout << "end refineSimplex" << std::endl;
-  std::cout << "Vertices " << nextLevel << ": " << Dune::get<0>(entityImps_[nextLevel]).size() << std::endl;
-  std::cout << "Elements " << nextLevel << ": " << Dune::get<dimgrid>(entityImps_[nextLevel]).size() << std::endl;
+  dvverb << "end refineSimplex" << std::endl;
+  dvverb << "Vertices " << nextLevel << ": " << Dune::get<0>(entityImps_[nextLevel]).size() << std::endl;
+  dvverb << "Elements " << nextLevel << ": " << Dune::get<dimgrid>(entityImps_[nextLevel]).size() << std::endl;
 }
 
 // Overwrites the neighbours of this and descendant facets

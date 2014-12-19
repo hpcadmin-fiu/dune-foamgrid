@@ -618,7 +618,6 @@ class FoamGridEntity<0, 1, GridImp> :
             }
         }
 
-
         //! First level intersection
         FoamGridLevelIntersectionIterator<GridImp> ilevelbegin () const{
             return FoamGridLevelIntersectionIterator<GridImp>(target_, 0);
@@ -700,7 +699,7 @@ class FoamGridEntity<0, 1, GridImp> :
                 // For the element with all corners on the edge midpoints of
                 // the father, the corner are numbered according to the edge indices
                 // of the father.
-                double mapping[2][2] = {{0.0, 0.5}, {1.0, 0.5}};
+                double mapping[2][2] = {{0.0, 0.5}, {0.5, 1.0}};
 
                 std::vector<FieldVector<typename GridImp::ctype, dimgrid> > coordinates(2);
 
