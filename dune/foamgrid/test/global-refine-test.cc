@@ -65,7 +65,7 @@ int main (int argc, char *argv[]) try
     gridcheck(*grid2d);
     checkIntersectionIterator(*grid2d);
 
-    std::cout << "Checking FoamGrid<1, 2> (1d in 2d grid)" << std::endl;
+    std::cout << "Checking FoamGrid<1, 3> (1d in 3d grid)" << std::endl;
 	std::cout << "  Creating grid" << std::endl;
     std::shared_ptr<FoamGrid<1, 3> > grid1d( GmshReader<FoamGrid<1, 3> >::read(dune_foamgrid_path + "line1d3d.msh", /*verbose*/ true, false ) );
 	{
