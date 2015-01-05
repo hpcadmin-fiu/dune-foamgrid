@@ -463,20 +463,20 @@ class FoamGrid :
 
     private:
 
-        //! \brief erases pointers in father elements to vanished entities of the element
-        void erasePointersToEntities(std::list<FoamGridEntityImp<dimgrid, dimgrid ,dimworld> >& elements);
+    //! \brief erases pointers in father elements to vanished entities of the element
+    void erasePointersToEntities(std::list<FoamGridEntityImp<dimgrid, dimgrid ,dimworld> >& elements);
 
-        //! \brief Erase Entities from memory that vanished due to coarsening.
-        //! \warning This method has to be called first for i=0.
-        //! \tparam i The dimension of the entities.
-        //! \param  levelEntities The vector with the level entitied
-        template<int i>
-        void eraseVanishedEntities(std::list<FoamGridEntityImp<i, dimgrid, dimworld> >& levelEntities);
+    //! \brief Erase Entities from memory that vanished due to coarsening.
+    //! \warning This method has to be called first for i=0.
+    //! \tparam i The dimension of the entities.
+    //! \param  levelEntities The vector with the level entitied
+    template<int i>
+    void eraseVanishedEntities(std::list<FoamGridEntityImp<i, dimgrid, dimworld> >& levelEntities);
 
     //! \brief Coarsen an Element
     //! \param element The element to coarsen
     void coarsenSimplexElement(FoamGridEntityImp<dimgrid, dimgrid, dimworld>& element);
-
+   
     //! \brief refine an Element
     //! \param element The element to refine
     //! \param refCount How many times to refine the element
