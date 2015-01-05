@@ -40,7 +40,7 @@ void Dune::FoamGrid<dimgrid, dimworld>::globalRefine (int refCount)
   }
 
   if (refCount < 0)
-  {
+  { 
     if (globalRefined+refCount<0)
     {
       for (int i=refCount; i<0; ++i)
@@ -79,17 +79,24 @@ void Dune::FoamGrid<dimgrid, dimworld>::globalRefine (int refCount)
       typename std::list<FoamGridEntityImp<0, dimgrid, dimworld> >::iterator vEndIt
         = Dune::get<0>(entityImps_[maxLevel()]).end();
       for (; vIt!=vEndIt; ++vIt)
-        vIt->sons_[0]=nullptr;
-
-      typename std::list<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld> >::iterator edIt
-        = Dune::get<dimgrid-1>(entityImps_[maxLevel()]).begin();
-      typename std::list<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld> >::iterator edEndIt
-        = Dune::get<dimgrid-1>(entityImps_[maxLevel()]).end();
-      for (; edIt!=edEndIt; ++edIt)
       {
-        edIt->sons_[0]=nullptr;
-        edIt->sons_[1]=nullptr;
-        edIt->nSons_=0;
+        vIt->sons_[0]=nullptr;
+        if(dimgrid == 1)
+        	vIt->nSons_=0;
+      }
+
+      if(dimgrid == 2) 
+      {
+      	typename std::list<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld> >::iterator edIt
+        	= Dune::get<dimgrid-1>(entityImps_[maxLevel()]).begin();
+      	typename std::list<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld> >::iterator edEndIt
+        	= Dune::get<dimgrid-1>(entityImps_[maxLevel()]).end();
+      	for (; edIt!=edEndIt; ++edIt)
+      	{
+        	edIt->sons_[0]=nullptr;
+        	edIt->sons_[1]=nullptr;
+        	edIt->nSons_=0;
+      	}
       }
 
       typename std::list<FoamGridEntityImp<dimgrid, dimgrid, dimworld> >::iterator elIt
@@ -208,7 +215,7 @@ bool Dune::FoamGrid<dimgrid, dimworld>::adapt()
     int mark=getMark(*elem);
     if (mark>0)
     {
-      // Refine Triangles
+      // Refine simplices
       if (elem->type().isTriangle() || elem->type().isLine())
       {
         refineSimplexElement(*const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(*elem).target_), 1);
@@ -219,9 +226,9 @@ bool Dune::FoamGrid<dimgrid, dimworld>::adapt()
         DUNE_THROW(NotImplemented, "Refinement only supported for simplices!");
     }
 
-    if (mark<0) // If simplex was allready treated by coarsenSimplex mark will be 0
+    if (mark<0) // If simplex was already treated by coarsenSimplex mark is 0
     {
-      // Coarsen triangles
+      // Coarsen simplices
       if (elem->type().isTriangle() || elem->type().isLine())
       {
         assert(elem->level());
@@ -229,7 +236,7 @@ bool Dune::FoamGrid<dimgrid, dimworld>::adapt()
         levelsChanged.insert(elem->level());
       }
       else
-        DUNE_THROW(NotImplemented, "Refinement only supported for simplices!");
+        DUNE_THROW(NotImplemented, "Coarsening only supported for simplices!");
     }
   }
 
@@ -245,7 +252,8 @@ bool Dune::FoamGrid<dimgrid, dimworld>::adapt()
     // Now delete the actual vertices.
     eraseVanishedEntities(Dune::get<0>(entityImps_[*level]));
 
-    // erase vanished facets
+    // erase vanished facets (only exist in 2D)
+    if (dimgrid == 2)
     {
       typedef typename std::list<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld> >::iterator FacetIter;
       for (FacetIter facet=Dune::get<dimgrid-1>(entityImps_[*level]).begin(),
@@ -369,8 +377,7 @@ void Dune::FoamGrid<dimgrid, dimworld>::eraseVanishedEntities(std::list<FoamGrid
   }
 }
 
-// TODO: This adds facets and vertices althought in 1D they are the same objects
-// Coarsen an Element
+// Coarsen a simplex element
 template <int dimgrid, int dimworld>
 void Dune::FoamGrid<dimgrid, dimworld>::coarsenSimplexElement(FoamGridEntityImp<dimgrid, dimgrid, dimworld>& element)
 {
@@ -480,8 +487,6 @@ void Dune::FoamGrid<dimgrid, dimworld>::coarsenSimplexElement(FoamGridEntityImp<
   for (VertexIter v=childVertices.begin(); v!=childVertices.end(); ++v)
    (*v)->willVanish_=true;
 }
-
-
 
 // Refine one simplex element (2D simplex)
 template <int dimgrid, int dimworld>

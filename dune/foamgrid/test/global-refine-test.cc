@@ -74,29 +74,39 @@ int main (int argc, char *argv[]) try
     }
 
     gridcheck(*grid1d);
-    grid1d->globalRefine(1);
     Dune::gridinfo(*grid1d);
+
+    // refine once
+    grid1d->globalRefine(1);
     {
         Dune::VTKWriter<typename FoamGrid<1, 3>::LeafGridView > writer(grid1d->leafGridView(), VTK::nonconforming);
         writer.write("1d_refined1");
     }
+    gridcheck(*grid1d);
     checkGeometryInFather(*grid1d);
-    // grid1d->globalRefine(-1);
-
-    // {
-    //     Dune::VTKWriter<typename FoamGrid<1, 3>::LeafGridView >
-    //         writer(grid1d->leafGridView(), VTK::nonconforming);
-    //     writer.write("1d_refined-1");
-    // }
-    // checkGeometryInFather(*grid1d);
     Dune::gridinfo(*grid1d);
+
+    // coarsen once
+    grid1d->globalRefine(-1);
+
+    {
+        Dune::VTKWriter<typename FoamGrid<1, 3>::LeafGridView > writer(grid1d->leafGridView(), VTK::nonconforming);
+        writer.write("1d_refined-1");
+    }
+    gridcheck(*grid1d);
+    checkGeometryInFather(*grid1d);
+    Dune::gridinfo(*grid1d);
+
+    // refine twice
     grid1d->globalRefine(2);
     {
         Dune::VTKWriter<typename FoamGrid<1, 3>::LeafGridView > writer(grid1d->leafGridView(), VTK::nonconforming);
         writer.write("1d_refined2");
     }
-    Dune::gridinfo(*grid1d);
     gridcheck(*grid1d);
+    Dune::gridinfo(*grid1d);
+
+    // refine three times
     grid1d->globalRefine(3);
     {
         Dune::VTKWriter<typename FoamGrid<1, 3>::LeafGridView > writer(grid1d->leafGridView(), VTK::nonconforming);
@@ -104,6 +114,7 @@ int main (int argc, char *argv[]) try
     }
     gridcheck(*grid1d);
     checkIntersectionIterator(*grid1d);
+    Dune::gridinfo(*grid1d);
 
 }
 // //////////////////////////////////
