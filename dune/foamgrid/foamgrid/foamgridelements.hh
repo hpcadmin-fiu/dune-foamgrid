@@ -31,7 +31,8 @@ namespace Dune {
         FoamGridEntityImp(FoamGridEntityImp<0, dimgrid, dimworld>* v0,
                           FoamGridEntityImp<0, dimgrid, dimworld>* v1,
                           int level, unsigned int id)
-            : FoamGridEntityBase(level,id), nSons_(0), father_(nullptr)
+            : FoamGridEntityBase(level,id), nSons_(0), father_(nullptr),
+              refinementIndex_(-1), markState_(DO_NOTHING), isNew_(false)
         {
             vertex_[0] = v0;
             vertex_[1] = v1;
@@ -46,7 +47,8 @@ namespace Dune {
                           int level, unsigned int id,
                           FoamGridEntityImp* father)
 
-            : FoamGridEntityBase(level,id), nSons_(0), father_(father)
+            : FoamGridEntityBase(level,id), nSons_(0), father_(father),
+              refinementIndex_(-1), markState_(DO_NOTHING), isNew_(false)
         {
             vertex_[0] = v0;
             vertex_[1] = v1;
@@ -129,8 +131,6 @@ namespace Dune {
 
         int refinementIndex_;
 
-        bool isNew_;
-
         MarkState markState_;
 
         FoamGridEntityImp<0, dimgrid, dimworld>* vertex_[2];
@@ -146,6 +146,7 @@ namespace Dune {
         /** \brief Pointer to father element */
         FoamGridEntityImp<dimgrid, dimgrid, dimworld>* father_;
 
+         bool isNew_;
     };
 
     /** \brief Element specialization of FoamGridEntityImp for 2d grids. Element is a grid entity of topological codimension 0 and dimension dimgrid.*/
