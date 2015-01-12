@@ -1,6 +1,6 @@
 // Refine the grid uniformly
 template <int dimgrid, int dimworld>
-void Dune::FoamGrid<dimgrid, dimworld>::globalRefine (int refCount)
+void Dune::FoamGrid<dimgrid, dimworld>::globalRefine (int refCount = 1)
 {
   willCoarsen=false;
 

@@ -29,8 +29,14 @@ int main (int argc, char *argv[]) try
             writer(grid2d->leafGridView(), VTK::nonconforming);
         writer.write("2d_refined0");
     }
-
     gridcheck(*grid2d);
+    
+    // call globalRefine with 0 (no refinement)
+    // who knows who does that
+    grid2d->globalRefine(0);
+    gridcheck(*grid2d);
+    
+    // refine once
     grid2d->globalRefine(1);
     Dune::gridinfo(*grid2d);
     {
@@ -39,6 +45,8 @@ int main (int argc, char *argv[]) try
         writer.write("2d_refined1");
     }
     checkGeometryInFather(*grid2d);
+    
+    // coarsen once
     grid2d->globalRefine(-1);
 
     {
@@ -48,6 +56,8 @@ int main (int argc, char *argv[]) try
     }
     checkGeometryInFather(*grid2d);
     Dune::gridinfo(*grid2d);
+    
+    // refine twice
     grid2d->globalRefine(2);
     {
         Dune::VTKWriter<typename FoamGrid<2, 2>::LeafGridView >
@@ -56,6 +66,8 @@ int main (int argc, char *argv[]) try
     }
     Dune::gridinfo(*grid2d);
     gridcheck(*grid2d);
+    
+    // refine three times
     grid2d->globalRefine(3);
     {
         Dune::VTKWriter<typename FoamGrid<2, 2>::LeafGridView >
@@ -76,8 +88,13 @@ int main (int argc, char *argv[]) try
     gridcheck(*grid1d);
     Dune::gridinfo(*grid1d);
 
+    // call globalRefine with 0 (no refinement)
+    // who knows who does that
+    grid1d->globalRefine(0);
+    gridcheck(*grid1d);
+
     // refine once
-    grid1d->globalRefine(1);
+    grid1d->globalRefine(); // the default is globalRefine(1)
     {
         Dune::VTKWriter<typename FoamGrid<1, 3>::LeafGridView > writer(grid1d->leafGridView(), VTK::nonconforming);
         writer.write("1d_refined1");
