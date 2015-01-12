@@ -332,7 +332,7 @@ class FoamGrid :
         /** \brief Refine the grid uniformly
          * \param refCount Number of times the grid is to be refined uniformly
         */
-        void globalRefine (int refCount);
+        void globalRefine (int refCount = 1);
 
         /** \brief Mark entity for refinement
         *

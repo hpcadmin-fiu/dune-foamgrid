@@ -16,7 +16,7 @@
 
 int main (int argc, char *argv[]) try
 {
-	const std::string dune_foamgrid_path = "/home/timokoch/dumux/dune-foamgrid/doc/grids/gmsh/";
+    const std::string dune_foamgrid_path = std::string(DUNE_FOAMGRID_EXAMPLE_GRIDS_PATH) + "gmsh/";
 
     std::cout << "Checking FoamGrid<2, 2> (2d in 2d grid)" << std::endl;
     Dune::GridFactory<FoamGrid<2, 2> > factory;

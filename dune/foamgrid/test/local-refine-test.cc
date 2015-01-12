@@ -17,7 +17,7 @@
 
 int main (int argc, char *argv[]) try
 {
-    const std::string dune_foamgrid_path = "/home/timokoch/dumux/dune-foamgrid/doc/grids/gmsh/";
+    const std::string dune_foamgrid_path = std::string(DUNE_FOAMGRID_EXAMPLE_GRIDS_PATH) + "gmsh/";
 
     Dune::GridFactory<FoamGrid<2, 2> > factory;
     BasicUnitCube<2>::insertVertices(factory);
