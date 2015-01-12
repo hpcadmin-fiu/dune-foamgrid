@@ -1,4 +1,5 @@
 add_definitions(-DDUNE_FOAMGRID_EXAMPLE_GRIDS_PATH=\"${PROJECT_SOURCE_DIR}/doc/grids/\")
+add_definitions(-DDUNE_GRID_EXAMPLE_GRIDS_PATH=\"${DUNE_GRID_EXAMPLE_GRIDS_PATH}\")
 
 add_executable(foamgrid-test EXCLUDE_FROM_ALL foamgrid-test.cc)
 add_executable(global-refine-test EXCLUDE_FROM_ALL global-refine-test.cc)
