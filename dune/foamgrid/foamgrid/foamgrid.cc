@@ -112,7 +112,7 @@ void Dune::FoamGrid<dimgrid, dimworld>::globalRefine (int refCount)
     }
 
   }
-  else
+  else if (refCount > 0) // for refCount = 0 do nothing
   {
     // sanity check whether the above asssumption really holds.
     assert(&entityImps_[oldLevels-1]==&(*level));
