@@ -73,10 +73,11 @@ struct FoamGridFamily
 
 
 
-/** \brief An implementation of the Dune grid interface: an n-dimensional (1 or 2) simplicial grid in an n-dimensional (1, 2, 3) world
+/** \brief An implementation of the Dune grid interface: a 1- or 2-dimensional simplicial grid in an n-dimensional world
  *
-* \tparam dimworld Dimension of the world space
-*/
+ * \tparam dimgrid Dimension of the grid; must be either 1 or 2
+ * \tparam dimworld Dimension of the world space
+ */
 template <int dimgrid, int dimworld>
 class FoamGrid :
         public GridDefaultImplementation  <dimgrid, dimworld, double, FoamGridFamily<dimgrid, dimworld> >
@@ -116,7 +117,7 @@ class FoamGrid :
     public:
 
     /** \brief FoamGrid is only implemented for 1 and 2 dimension */
-    static_assert(dimgrid==1 || dimgrid==2, "Use FoamGrid only for 1d and 2d in nd!");
+    static_assert(dimgrid==1 || dimgrid==2, "Use FoamGrid only for 1d and 2d grids!");
 
     //**********************************************************
     // The Interface Methods
