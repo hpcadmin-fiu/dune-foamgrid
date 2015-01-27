@@ -458,7 +458,7 @@ class FoamGridLeafIntersection
             = Dune::ReferenceElements<double, dimgrid>::general((*this->neighbor_)->type());
 
         for (std::size_t j=0; j< dimgrid; j++)
-          for (std::size_t i=0; i<refElementOther.size(dimgrid); i++)
+          for (int i=0; i<refElementOther.size(dimgrid); i++)
              if (vtx[j] == (*this->neighbor_)->vertex_[refElementOther.subEntity(0, 0, i, dimgrid)])
               coordinates[j] = refElement.position(refElement.subEntity(0, 0, i, dimgrid), dimgrid);
 
