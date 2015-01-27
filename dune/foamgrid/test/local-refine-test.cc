@@ -12,20 +12,20 @@
 #include <dune/foamgrid/foamgrid.hh>
 #include <dune/grid/test/checkgeometryinfather.cc>
 #include <dune/grid/common/gridinfo.hh>
-#include <dune/grid/test/basicunitcube.hh>
+#include <dune/grid/utility/structuredgridfactory.hh>
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
 
 int main (int argc, char *argv[]) try
 {
     const std::string dune_foamgrid_path = std::string(DUNE_FOAMGRID_EXAMPLE_GRIDS_PATH) + "gmsh/";
 
-    Dune::GridFactory<FoamGrid<2, 2> > factory;
-    BasicUnitCube<2>::insertVertices(factory);
-    BasicUnitCube<2>::insertSimplices(factory);
+    Dune::FieldVector<double,2> lower = {0,0};
+    Dune::FieldVector<double,2> upper = {1,1};
+    std::array<unsigned int,2> elements = {1,1};
 
     std::cout << "Checking FoamGrid<2, 2> (2d in 2d grid)" << std::endl;
     std::cout << "  Creating grid" << std::endl;
-    std::auto_ptr<FoamGrid<2, 2> > grid2d(factory.createGrid());
+    std::shared_ptr<FoamGrid<2, 2> > grid2d = StructuredGridFactory<FoamGrid<2,2> >::createSimplexGrid(lower,upper,elements);
     {
         Dune::VTKWriter<typename FoamGrid<2, 2>::LeafGridView > writer(grid2d->leafGridView(), VTK::nonconforming);
         writer.write("2d_refined0");
