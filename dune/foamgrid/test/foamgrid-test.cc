@@ -14,19 +14,19 @@ template<class G>
 void traversal (G& grid)
 {
   // first we extract the dimensions of the grid
-  const int dimgrid = G::dimension;                        
-  const int dimworld = G::dimensionworld;                        
+  const int dimgrid = G::dimension;
+  const int dimworld = G::dimensionworld;
 
   // type used for coordinates in the grid
   // such a type is exported by every grid implementation
-  typedef typename G::ctype ct;                        
+  typedef typename G::ctype ct;
 
   // Leaf Traversal
   std::cout << "*** Traverse codim 0 leaves" << std::endl;
 
   // type of the GridView used for traversal
   // every grid exports a LeafGridView and a LevelGridView
-  typedef typename G :: LeafGridView LeafGridView;    
+  typedef typename G :: LeafGridView LeafGridView;
 
   // get the instance of the LeafGridView
   LeafGridView leafView = grid.leafGridView();
@@ -39,13 +39,13 @@ void traversal (G& grid)
   int count = 0;
   for (ElementLeafIterator it = leafView.template begin<0>();
        it!=leafView.template end<0>(); ++it)
-  {                                                   
-    Dune::GeometryType gt = it->type();       
-    std::cout << "visiting leaf " << gt                
+  {
+    Dune::GeometryType gt = it->type();
+    std::cout << "visiting leaf " << gt
               << " with first vertex at " << it->geometry().corner(0)
               << std::endl;
-    count++;                                          
-  }                                                    
+    count++;
+  }
 
   std::cout << "there are/is " << count << " leaf element(s)" << std::endl;
 
@@ -56,11 +56,11 @@ void traversal (G& grid)
   // Get the iterator type
   // Note the use of the typename and template keywords
   typedef typename LeafGridView :: template Codim<dimgrid>
-  :: Iterator VertexLeafIterator;                
+  :: Iterator VertexLeafIterator;
 
   // iterate through all entities of codim 0 on the given level
   count = 0;
-  for (VertexLeafIterator it = leafView.template begin<dimgrid>(); 
+  for (VertexLeafIterator it = leafView.template begin<dimgrid>();
        it!=leafView.template end<dimgrid>(); ++it)
   {
     Dune::GeometryType gt = it->type();
@@ -78,7 +78,7 @@ void traversal (G& grid)
 
   // type of the GridView used for traversal
   // every grid exports a LeafGridView and a LevelGridView
-  typedef typename G :: LevelGridView LevelGridView;   
+  typedef typename G :: LevelGridView LevelGridView;
 
   // Get the iterator type
   // Note the use of the typename and template keywords
@@ -104,20 +104,20 @@ void traversal (G& grid)
     std::cout << "there are/is " << count << " element(s) on level "
               << level << std::endl;
     std::cout << std::endl;
-  }                        
+  }
   // Iterate over all intersections
   std::cout << std::endl;
   std::cout << "*** Traverse intersections with level iterator" << std::endl;
   LevelGridView levelView = grid.levelGridView(0);
-  
+
   typedef typename LevelGridView::IntersectionIterator LevelIntersectionIterator;
   typedef typename LevelGridView::template Codim<0>::Iterator ElementLevelIterator;
-  
-  for(ElementLevelIterator it = levelView.template begin<0>(); 
+
+  for(ElementLevelIterator it = levelView.template begin<0>();
         it!=levelView.template end<0>(); ++it)
   {
-    Dune::GeometryType gt = it->type();       
-    std::cout << "visiting leaf " << gt                
+    Dune::GeometryType gt = it->type();
+    std::cout << "visiting leaf " << gt
               << " with first vertex at " << it->geometry().corner(0)
               << " and second vertex at " << it->geometry().corner(1);
     if(dimgrid==2)
@@ -126,16 +126,16 @@ void traversal (G& grid)
 
 
     count = 0;
-    for (LevelIntersectionIterator is = levelView.ibegin(*it); 
+    for (LevelIntersectionIterator is = levelView.ibegin(*it);
             is!=levelView.iend(*it); ++is)
     {
-        if(is->neighbor()) {    
-            std::cout << "found neighbor with first vertex at: " 
-                      << is->outside()->geometry().corner(0) << " and second vertex at: " 
+        if(is->neighbor()) {
+            std::cout << "found neighbor with first vertex at: "
+                      << is->outside()->geometry().corner(0) << " and second vertex at: "
                       << is->outside()->geometry().corner(1);
             if(dimgrid==2)
-                std::cout << " and third vertex at " << is->outside()->geometry().corner(2); 
-            std::cout << std::endl; 
+                std::cout << " and third vertex at " << is->outside()->geometry().corner(2);
+            std::cout << std::endl;
             ++count;
         } else if(is->boundary()) {
             std::cout << "    this is a boundary intersection." << std::endl;
@@ -147,15 +147,15 @@ void traversal (G& grid)
   // Iterate over all intersections
   std::cout << std::endl;
   std::cout << "*** Traverse intersections with leaf iterator" << std::endl;
-  
+
   typedef typename LeafGridView::IntersectionIterator LeafIntersectionIterator;
   typedef typename LeafGridView::template Codim<0>::Iterator ElementLeafIterator;
-  
-  for(ElementLeafIterator it = leafView.template begin<0>(); 
+
+  for(ElementLeafIterator it = leafView.template begin<0>();
         it!=leafView.template end<0>(); ++it)
   {
-    Dune::GeometryType gt = it->type();       
-    std::cout << "visiting leaf " << gt                
+    Dune::GeometryType gt = it->type();
+    std::cout << "visiting leaf " << gt
               << " with first vertex at " << it->geometry().corner(0)
               << " and second vertex at " << it->geometry().corner(1);
     if(dimgrid==2)
@@ -163,17 +163,17 @@ void traversal (G& grid)
     std::cout << std::endl;
 
     count = 0;
-    for (LeafIntersectionIterator is = leafView.ibegin(*it); 
+    for (LeafIntersectionIterator is = leafView.ibegin(*it);
             is!=leafView.iend(*it); ++is)
     {
-        if(is->neighbor()){    
-            std::cout << "    found neighbor with first vertex at: " 
-                      << is->outside()->geometry().corner(0) 
-                      << " and second vertex at: " 
+        if(is->neighbor()){
+            std::cout << "    found neighbor with first vertex at: "
+                      << is->outside()->geometry().corner(0)
+                      << " and second vertex at: "
                       << is->outside()->geometry().corner(1);
             if(dimgrid==2)
-                std::cout << " and third vertex at " << is->outside()->geometry().corner(2); 
-            std::cout << std::endl; 
+                std::cout << " and third vertex at " << is->outside()->geometry().corner(2);
+            std::cout << std::endl;
             ++count;
         } else if(is->boundary()) {
             std::cout << "    this is a boundary intersection." << std::endl;
@@ -195,7 +195,7 @@ void traversal (G& grid)
   // }
 
 
-}                                                    
+}
 
 int main (int argc, char *argv[]) try
 {

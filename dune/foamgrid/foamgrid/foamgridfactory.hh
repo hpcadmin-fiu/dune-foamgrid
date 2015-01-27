@@ -22,7 +22,7 @@ namespace Dune {
     */
 template <int dimgrid, int dimworld>
     class GridFactoryBase
-        : public GridFactoryInterface<FoamGrid<dimgrid, dimworld> > 
+        : public GridFactoryInterface<FoamGrid<dimgrid, dimworld> >
     {
     /** \brief Type used by the grid for coordinates */
     typedef typename FoamGrid<dimgrid, dimworld>::ctype ctype;
@@ -89,7 +89,7 @@ template <int dimgrid, int dimworld>
         {
             insertBoundarySegment(vertices);
         }
-        
+
         /** \brief Return the number of the element to insert parameters
          */
         virtual unsigned int
@@ -97,7 +97,7 @@ template <int dimgrid, int dimworld>
         {
             return grid_->getRealImplementation(entity).target_->leafIndex_;
         }
-        
+
         /** \brief Return the number of the vertex to insert parameters
          */
         virtual unsigned int
@@ -106,7 +106,7 @@ template <int dimgrid, int dimworld>
             return grid_->getRealImplementation(vertex).target_->leafIndex_;
 
         }
-        
+
     protected:
 
         // Pointer to the grid being built
@@ -118,14 +118,14 @@ template <int dimgrid, int dimworld>
 
         /** \brief Counter that creates the vertex indices */
         unsigned int vertexIndex_;
-        
+
         /** \brief Array containing all vertices */
         std::vector<FoamGridEntityImp<0, dimgrid, dimworld>*> vertexArray_;
     };
 
 template <int dimgrid, int dimworld>
     class GridFactory<FoamGrid<dimgrid, dimworld> >
-        : public GridFactoryBase<dimgrid, dimworld> 
+        : public GridFactoryBase<dimgrid, dimworld>
     {};
 
 /** \brief Specialization of GridFactoryBase for 1D-FoamGrid<1, dimworld>
@@ -135,7 +135,7 @@ template <int dimworld>
         : public GridFactoryBase<1, dimworld>
     {
         /** \brief Grid dimension */
-        enum {dimgrid = 1}; 
+        enum {dimgrid = 1};
         typedef typename std::list<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld> >::iterator FacetIterator;
 
     public:
@@ -151,7 +151,7 @@ template <int dimworld>
         virtual void insertElement(const GeometryType& type,
                                    const std::vector<unsigned int>& vertices) {
             assert(type.isLine());
-            FoamGridEntityImp<1, dimgrid, dimworld> newElement(this->vertexArray_[vertices[0]], 
+            FoamGridEntityImp<1, dimgrid, dimworld> newElement(this->vertexArray_[vertices[0]],
                                                                this->vertexArray_[vertices[1]],
                                                                0,
                                                                this->grid_->freeIdCounter_[1]++);
@@ -219,12 +219,12 @@ template <int dimworld>
     */
 template <int dimworld>
     class GridFactory<FoamGrid<2, dimworld> >
-        : public GridFactoryBase<2, dimworld> 
+        : public GridFactoryBase<2, dimworld>
     {
         /** \brief Grid dimension */
-        enum {dimgrid = 2}; 
+        enum {dimgrid = 2};
         typedef typename std::list<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld> >::iterator FacetIterator;
-        
+
     public:
 
         GridFactory() {}

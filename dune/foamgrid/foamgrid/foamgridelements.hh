@@ -22,7 +22,7 @@ namespace Dune {
     {
         /** \brief Grid dimension */
         enum {dimgrid = 1};
-        
+
     public:
 
         /** \brief The different ways to mark an element for grid changes */
@@ -134,7 +134,7 @@ namespace Dune {
         MarkState markState_;
 
         FoamGridEntityImp<0, dimgrid, dimworld>* vertex_[2];
-        
+
         array<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>*, 2> facet_;
 
         /** \brief links to refinements of this edge */
@@ -161,7 +161,7 @@ namespace Dune {
 
          /** \brief The different ways to mark an element for grid changes */
         enum MarkState { DO_NOTHING , COARSEN , REFINE, IS_COARSENED };
-        
+
         FoamGridEntityImp(int level, unsigned int id)
             : FoamGridEntityBase(level,id),
               nSons_(0), refinementIndex_(-1),
@@ -179,7 +179,7 @@ namespace Dune {
         GeometryType type() const {
             return GeometryType(GeometryType::simplex, 2);
         }
-       
+
 
         bool hasFather() const
         {

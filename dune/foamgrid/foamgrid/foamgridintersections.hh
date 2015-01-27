@@ -31,11 +31,11 @@ class FoamGridIntersection
 {
     enum {dimgrid  = GridImp::dimension};
     enum {dimworld = GridImp::dimensionworld};
-    
+
     // The type used to store coordinates
     typedef typename GridImp::ctype ctype;
     typedef typename GridImp::Traits::template Codim<1>::GeometryImpl GeometryImpl;
-    
+
     friend class FoamGridLevelIntersectionIterator<GridImp>;
     friend class FoamGridLeafIntersectionIterator<GridImp>;
 
@@ -72,7 +72,7 @@ public:
 
         //! equality
         bool equals(const FoamGridIntersection<GridImp>& i) const {
-            return center_==i.center_ && neighbor_ == i.neighbor_; 
+            return center_==i.center_ && neighbor_ == i.neighbor_;
         }
 
         /** \brief return true if intersection is with boundary.
@@ -82,19 +82,19 @@ public:
         }
 
         //! return information about the Boundary
-        int boundarySegmentIndex () const 
+        int boundarySegmentIndex () const
         {
             return center_->facet_[facetIndex_]->boundarySegmentIndex();
         }
 
         //! Geometry type of an intersection
-        GeometryType type () const 
+        GeometryType type () const
         {
             return GeometryType(GeometryType::simplex, dimgrid-1);
         }
 
         //! local number of codim 1 entity in self where intersection is contained in
-        int indexInInside () const 
+        int indexInInside () const
         {
             return facetIndex_;
         }
@@ -102,7 +102,7 @@ public:
         virtual int indexInOutside(std::size_t neighborIndex = 0) const=0;
 
         //! return outer normal
-        FieldVector<ctype, dimworld> outerNormal (const FieldVector<ctype, dimgrid-1>& local) const 
+        FieldVector<ctype, dimworld> outerNormal (const FieldVector<ctype, dimgrid-1>& local) const
         {
             // The intersection normal is a vector that is orthogonal to the element normal
             // and to the intersection itself.
@@ -140,7 +140,7 @@ public:
                     outerNormal_[0] = facet[1]*scaledElementNormal[2] - facet[2]*scaledElementNormal[1];
                     outerNormal_[1] = facet[2]*scaledElementNormal[0] - facet[0]*scaledElementNormal[2];
                     outerNormal_[2] = facet[0]*scaledElementNormal[1] - facet[1]*scaledElementNormal[0];
-                } 
+                }
                 else //dimworld==2
                 {
                     outerNormal_[0] = facet[1];
@@ -151,7 +151,7 @@ public:
                 otherEdge = center_->vertex_[v0]->pos_ - center_->vertex_[v2]->pos_;
                 if(otherEdge*outerNormal_ < 0)
                     outerNormal_ *= -1.0;
-                
+
                 return outerNormal_;
             }
             else //dimgrid ==1
@@ -167,7 +167,7 @@ public:
         }
 
         //! return outer normal multiplied by the integration element
-        FieldVector<ctype, dimworld> integrationOuterNormal (const FieldVector<ctype, dimgrid-1>& local) const 
+        FieldVector<ctype, dimworld> integrationOuterNormal (const FieldVector<ctype, dimgrid-1>& local) const
         {
 
             if(dimgrid == 2)
@@ -185,7 +185,7 @@ public:
                 FieldVector<ctype, dimworld> integrationOuterNormal_ = unitOuterNormal(local);
                 integrationOuterNormal_ *= facetLength;
                 return integrationOuterNormal_;
-            } 
+            }
             else //dimgrid == 1
             {
                 integrationOuterNormal_ = this->unitOuterNormal(local);
@@ -195,7 +195,7 @@ public:
         }
 
         //! return unit outer normal
-        FieldVector<ctype, dimworld> unitOuterNormal (const FieldVector<ctype, dimgrid-1>& local) const 
+        FieldVector<ctype, dimworld> unitOuterNormal (const FieldVector<ctype, dimgrid-1>& local) const
         {
             unitOuterNormal_ = this->outerNormal(local);
             unitOuterNormal_ /= unitOuterNormal_.two_norm();
@@ -203,7 +203,7 @@ public:
         }
 
         //! return unit outer normal at the intersection center
-        FieldVector<ctype, dimworld> centerUnitOuterNormal () const 
+        FieldVector<ctype, dimworld> centerUnitOuterNormal () const
         {
             return unitOuterNormal(FieldVector<ctype,dimgrid-1>(0.5));
         }
@@ -279,7 +279,7 @@ public:
     //! iteration started.
     //! Here returned element is in LOCAL coordinates of the element
     //! where iteration started.
-    LocalGeometry geometryInInside () const 
+    LocalGeometry geometryInInside () const
     {
         std::vector<FieldVector<double, dimgrid> > coordinates(dimgrid);
 
@@ -289,7 +289,7 @@ public:
 
         for (int idx = 0; idx < dimgrid; ++idx)
             coordinates[idx] = refElement.position(refElement.subEntity(this->facetIndex_, 1, idx, dimgrid), dimgrid);
-        
+
         geometryInInside_ = make_shared<LocalGeometryImpl>(this->type(), coordinates);
 
       return LocalGeometry(*geometryInInside_);
@@ -299,7 +299,7 @@ public:
     //! Here returned element is in LOCAL coordinates of neighbor
     //! In the LevelIntersection we know that the intersection is conforming
     LocalGeometry geometryInOutside (std::size_t neighborIndex = 0) const {
-  
+
         // Get two vertices of the intersection
         const Dune::ReferenceElement<double,dimgrid>& refElement
            = Dune::ReferenceElements<double, dimgrid>::general(this->center_->type());
@@ -338,7 +338,7 @@ public:
 
         for (std::size_t idx = 0; idx < dimgrid; ++idx)
             coordinates[idx] = this->center_->vertex_[refElement.subEntity(this->facetIndex_, 1, idx, dimgrid)]->pos_;
-    
+
         geometry_ = make_shared<GeometryImpl>(this->type(), coordinates);
 
         return Geometry(*geometry_);
@@ -371,7 +371,7 @@ class FoamGridLeafIntersection
 {
 
     friend class FoamGridLeafIntersectionIterator<GridImp>;
-    
+
     public:
 
     enum {dimworld = GridImp::dimensionworld};
@@ -420,7 +420,7 @@ class FoamGridLeafIntersection
     //! iteration started.
     //! Here returned element is in LOCAL coordinates of the element
     //! where iteration started.
-    LocalGeometry geometryInInside () const 
+    LocalGeometry geometryInInside () const
     {
         std::vector<FieldVector<double, dimgrid> > coordinates(dimgrid);
 
@@ -430,7 +430,7 @@ class FoamGridLeafIntersection
 
         for (std::size_t idx = 0; idx < dimgrid; ++idx)
             coordinates[idx] = refElement.position(refElement.subEntity(this->facetIndex_, 1, idx, dimgrid), dimgrid);
-        
+
         geometryInInside_ = make_shared<LocalGeometryImpl>(this->type(), coordinates);
 
       return LocalGeometry(*geometryInInside_);
@@ -440,7 +440,7 @@ class FoamGridLeafIntersection
     //! Here returned element is in LOCAL coordinates of neighbor
     //! In the LevelIntersection we know that the intersection is conforming
     LocalGeometry geometryInOutside (std::size_t neighborIndex = 0) const {
-  
+
         // Get two vertices of the intersection
         const Dune::ReferenceElement<double,dimgrid>& refElement
            = Dune::ReferenceElements<double, dimgrid>::general(this->center_->type());
@@ -479,7 +479,7 @@ class FoamGridLeafIntersection
 
         for (std::size_t idx = 0; idx < dimgrid; ++idx)
             coordinates[idx] = this->center_->vertex_[refElement.subEntity(this->facetIndex_, 1, idx, dimgrid)]->pos_;
-    
+
         geometry_ = make_shared<GeometryImpl>(this->type(), coordinates);
 
         return Geometry(*geometry_);

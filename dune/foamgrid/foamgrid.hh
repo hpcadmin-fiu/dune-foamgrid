@@ -476,7 +476,7 @@ class FoamGrid :
     //! \brief Coarsen an Element
     //! \param element The element to coarsen
     void coarsenSimplexElement(FoamGridEntityImp<dimgrid, dimgrid, dimworld>& element);
-   
+
     //! \brief refine an Element
     //! \param element The element to refine
     //! \param refCount How many times to refine the element
@@ -521,7 +521,7 @@ class FoamGrid :
 
     // conditional typename depending on dimension of grid (1 or 2)
     typedef typename std::conditional<
-                      dimgrid==2, 
+                      dimgrid==2,
                       typename std::vector<std::tuple<std::list<FoamGridEntityImp<0, dimgrid, dimworld> >,
                                                  std::list<FoamGridEntityImp<1, dimgrid, dimworld> >,
                                                  std::list<FoamGridEntityImp<2, dimgrid, dimworld> > > >,
@@ -532,7 +532,7 @@ class FoamGrid :
     EntityImps entityImps_;
 
     typedef typename std::conditional<
-                        dimgrid==2, 
+                        dimgrid==2,
                         std::tuple<std::list<FoamGridEntityImp<0, dimgrid, dimworld> >,
                                      std::list<FoamGridEntityImp<1, dimgrid, dimworld> >,
                                      std::list<FoamGridEntityImp<2, dimgrid, dimworld> > >,
@@ -545,7 +545,7 @@ class FoamGrid :
 
     //! The leaf index set
     FoamGridLeafIndexSet<const FoamGrid > leafIndexSet_;
-    
+
     // The leaf grid view
     FoamGridLeafGridView<const FoamGrid, All_Partition> leafGridView_;
 

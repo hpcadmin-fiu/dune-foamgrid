@@ -19,7 +19,7 @@ namespace Dune {
     public:
         /** \brief Dimension of the grid is always 2 if edges exist. */
         enum {dimgrid = 2};
-        
+
         FoamGridEntityImp(const FoamGridEntityImp<0, dimgrid, dimworld>* v0,
                           const FoamGridEntityImp<0, dimgrid, dimworld>* v1,
                           int level, unsigned int id)

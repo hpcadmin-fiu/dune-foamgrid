@@ -56,7 +56,7 @@ public:
             return;
         }
 
-        for(std::size_t i=0; i<center->corners(); ++i) 
+        for(std::size_t i=0; i<center->corners(); ++i)
             traverseAndPushLeafFacet(center->facet_[i], (*leafFacet_)[i]);
 
 
@@ -173,7 +173,7 @@ private:
         if(facet->isLeaf())
         {
             typedef typename ElementVector::const_iterator iter;
-            for(iter eIt = facet->elements_.begin(); eIt!=facet->elements_.end(); ++eIt) 
+            for(iter eIt = facet->elements_.begin(); eIt!=facet->elements_.end(); ++eIt)
                 leafFacet.push_back(*eIt);
             //leafFacet.insert(leafFacet.end(), facet->elements_.begin(), facet->elements_.end());
 #ifndef NDEBUG
@@ -239,7 +239,7 @@ protected:
 
         // Search for the first intersection.
         // An intersection can have multiple neighbor elements on the same level
-        // or is a boundary intersection 
+        // or is a boundary intersection
         while(GridImp::getRealImplementation(intersection_).facetIndex_ != center->corners()) // not an  end iterator
         {
             GridImp::getRealImplementation(intersection_).neighbor_=GridImp::getRealImplementation(intersection_).center_->facet_[GridImp::getRealImplementation(intersection_).facetIndex_]->elements_.begin();
@@ -376,7 +376,7 @@ public:
         return intersection_;
     }
 private:
-  
+
     /** \brief The actual intersection
     */
     mutable MakeableInterfaceObject<Intersection> intersection_;

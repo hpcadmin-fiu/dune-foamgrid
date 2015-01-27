@@ -16,13 +16,13 @@ void Dune::FoamGrid<dimgrid, dimworld>::globalRefine (int refCount)
   std::size_t oldLevels =entityImps_.size();
   //conditional typename depending on dimension of grid (1 or 2)
   typedef typename std::conditional<
-                      dimgrid==2, 
+                      dimgrid==2,
                       typename std::vector<tuple<std::list<FoamGridEntityImp<0, dimgrid, dimworld> >,
                                                  std::list<FoamGridEntityImp<1, dimgrid, dimworld> >,
                                                  std::list<FoamGridEntityImp<2, dimgrid, dimworld> >
                                           > >::reverse_iterator,
                       typename std::vector<tuple<std::list<FoamGridEntityImp<0, dimgrid, dimworld> >,
-                                                 std::list<FoamGridEntityImp<1, dimgrid, dimworld> > 
+                                                 std::list<FoamGridEntityImp<1, dimgrid, dimworld> >
                                           > >::reverse_iterator
                    >::type LevelIterator;
 
@@ -40,7 +40,7 @@ void Dune::FoamGrid<dimgrid, dimworld>::globalRefine (int refCount)
   }
 
   if (refCount < 0)
-  { 
+  {
     if (globalRefined+refCount<0)
     {
       for (int i=refCount; i<0; ++i)
@@ -85,7 +85,7 @@ void Dune::FoamGrid<dimgrid, dimworld>::globalRefine (int refCount)
         	vIt->nSons_=0;
       }
 
-      if(dimgrid == 2) 
+      if(dimgrid == 2)
       {
       	typename std::list<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld> >::iterator edIt
         	= Dune::get<dimgrid-1>(entityImps_[maxLevel()]).begin();
@@ -105,7 +105,7 @@ void Dune::FoamGrid<dimgrid, dimworld>::globalRefine (int refCount)
         = Dune::get<dimgrid>(entityImps_[maxLevel()]).end();
       for (; elIt!=elEndIt; ++elIt)
       {
-        for(int sonIdx=0; sonIdx < (1<<dimgrid); ++sonIdx) 
+        for(int sonIdx=0; sonIdx < (1<<dimgrid); ++sonIdx)
           elIt->sons_[sonIdx]=nullptr;
         elIt->nSons_=0;
       }
@@ -302,7 +302,7 @@ bool Dune::FoamGrid<dimgrid, dimworld>::adapt()
   if (levelsChanged.size())
     // Update the leaf indices
     leafIndexSet_.update(*this);
-  
+
   globalRefined=0;
 
   return haveRefined;
@@ -856,7 +856,7 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<1
         .push_back(FoamGridEntityImp<0, dimgrid, dimworld>(nextLevel,
                                                element.vertex_[c]->pos_,
                                                element.vertex_[c]->id_));
-      FoamGridEntityImp<0, dimgrid, dimworld>& newVertex = 
+      FoamGridEntityImp<0, dimgrid, dimworld>& newVertex =
         Dune::get<0>(entityImps_[nextLevel]).back();
 
       element.vertex_[c]->sons_[0] = &newVertex;
@@ -871,7 +871,7 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<1
       // we will overwrite it with the correct values
       element.vertex_[c]->sons_[0]->elements_= element.vertex_[c]->elements_;
     }
-    //add vertex to nextLevelVertices  
+    //add vertex to nextLevelVertices
     check_for_duplicates(nextLevelVertices, element.vertex_[c]->sons_[0], vertexIndex);
     nextLevelVertices[vertexIndex++]=element.vertex_[c]->sons_[0];
   }
@@ -906,7 +906,7 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<1
   newElement->father_=&element;
   newElement->vertex_[0]=nextLevelVertices[0];
   newElement->vertex_[1]=nextLevelVertices[2];
-  newElement->facet_[0]=nextLevelVertices[0]; // are equal to vertices but are 
+  newElement->facet_[0]=nextLevelVertices[0]; // are equal to vertices but are
   newElement->facet_[1]=nextLevelVertices[2]; // set for consistent interface
   newElement->refinementIndex_=0;
   nextLevelElements[0]=newElement;
@@ -922,7 +922,7 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<1
   newElement->father_=&element;
   newElement->vertex_[0]=nextLevelVertices[2];
   newElement->vertex_[1]=nextLevelVertices[1];
-  newElement->facet_[0]=nextLevelVertices[2]; // are equal to vertices but are 
+  newElement->facet_[0]=nextLevelVertices[2]; // are equal to vertices but are
   newElement->facet_[1]=nextLevelVertices[1]; // set for consistent interface
   newElement->refinementIndex_=1;
   nextLevelElements[1]=newElement;

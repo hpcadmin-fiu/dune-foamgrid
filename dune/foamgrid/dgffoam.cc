@@ -67,7 +67,7 @@ namespace Dune
     }
 
     // create grid
-    grid_ = factory_.createGrid();   
+    grid_ = factory_.createGrid();
   }
 
 } // namespace Dune

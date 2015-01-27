@@ -157,7 +157,7 @@ namespace Dune {
                     ++eIt)
                     /** \todo Remove this const cast */
                     *const_cast<unsigned int*>(&(eIt->levelIndex_)) = (eIt->type().isTriangle()) ? numTriangles_++ : numQuads_++;
-            }  
+            }
 
             // ///////////////////////////////////////////////
             //   Update the list of geometry types present
@@ -180,7 +180,7 @@ namespace Dune {
             if (numVertices_>0)
                 myTypes_[dimgrid].push_back(GeometryType(GeometryType::simplex, 0));
         }
-  
+
     private:
         const GridImp* grid_;
         int level_;
@@ -314,9 +314,9 @@ public:
             if(eIt->type().isLine() && dimgrid == 1)
                 *const_cast<unsigned int*>(&(GridImp::getRealImplementation(*eIt).target_->leafIndex_)) = numEdges_++;
         }
-        
+
         // //////////////////////////////
-        //   Init the codim 1 entitiy indices 
+        //   Init the codim 1 entitiy indices
         // //////////////////////////////
 
         for (int i=grid.maxLevel(); i>=0; i--) {
@@ -379,7 +379,7 @@ public:
         for (int i = 0; i < dimgrid+1; ++i)
             myTypes_[i].clear();
 
-        
+
         if (numTriangles_>0 && dimgrid == 2)
             myTypes_[0].push_back(GeometryType(GeometryType::simplex, 2));
 

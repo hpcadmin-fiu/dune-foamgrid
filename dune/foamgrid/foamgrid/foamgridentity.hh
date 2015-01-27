@@ -296,7 +296,7 @@ class FoamGridEntity<0, 2, GridImp> :
                 return target_->vertex_[i]->id_;
             }
             DUNE_THROW(GridError, "Non-existing codimension requested!");
-        }   
+        }
 
         /** \brief Provide access to sub entity i of given codimension. Entities
         *  are numbered 0 ... count<cc>()-1
