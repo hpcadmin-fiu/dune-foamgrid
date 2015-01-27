@@ -9,4 +9,8 @@ target_link_libraries(foamgrid-test ${DUNE_LIBS})
 target_link_libraries(global-refine-test ${DUNE_LIBS})
 target_link_libraries(local-refine-test ${DUNE_LIBS})
 
+add_test(foamgrid-test foamgrid-test)
+add_test(global-refine-test global-refine-test)
+add_test(local-refine-test local-refine-test)
+
 set(CMAKE_BUILD_TYPE Debug)
