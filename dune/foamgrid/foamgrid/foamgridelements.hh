@@ -26,7 +26,7 @@ namespace Dune {
     public:
 
         /** \brief The different ways to mark an element for grid changes */
-        enum MarkState { DO_NOTHING , COARSEN , REFINE, IS_COARSENED };
+        enum MarkState { DO_NOTHING , COARSEN , REFINE, IS_COARSENED, SPAWN, VANISH };
 
         FoamGridEntityImp(FoamGridEntityImp<0, dimgrid, dimworld>* v0,
                           FoamGridEntityImp<0, dimgrid, dimworld>* v1,
@@ -160,7 +160,7 @@ namespace Dune {
     public:
 
          /** \brief The different ways to mark an element for grid changes */
-        enum MarkState { DO_NOTHING , COARSEN , REFINE, IS_COARSENED };
+        enum MarkState { DO_NOTHING , COARSEN , REFINE, IS_COARSENED, SPAWN, VANISH };
 
         FoamGridEntityImp(int level, unsigned int id)
             : FoamGridEntityBase(level,id),
