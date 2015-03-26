@@ -133,6 +133,9 @@ namespace Dune {
 
         MarkState markState_;
 
+        /** \brief Stores the spawn point */
+        Dune::FieldVector<ctype, dimworld> spawnPoint_;
+
         FoamGridEntityImp<0, dimgrid, dimworld>* vertex_[2];
 
         array<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>*, 2> facet_;
@@ -310,6 +313,9 @@ namespace Dune {
 
         /** \brief Stores requests for refinement and coarsening */
         MarkState markState_;
+
+        /** \brief Stores the spawn point */
+        Dune::FieldVector<ctype, dimworld> spawnPoint_;
 
         /** \brief This flag is set by adapt() if this element has been newly created. */
         bool isNew_;
