@@ -361,17 +361,45 @@ class FoamGrid :
             return true;
         }
 
+        // Overload of the mark function that also passes a point where a new grid vertex is inserted
+        bool mark(int flag, const typename Traits::template Codim<0>::EntityPointer & e, Dune::FieldVector<ctype, dimworld> spawnPoint)
+        {
+            if (not e->isLeaf())
+                return false;
+
+            /** \todo Why do I need those const_casts here? */
+            if (flag>=1)
+                const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(*e).target_)->markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::SPAWN;
+                const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(*e).target_)->spawnPoint_ = spawnPoint;
+            else if (flag<0)
+                const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(*e).target_)->markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::VANISH;
+                const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(*e).target_)->spawnPoint_ = spawnPoint;
+            else
+                const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(*e).target_)->markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::DO_NOTHING;
+
+            return true;
+        }
+
         /** \brief Return refinement mark for entity
         *
         * \return refinement mark (1,0,-1)
         */
-        int getMark(const typename Traits::template Codim<0>::EntityPointer & e) const
+        int getMark(const typename Traits::template Codim<0>::EntityPointer & e, bool growth = false) const
         {
-            if (this->getRealImplementation(*e).target_->markState_ == FoamGridEntityImp<dimgrid, dimgrid, dimworld>::REFINE)
-                return 1;
-            if (this->getRealImplementation(*e).target_->markState_ == FoamGridEntityImp<dimgrid, dimgrid, dimworld>::COARSEN)
-                return -1;
-
+            if(!growth)
+            {
+                if (this->getRealImplementation(*e).target_->markState_ == FoamGridEntityImp<dimgrid, dimgrid, dimworld>::REFINE)
+                    return 1;
+                if (this->getRealImplementation(*e).target_->markState_ == FoamGridEntityImp<dimgrid, dimgrid, dimworld>::COARSEN)
+                    return -1;
+            }
+            else
+            {
+                if (this->getRealImplementation(*e).target_->markState_ == FoamGridEntityImp<dimgrid, dimgrid, dimworld>::SPAWN)
+                    return 1;
+                if (this->getRealImplementation(*e).target_->markState_ == FoamGridEntityImp<dimgrid, dimgrid, dimworld>::VANISH)
+                    return -1;
+            }
             return 0;
         }
 
