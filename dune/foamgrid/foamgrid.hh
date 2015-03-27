@@ -362,18 +362,22 @@ class FoamGrid :
         }
 
         // Overload of the mark function that also passes a point where a new grid vertex is inserted
-        bool mark(int flag, const typename Traits::template Codim<0>::EntityPointer & e, Dune::FieldVector<ctype, dimworld> spawnPoint)
+        bool mark(int flag, const typename Traits::template Codim<0>::EntityPointer & e, Dune::FieldVector<ctype, dimworld> p)
         {
             if (not e->isLeaf())
                 return false;
 
             /** \todo Why do I need those const_casts here? */
             if (flag>=1)
+            {
                 const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(*e).target_)->markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::SPAWN;
-                const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(*e).target_)->spawnPoint_ = spawnPoint;
+                const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(*e).target_)->spawnPoint_ = p;
+            }
             else if (flag<0)
-                const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(*e).target_)->markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::VANISH;
-                const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(*e).target_)->spawnPoint_ = spawnPoint;
+            {
+                const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(*e).target_)->markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::PRUNE;
+                const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(*e).target_)->spawnPoint_ = p;
+            }
             else
                 const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(*e).target_)->markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::DO_NOTHING;
 
@@ -397,7 +401,7 @@ class FoamGrid :
             {
                 if (this->getRealImplementation(*e).target_->markState_ == FoamGridEntityImp<dimgrid, dimgrid, dimworld>::SPAWN)
                     return 1;
-                if (this->getRealImplementation(*e).target_->markState_ == FoamGridEntityImp<dimgrid, dimgrid, dimworld>::VANISH)
+                if (this->getRealImplementation(*e).target_->markState_ == FoamGridEntityImp<dimgrid, dimgrid, dimworld>::PRUNE)
                     return -1;
             }
             return 0;
@@ -411,6 +415,15 @@ class FoamGrid :
 
         /** \brief Clean up refinement markers */
         void postAdapt();
+
+        //! \brief Book-keeping routine to be called before adaptation
+        bool preGrow();
+
+        //! Triggers the grid growth process
+        bool grow();
+
+        /** \brief Clean up refinement markers */
+        void postGrow();
 
         /*@}*/
 
@@ -514,6 +527,9 @@ class FoamGrid :
     //! Overloaded function for the 1d case
     void refineSimplexElement(FoamGridEntityImp<1, dimgrid, dimworld>& element,
                        int refCount);
+
+    //! \brief spawn a new element from this element resulting in grid growth
+    void spawnSimplexElement(FoamGridEntityImp<dimgrid, dimgrid, dimworld>& element);
 
     /**
      * \brief Overwrites the neighbours of this and descendant edges

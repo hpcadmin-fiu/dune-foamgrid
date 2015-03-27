@@ -169,6 +169,11 @@ bool Dune::FoamGrid<dimgrid, dimworld>::preAdapt()
 
     if (mark<0)
     {
+      // If the element is marked for coarsening but it is not allowed because of growth
+      // i.e. it contains a junction facet with has no father, we reset to DO_NOTHING
+      if(elem->coarseningBlocked_)
+        elem->markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::DO_NOTHING;
+
       // If this element is marked for coarsening, but another child
       // of this element's father is marked for refinement, then we
       // need to reset the marker to doNothing
@@ -329,6 +334,187 @@ void Dune::FoamGrid<dimgrid, dimworld>::postAdapt()
   }
 }
 
+//f Book-keeping routine to be called before adaptation
+// Returns true if growth will happen
+template <int dimgrid, int dimworld>
+bool Dune::FoamGrid<dimgrid, dimworld>::preGrow()
+{
+  // Loop over all leaf entities and check whether they might spawn
+  // If there is one return true.
+  typedef typename Traits::template Codim<0>::LeafIterator Iterator;
+  bool willGrow = false;
+
+  for (Iterator elem=this->leafbegin<0>(), end = this->leafend<0>(); elem != end; ++elem)
+  {
+    FoamGridEntityImp<dimgrid, dimgrid, dimworld>& element=*const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(*elem).target_);
+    int mark=getMark(*elem, /*growth==*/true);
+    // Every element can be pruned and can grow if dimgrid < dimworld. The user has to make sure
+    // the growth algorithm does not degenerate the grid.
+    // For dimgrid == dimworld only boundary elements can grow on boundary facets.
+    if (mark>1)
+    {
+      bool isAllowedToSpawn = true;
+      if(dimgrid == dimworld)
+      {
+        isAllowedToSpawn = false;
+        typedef typename array<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>*, dimgrid+1>::iterator FacetIterator;
+        for(FacetIterator facet = element.facet_.begin(); facet != element.facet_.end(); ++facet)
+          if((*facet)->elements_.size() == 1) //if a boundary facet
+            isAllowedToSpawn = true;
+      }
+      if(!isAllowedToSpawn)
+        element.markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::DO_NOTHING;
+
+      willGrow = willGrow || isAllowedToSpawn;
+    }
+  }
+  return willGrow;
+}
+
+
+// Triggers the grid growth
+template <int dimgrid, int dimworld>
+bool Dune::FoamGrid<dimgrid, dimworld>::grow()
+{
+  bool leafChanged = false;
+  bool pruning = false;
+  // Loop over all leaf elements and grow/prune according to the mark
+  typedef typename Traits::template Codim<0>::LeafIterator Iterator;
+  for (Iterator elem=this->leafbegin<0>(), end = this->leafend<0>();
+       elem != end; ++elem)
+  {
+    int mark=getMark(*elem, /*growth==*/true);
+    if (mark>0)
+    {
+      // spawn simplices
+      if (elem->type().isTriangle() || elem->type().isLine())
+      {
+        spawnSimplexElement(*const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(*elem).target_));
+        leafChanged = true;
+      }
+      else
+        DUNE_THROW(NotImplemented, "Growth only supported for simplices!");
+    }
+
+    if (mark<0) // If simplex was already treated by pruneSimlex mark is 0
+    {
+      // Prune simplices
+      //if (elem->type().isTriangle() || elem->type().isLine())
+      //{
+        DUNE_THROW(NotImplemented, "Pruning is not possible yet!");
+        // assert(elem->level());
+        // pruneSimplexElement(*const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(*elem).target_));
+        // leafChanged = true;
+        // pruning = true;
+      //}
+      //else
+        //DUNE_THROW(NotImplemented, "Pruning only supported for simplices!");
+    }
+  }
+
+  if (leafChanged)
+    leafIndexSet_.update(*this);
+
+  if (!pruning)
+    return leafChanged;
+
+  // TODO if there is pruning we need to delete the entities and pointers to them
+  // for this we can reuse the erase methods
+  return false;
+}
+
+
+
+// Clean up refinement markers
+template <int dimgrid, int dimworld>
+void Dune::FoamGrid<dimgrid, dimworld>::postGrow()
+{
+  // Loop over all leaf entities and remove the isNew Marker
+  // and do the coarseing blocking in case we created a T-junction
+  typedef typename Traits::template Codim<0>::LeafIterator Iterator;
+
+  for (Iterator elem=this->leafbegin<0>(), end = this->leafend<0>(); elem != end; ++elem)
+  {
+    FoamGridEntityImp<dimgrid, dimgrid, dimworld>& element=*const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(*elem).target_);
+    element.isNew_=false;
+
+    //Block elements that do now have a facet being a junction and not having a father for coarsening
+    typedef typename array<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>*, dimgrid+1>::iterator FacetIterator;
+    for(FacetIterator facet = element.facet_.begin(); facet != element.facet_.end(); ++facet)
+      if((*facet)->elements_.size() > 2 && !((*facet)->hasFather()))
+        element.coarseningBlocked_ = true;
+
+    // Also block all children of the father as one child marked for coarsening is enough to coarsen all
+    if(element.coarseningBlocked_ && element.hasFather())
+    {
+      FoamGridEntityImp<dimgrid, dimgrid, dimworld>& father=*(element.father_);
+      typedef typename array<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*, 1<<dimgrid >::const_iterator ChildrenIter;
+      for (ChildrenIter child=father.sons_.begin(); child != father.sons_.end(); ++child)
+        (*child)->coarseningBlocked_ = true;
+    }
+  }
+}
+
+// Add an element by spawning
+template <int dimgrid, int dimworld>
+void Dune::FoamGrid<dimgrid, dimworld>::spawnSimplexElement(FoamGridEntityImp<dimgrid, dimgrid, dimworld>& element)
+{
+  //TODO check if the spawn point is set
+
+  // Decide where it is going to be connected to the grid
+  // For dimgrid==dimworld take the closest boundary facet
+  // For dimgrid < dimworld take the closest facet
+  // The facet has to be marked to not spawn another element
+  std::pair<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>*, double> spawnFacet(nullptr, 0.0);
+  // loop over all facets and check which one is the closest
+  typedef typename array<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>*, dimgrid+1>::iterator FacetIterator;
+  for(FacetIterator facet = element.facet_.begin(); facet != element.facet_.end(); ++facet)
+  {
+    if(dimgrid == dimworld && (*facet)->elements_.size() > 1)
+      continue;
+
+    // compute facet midPoint
+    FieldVector<double, dimworld> midPoint(0.0);
+    for(int dim=0; dim<dimworld;++dim)
+    {
+      for(int vIdx = 0; vIdx < (*facet)->corners(); ++vIdx)
+        midPoint[dim]+=(*facet)->pos_[dim];
+
+      midPoint[dim] /= (*facet)->corners();
+    }
+    // calculate distance to spawnPoint
+    midPoint -= element.spawnPoint_;
+    double dist = midPoint.two_norm();
+    if(spawnFacet.first == nullptr)
+      spawnFacet = std::make_pair((*facet), dist);
+    else
+      if(spawnFacet.second > dist)
+        spawnFacet = std::make_pair((*facet), dist);
+  }
+
+  if(spawnFacet.first != nullptr)
+  {
+    unsigned int thisLevel = element.level();
+    // Create the new point
+    dvverb << "Adding the new point: " << element.spawnPoint_ << std::endl;
+    Dune::get<0>(entityImps_[thisLevel]).push_back(FoamGridEntityImp<0, dimgrid, dimworld>(thisLevel, element.spawnPoint_, freeIdCounter_[0]++));
+    FoamGridEntityImp<0, dimgrid, dimworld>& newVertex = Dune::get<0>(entityImps_[thisLevel]).back();
+
+    // Create the new element with the spawnPoint and the spawnFacet
+    Dune::get<dimgrid>(entityImps_[thisLevel])
+          .push_back(FoamGridEntityImp<dimgrid, dimgrid, dimworld>(spawnFacet.first,
+                                                                   &newVertex,
+                                                                   thisLevel,
+                                                                   freeIdCounter_[dimgrid]++));
+    FoamGridEntityImp<dimgrid, dimgrid, dimworld>* newElement = &(Dune::get<dimgrid>(entityImps_[thisLevel]).back());
+    // set the new flag, everything else is handled by the 1d constructor
+    newElement->isNew_ = true;
+    dvverb<<"Pushed element "<<newElement<<std::endl;
+
+    // Now we have to update the elements vector of the joined facets (the only spawnFacet in 1d)
+    spawnFacet.first->elements_.push_back(newElement);
+  }
+}
 
 // Erases pointers in father elements to vanished entities of the element
 template <int dimgrid, int dimworld>
