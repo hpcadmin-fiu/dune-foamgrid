@@ -4,13 +4,16 @@ add_definitions(-DDUNE_GRID_EXAMPLE_GRIDS_PATH=\"${DUNE_GRID_EXAMPLE_GRIDS_PATH}
 add_executable(foamgrid-test EXCLUDE_FROM_ALL foamgrid-test.cc)
 add_executable(global-refine-test EXCLUDE_FROM_ALL global-refine-test.cc)
 add_executable(local-refine-test EXCLUDE_FROM_ALL local-refine-test.cc)
+add_executable(growth-test EXCLUDE_FROM_ALL growth-test.cc)
 
 target_link_libraries(foamgrid-test ${DUNE_LIBS})
 target_link_libraries(global-refine-test ${DUNE_LIBS})
 target_link_libraries(local-refine-test ${DUNE_LIBS})
+target_link_libraries(growth-test ${DUNE_LIBS})
 
 add_test(foamgrid-test foamgrid-test)
 add_test(global-refine-test global-refine-test)
 add_test(local-refine-test local-refine-test)
+add_test(growth-test growth-test)
 
 set(CMAKE_BUILD_TYPE Debug)
