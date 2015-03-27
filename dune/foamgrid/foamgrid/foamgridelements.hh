@@ -26,13 +26,13 @@ namespace Dune {
     public:
 
         /** \brief The different ways to mark an element for grid changes */
-        enum MarkState { DO_NOTHING , COARSEN , REFINE, IS_COARSENED, SPAWN, VANISH };
+        enum MarkState { DO_NOTHING , COARSEN , REFINE, IS_COARSENED, SPAWN, PRUNE };
 
         FoamGridEntityImp(FoamGridEntityImp<0, dimgrid, dimworld>* v0,
                           FoamGridEntityImp<0, dimgrid, dimworld>* v1,
                           int level, unsigned int id)
             : FoamGridEntityBase(level,id), nSons_(0), father_(nullptr),
-              refinementIndex_(-1), markState_(DO_NOTHING), isNew_(false)
+              refinementIndex_(-1), markState_(DO_NOTHING), isNew_(false), coarseningBlocked_(false)
         {
             vertex_[0] = v0;
             vertex_[1] = v1;
@@ -48,7 +48,7 @@ namespace Dune {
                           FoamGridEntityImp* father)
 
             : FoamGridEntityBase(level,id), nSons_(0), father_(father),
-              refinementIndex_(-1), markState_(DO_NOTHING), isNew_(false)
+              refinementIndex_(-1), markState_(DO_NOTHING), isNew_(false), coarseningBlocked_(false)
         {
             vertex_[0] = v0;
             vertex_[1] = v1;
@@ -60,7 +60,7 @@ namespace Dune {
         FoamGridEntityImp(int level, unsigned int id)
             : FoamGridEntityBase(level, id),
               nSons_(0), refinementIndex_(-1),
-              markState_(DO_NOTHING), isNew_(false)
+              markState_(DO_NOTHING), isNew_(false), coarseningBlocked_(false)
         {
           sons_[0] = sons_[1] = nullptr;
           father_ = nullptr;
@@ -88,6 +88,11 @@ namespace Dune {
 
         GeometryType type() const {
             return GeometryType(GeometryType::simplex, 1);
+        }
+
+        bool hasFather() const
+        {
+            return father_!=nullptr;
         }
 
         /** \brief Number of corners (==2) */
@@ -133,8 +138,8 @@ namespace Dune {
 
         MarkState markState_;
 
-        /** \brief Stores the spawn point */
-        Dune::FieldVector<ctype, dimworld> spawnPoint_;
+        /** \brief Stores the spawn point coordinates */
+        Dune::FieldVector<double, dimworld> spawnPoint_;
 
         FoamGridEntityImp<0, dimgrid, dimworld>* vertex_[2];
 
@@ -149,7 +154,13 @@ namespace Dune {
         /** \brief Pointer to father element */
         FoamGridEntityImp<dimgrid, dimgrid, dimworld>* father_;
 
-         bool isNew_;
+        /** \brief This flag is set by adapt() if this element has been newly created. */
+        bool isNew_;
+
+        /** \brief This flag is set by postGrow() if the element looses its right to coarsen
+        *         because it contains a bifurcation facet without father
+        */
+        bool coarseningBlocked_;
     };
 
     /** \brief Element specialization of FoamGridEntityImp for 2d grids. Element is a grid entity of topological codimension 0 and dimension dimgrid.*/
@@ -163,13 +174,13 @@ namespace Dune {
     public:
 
          /** \brief The different ways to mark an element for grid changes */
-        enum MarkState { DO_NOTHING , COARSEN , REFINE, IS_COARSENED, SPAWN, VANISH };
+        enum MarkState { DO_NOTHING , COARSEN , REFINE, IS_COARSENED, SPAWN, PRUNE };
 
         FoamGridEntityImp(int level, unsigned int id)
             : FoamGridEntityBase(level,id),
               refinementIndex_(-1),
               nSons_(0),
-              markState_(DO_NOTHING), isNew_(false)
+              markState_(DO_NOTHING), isNew_(false), coarseningBlocked_(false)
         {
           sons_[0]= sons_[1] = sons_[2] = sons_[3] = nullptr;
           father_ = nullptr;
@@ -314,11 +325,16 @@ namespace Dune {
         /** \brief Stores requests for refinement and coarsening */
         MarkState markState_;
 
-        /** \brief Stores the spawn point */
-        Dune::FieldVector<ctype, dimworld> spawnPoint_;
+        /** \brief Stores the spawn point or coordinates of the point to be pruned */
+        Dune::FieldVector<double, dimworld> spawnPoint_;
 
         /** \brief This flag is set by adapt() if this element has been newly created. */
         bool isNew_;
+
+        /** \brief This flag is set by postGrow() if the element looses its right to coarsen
+        *         because it contains a bifurcation facet without father
+        */
+        bool coarseningBlocked_;
 
     };
 }
