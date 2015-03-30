@@ -171,8 +171,9 @@ bool Dune::FoamGrid<dimgrid, dimworld>::preAdapt()
     {
       // If the element is marked for coarsening but it is not allowed because of growth
       // i.e. it contains a junction facet with has no father, we reset to DO_NOTHING
-      if(elem->coarseningBlocked_)
-        elem->markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::DO_NOTHING;
+      FoamGridEntityImp<dimgrid, dimgrid, dimworld>& element=*const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(*elem).target_);
+      if(element.coarseningBlocked_)
+        element.markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::DO_NOTHING;
 
       // If this element is marked for coarsening, but another child
       // of this element's father is marked for refinement, then we
