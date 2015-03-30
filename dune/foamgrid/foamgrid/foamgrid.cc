@@ -351,7 +351,7 @@ bool Dune::FoamGrid<dimgrid, dimworld>::preGrow()
     int mark=getMark(*elem, /*growth==*/true);
     // Every element can be pruned and can grow if dimgrid < dimworld. The user has to make sure
     // the growth algorithm does not degenerate the grid.
-    // For dimgrid == dimworld only boundary elements can grow on boundary facets.
+    // For dimgrid == dimworld only boundary elements can grow (on boundary facets).
     if (mark>1)
     {
       bool isAllowedToSpawn = true;
@@ -461,7 +461,7 @@ template <int dimgrid, int dimworld>
 void Dune::FoamGrid<dimgrid, dimworld>::spawnSimplexElement(FoamGridEntityImp<dimgrid, dimgrid, dimworld>& element)
 {
   //TODO check if the spawn point is set
-
+  assert(dimgrid==1); // TODO currently only work for 1d grids
   // Decide where it is going to be connected to the grid
   // For dimgrid==dimworld take the closest boundary facet
   // For dimgrid < dimworld take the closest facet
@@ -495,12 +495,30 @@ void Dune::FoamGrid<dimgrid, dimworld>::spawnSimplexElement(FoamGridEntityImp<di
 
   if(spawnFacet.first != nullptr)
   {
+    bool onBoundary = false;
+    if(spawnFacet.first->elements_.size() == 1)
+      onBoundary = true;
+
     unsigned int thisLevel = element.level();
     // Create the new point
     dvverb << "Adding the new point: " << element.spawnPoint_ << std::endl;
     Dune::get<0>(entityImps_[thisLevel]).push_back(FoamGridEntityImp<0, dimgrid, dimworld>(thisLevel, element.spawnPoint_, freeIdCounter_[0]++));
     FoamGridEntityImp<0, dimgrid, dimworld>& newVertex = Dune::get<0>(entityImps_[thisLevel]).back();
 
+    // the new vertex is the new boundary
+    if(onBoundary)
+    {
+      // if the spawn facet was on the boundary inherit the boudaryId
+      newVertex.boundaryId_= spawnFacet.first->boundaryId_;
+      newVertex.boundarySegmentIndex_= spawnFacet.first->boundarySegmentIndex_;
+    }
+    else
+    {
+      // if not we have to give it a new boundaryId
+      FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>& lastFacet = Dune::get<dimgrid-1>(entityImps_[thisLevel]).back();
+      newVertex.boundaryId_= lastFacet.boundaryId_ + 1;
+      newVertex.boundarySegmentIndex_= lastFacet.boundarySegmentIndex_ + 1;
+    }
     // Create the new element with the spawnPoint and the spawnFacet
     Dune::get<dimgrid>(entityImps_[thisLevel])
           .push_back(FoamGridEntityImp<dimgrid, dimgrid, dimworld>(spawnFacet.first,
