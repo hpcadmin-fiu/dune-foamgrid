@@ -26,7 +26,7 @@ namespace Dune {
     public:
 
         /** \brief The different ways to mark an element for grid changes */
-        enum MarkState { DO_NOTHING , COARSEN , REFINE, IS_COARSENED, SPAWN, PRUNE };
+        enum MarkState { DO_NOTHING , COARSEN , REFINE, IS_COARSENED, ADD_NEIGHBOR, VANISH, MERGE_WITH_NEIGHBOR };
 
         FoamGridEntityImp(FoamGridEntityImp<0, dimgrid, dimworld>* v0,
                           FoamGridEntityImp<0, dimgrid, dimworld>* v1,
@@ -68,7 +68,7 @@ namespace Dune {
 
         /** \todo Implement this method! */
         bool isLeaf() const {
-            return sons_[0]==nullptr;
+            return sons_[0]==nullptr && sons_[1]==nullptr;
         }
 
         /** \todo Implement me! */
@@ -78,7 +78,7 @@ namespace Dune {
 
         bool mightVanish() const
         {
-            return markState_==COARSEN;
+            return markState_ == COARSEN || markState_ == VANISH;
         }
 
         bool isNew() const
@@ -134,13 +134,6 @@ namespace Dune {
             DUNE_THROW(GridError, "Non-existing codimension requested!");
         }
 
-        int refinementIndex_;
-
-        MarkState markState_;
-
-        /** \brief Stores the spawn point coordinates */
-        Dune::FieldVector<double, dimworld> spawnPoint_;
-
         FoamGridEntityImp<0, dimgrid, dimworld>* vertex_[2];
 
         array<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>*, 2> facet_;
@@ -154,12 +147,32 @@ namespace Dune {
         /** \brief Pointer to father element */
         FoamGridEntityImp<dimgrid, dimgrid, dimworld>* father_;
 
+        /**
+         * \brief index of the refined element in the father
+         *
+         * For red refinement this is either the index of corner,
+         * that is also a corner in the father element, within the father
+         * or 3 if no corner is also a corner in the father.
+         */
+        int refinementIndex_;
+
+        /** \brief Stores requests for refinement and coarsening and growth */
+        MarkState markState_;
+
         /** \brief This flag is set by adapt() if this element has been newly created. */
         bool isNew_;
 
+        /** \brief Stores the coordinates of the new point in case of growth */
+        Dune::FieldVector<double, dimworld> growthPoint_;
+
+        /** \brief Local index of the facet exhibiting growth */
+        int growthFacetIndex_;
+
+        /** \brief Stores a pointer to the facet index this element will be connected with */
+        FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>* neighborFacetForMerging_;
+
         /** \brief This flag is set by postGrow() if the element looses its right to coarsen
-        *         because it contains a bifurcation facet without father
-        */
+        *         because it contains a bifurcation facet without father */
         bool coarseningBlocked_;
     };
 
@@ -174,7 +187,7 @@ namespace Dune {
     public:
 
          /** \brief The different ways to mark an element for grid changes */
-        enum MarkState { DO_NOTHING , COARSEN , REFINE, IS_COARSENED, SPAWN, PRUNE };
+        enum MarkState { DO_NOTHING , COARSEN , REFINE, IS_COARSENED, ADD_NEIGHBOR, VANISH, MERGE_WITH_NEIGHBOR };
 
         FoamGridEntityImp(int level, unsigned int id)
             : FoamGridEntityBase(level,id),
@@ -203,12 +216,14 @@ namespace Dune {
 
         bool mightVanish() const
         {
-            return markState_==COARSEN;
+            return markState_ == COARSEN || markState_ == VANISH;
         }
 
         bool isLeaf() const {
-            // The sons are either all nullptr or all != nullptr
-            return sons_[0] == nullptr;
+            return sons_[0] == nullptr &&
+                    sons_[1] == nullptr &&
+                    sons_[2] == nullptr &&
+                    sons_[3] == nullptr;
         }
 
         bool isNew() const
@@ -303,6 +318,8 @@ namespace Dune {
             DUNE_THROW(GridError, "Non-existing codimension requested!");
         }
 
+        unsigned int nSons_;
+
         /**
          * \brief index of the refined element in the father
          *
@@ -312,28 +329,31 @@ namespace Dune {
          */
         int refinementIndex_;
 
-        unsigned int nSons_;
-
         array<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*, 4> sons_;
 
-        FoamGridEntityImp<dimgrid, dimgrid ,dimworld>* father_;
+        FoamGridEntityImp<dimgrid, dimgrid, dimworld>* father_;
 
         array<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>*, 3> facet_;
 
         FoamGridEntityImp<0, dimgrid, dimworld>* vertex_[3];
 
-        /** \brief Stores requests for refinement and coarsening */
+        /** \brief Stores requests for refinement and coarsening and growth */
         MarkState markState_;
 
-        /** \brief Stores the spawn point or coordinates of the point to be pruned */
-        Dune::FieldVector<double, dimworld> spawnPoint_;
+        /** \brief Stores the coordinates of the new point in case of growth */
+        Dune::FieldVector<double, dimworld> growthPoint_;
+
+        /** \brief Local index of the facet exhibiting growth */
+        int growthFacetIndex_;
+
+        /** \brief Stores a pointer to the element and a local facet index this element will be connected with */
+        FoamGridEntityImp<dimgrid, dimgrid, dimworld>* neighborFacetForMerging_;
 
         /** \brief This flag is set by adapt() if this element has been newly created. */
         bool isNew_;
 
         /** \brief This flag is set by postGrow() if the element looses its right to coarsen
-        *         because it contains a bifurcation facet without father
-        */
+        *         because it contains a bifurcation facet without father */
         bool coarseningBlocked_;
 
     };

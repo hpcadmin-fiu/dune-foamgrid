@@ -54,7 +54,7 @@ namespace Dune {
     public:
 
         FoamGridEntityImp(int level, const FieldVector<double, dimworld>& pos, unsigned int id)
-            : FoamGridEntityBase(level, id), pos_(pos), nSons_(0), elements_(), father_(nullptr), spawned_(false)
+            : FoamGridEntityBase(level, id), pos_(pos), nSons_(0), elements_(), father_(nullptr), grew_(false)
         {
             sons_[0] = nullptr;
         }
@@ -132,8 +132,8 @@ namespace Dune {
         //! Son vertex on the next finer grid
         array<FoamGridEntityImp<0, dimgrid, dimworld>*, 1> sons_;
 
-        //! Flag if the facet spawned a new element
-        bool spawned_;
+        //! Flag if the facet has already caused a new element to grow
+        bool grew_;
     };
 
 }
