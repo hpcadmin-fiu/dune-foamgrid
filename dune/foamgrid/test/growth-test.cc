@@ -35,6 +35,10 @@ void checkGridElementGrowth(Grid& grid)
     }
 	}
 
+  std::size_t numBoundarySegments = grid.numBoundarySegments();
+  std::cout << std::endl<< "numBoundarySegments before growth: " << numBoundarySegments << std::endl;
+  std::cout << "-------------------------------------------" << std::endl;
+
 	bool elementsWillVanish = grid.preGrow();
   if(elementsWillVanish)
     DUNE_THROW(InvalidStateException,"grid.preGrow() does not return correct information");
@@ -58,6 +62,25 @@ void checkGridElementGrowth(Grid& grid)
       if(it->isNew())
         DUNE_THROW(InvalidStateException,"After postGrow() was called no entity is new, i.e., isNew() == false");
   }
+
+
+  std::cout << "Boundary intersections after growth: " << std::endl;
+  int isCounter = 0;
+  for (ElementIterator eIt = grid.leafGridView().template begin<0>(); eIt != eEndIt; ++eIt)
+  {
+    for (auto isIt = grid.leafGridView().ibegin(*eIt); isIt != grid.leafGridView().iend(*eIt); ++isIt)
+    {
+      if(isIt->boundary())
+      {
+        std::cout << "Boundary Intersection no"<<isCounter<<" has segment index: " << isIt->boundarySegmentIndex() << std::endl;
+        ++isCounter;
+      }
+    }
+  }
+
+  numBoundarySegments = grid.numBoundarySegments();
+  std::cout << "-------------------------------------------" << std::endl;
+  std::cout << "numBoundarySegments after growth: " << numBoundarySegments << std::endl<< std::endl;
 }
 
 template <class Grid>
@@ -102,9 +125,32 @@ void checkGridElementMerge(Grid& grid)
     }
   }
 
+  std::size_t numBoundarySegments = grid.numBoundarySegments();
+  std::cout << std::endl<< "numBoundarySegments before merge: " << numBoundarySegments << std::endl;
+  std::cout << "-------------------------------------------" << std::endl;
+
   grid.preGrow();
   grid.grow();
   grid.postGrow();
+
+  std::cout << "Boundary intersections after merge: " << std::endl;
+
+  int isCounter = 0;
+  for (ElementIterator eIt = grid.leafGridView().template begin<0>(); eIt != eEndIt; ++eIt)
+  {
+    for (auto isIt = grid.leafGridView().ibegin(*eIt); isIt != grid.leafGridView().iend(*eIt); ++isIt)
+    {
+      if(isIt->boundary())
+      {
+        std::cout << "Boundary Intersection no"<<isCounter<<" has segment index: " << isIt->boundarySegmentIndex() << std::endl;
+        ++isCounter;
+      }
+    }
+  }
+
+  numBoundarySegments = grid.numBoundarySegments();
+  std::cout << "-------------------------------------------" << std::endl;
+  std::cout << "numBoundarySegments after merge: " << numBoundarySegments << std::endl<< std::endl;
 }
 
 template <class Grid>
@@ -130,8 +176,31 @@ void checkGridElementRemoval(Grid& grid)
   if(!elementsWillVanish)
     DUNE_THROW(InvalidStateException,"grid.preGrow() does not return correct information");
 
+  std::size_t numBoundarySegments = grid.numBoundarySegments();
+  std::cout << std::endl << "numBoundarySegments before removal: " << numBoundarySegments << std::endl;
+  std::cout << "-------------------------------------------" << std::endl;
+
   grid.grow();
   grid.postGrow();
+
+  std::cout << "Boundary intersections after removal: " << std::endl;
+
+  int isCounter = 0;
+  for (ElementIterator eIt = grid.leafGridView().template begin<0>(); eIt != eEndIt; ++eIt)
+  {
+    for (auto isIt = grid.leafGridView().ibegin(*eIt); isIt != grid.leafGridView().iend(*eIt); ++isIt)
+    {
+      if(isIt->boundary())
+      {
+        std::cout << "Boundary Intersection no"<<isCounter<<" has segment index: " << isIt->boundarySegmentIndex() << std::endl;
+        ++isCounter;
+      }
+    }
+  }
+
+  numBoundarySegments = grid.numBoundarySegments();
+  std::cout << "-------------------------------------------" << std::endl;
+  std::cout << "numBoundarySegments after removal: " << numBoundarySegments << std::endl << std::endl;
 }
 
 using namespace Dune;

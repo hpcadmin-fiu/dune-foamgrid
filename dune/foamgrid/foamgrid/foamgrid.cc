@@ -517,9 +517,8 @@ bool Dune::FoamGrid<dimgrid, dimworld>::growSimplexElement(FoamGridEntityImp<dim
   else
   {
     // if not we have to give it a new boundaryId
-    FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>& lastFacet = Dune::get<dimgrid-1>(entityImps_[thisLevel]).back();
-    newVertex.boundaryId_= lastFacet.boundaryId_ + 1;
-    newVertex.boundarySegmentIndex_= lastFacet.boundarySegmentIndex_ + 1;
+    newVertex.boundaryId_= numBoundarySegments_;
+    newVertex.boundarySegmentIndex_= numBoundarySegments_;
     ++numBoundarySegments_;
   }
   // Create the new element with the new vertex and the chosen facet
@@ -568,6 +567,13 @@ bool Dune::FoamGrid<dimgrid, dimworld>::removeSimplexElement(FoamGridEntityImp<d
     }
     else
     {
+      // this facet will become a boundary through the removal if it only has two associated elements
+      if((*facet)->elements_.size() == 2)
+      {
+        (*facet)->boundaryId_= numBoundarySegments_;
+        (*facet)->boundarySegmentIndex_= numBoundarySegments_;
+        ++numBoundarySegments_;
+      }
       // remove the entity pointers of the remaining subentities and the father
       for(auto e = (*facet)->elements_.begin(); e != (*facet)->elements_.end();)
       {
@@ -631,6 +637,12 @@ bool Dune::FoamGrid<dimgrid, dimworld>::mergeSimplexElement(FoamGridEntityImp<di
   // Now we have to update the elements vector of the joined facets
   facet->elements_.push_back(newElement);
   neighborFacet->elements_.push_back(newElement);
+
+  // If those elements were boundary facets before we have to reduce the number of boundary segments
+  if(facet->elements_.size() == 2)
+    --numBoundarySegments_;
+  if(neighborFacet->elements_.size() == 2)
+    --numBoundarySegments_;
 
   // Mark the facet as each facet is only allowed to grow once per growth step
   facet->grew_ = true;
