@@ -35,8 +35,8 @@ void checkGridElementGrowth(Grid& grid)
     }
 	}
 
-	bool newElementGenerated = grid.preGrow();
-  if(!newElementGenerated)
+	bool elementsWillVanish = grid.preGrow();
+  if(elementsWillVanish)
     DUNE_THROW(InvalidStateException,"grid.preGrow() does not return correct information");
 
   // check mightVanish
@@ -44,7 +44,7 @@ void checkGridElementGrowth(Grid& grid)
   for (LevelElementIterator it = grid.levelGridView(0).template begin<0>(); it != grid.levelGridView(0).template end<0>(); ++ it)
     checkHierarchy(*it);
 
-	newElementGenerated = grid.grow();
+	bool newElementGenerated = grid.grow();
   if(!newElementGenerated)
     DUNE_THROW(InvalidStateException,"grid.preGrow() does not return correct information");
 
@@ -110,6 +110,7 @@ void checkGridElementMerge(Grid& grid)
 template <class Grid>
 void checkGridElementRemoval(Grid& grid)
 {
+  using namespace Dune;
   typedef typename Grid::template Codim<0>::LeafIterator ElementIterator;
   typedef typename ElementIterator::Entity EntityType;
   enum { dimworld = Grid::dimensionworld };
@@ -125,7 +126,10 @@ void checkGridElementRemoval(Grid& grid)
       grid.markForRemoval(*eIt);
   }
 
-  grid.preGrow();
+  bool elementsWillVanish = grid.preGrow();
+  if(!elementsWillVanish)
+    DUNE_THROW(InvalidStateException,"grid.preGrow() does not return correct information");
+
   grid.grow();
   grid.postGrow();
 }
