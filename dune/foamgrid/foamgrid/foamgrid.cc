@@ -129,7 +129,6 @@ void Dune::FoamGrid<dimgrid, dimworld>::globalRefine (int refCount)
         if(element->isLeaf())
         {
           foundLeaf = true;
-          dverb << "refining element " << &(*element) << std::endl;
           if (element->type().isTriangle() || element->type().isLine())
             refineSimplexElement(*element, refCount);
           else
@@ -170,14 +169,15 @@ bool Dune::FoamGrid<dimgrid, dimworld>::preAdapt()
     if (mark<0)
     {
       // If this element is marked for coarsening, but another child
-      // of this element's father is marked for refinement, then we
+      // of this element's father is marked for refinement or has children, then we
       // need to reset the marker to doNothing
       bool otherChildRefined=false;
       FoamGridEntityImp<dimgrid, dimgrid, dimworld>& father = *this->getRealImplementation(*elem).target_->father_;
       typedef typename array<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*, 1<<dimgrid >::iterator ChildrenIter;
       for (ChildrenIter child=father.sons_.begin(); child != father.sons_.end(); ++child)
         otherChildRefined = otherChildRefined ||
-                            (*child)->markState_==FoamGridEntityImp<dimgrid, dimgrid, dimworld>::REFINE;
+                            (*child)->markState_==FoamGridEntityImp<dimgrid, dimgrid, dimworld>::REFINE ||
+                            !(*child)->isLeaf();
 
       if (otherChildRefined)
       {
@@ -204,7 +204,6 @@ bool Dune::FoamGrid<dimgrid, dimworld>::preAdapt()
 template <int dimgrid, int dimworld>
 bool Dune::FoamGrid<dimgrid, dimworld>::adapt()
 {
-  std::set<std::size_t> levelsChanged;
   bool haveRefined=false;
 
   // Loop over all leaf elements and refine/coarsen those that marked for it.
@@ -219,7 +218,6 @@ bool Dune::FoamGrid<dimgrid, dimworld>::adapt()
       if (elem->type().isTriangle() || elem->type().isLine())
       {
         refineSimplexElement(*const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(*elem).target_), 1);
-        levelsChanged.insert(elem->level()+1);
         haveRefined=true;
       }
       else
@@ -233,75 +231,88 @@ bool Dune::FoamGrid<dimgrid, dimworld>::adapt()
       {
         assert(elem->level());
         coarsenSimplexElement(*const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(*elem).target_));
-        levelsChanged.insert(elem->level());
       }
       else
         DUNE_THROW(NotImplemented, "Coarsening only supported for simplices!");
     }
   }
 
-  if (!willCoarsen)
-    return haveRefined;
-
-  typedef typename std::set<std::size_t>::const_reverse_iterator SIter;
-  for (SIter level=levelsChanged.rbegin(); level!=levelsChanged.rend(); ++level)
+  if(!willCoarsen)
   {
-    // First delete the pointer
-    erasePointersToEntities(Dune::get<dimgrid>(entityImps_[*level]));
-
-    // Now delete the actual vertices.
-    eraseVanishedEntities(Dune::get<0>(entityImps_[*level]));
-
-    // erase vanished facets (only exist in 2D)
-    if (dimgrid == 2)
+    if(haveRefined)
     {
-      typedef typename std::list<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld> >::iterator FacetIter;
-      for (FacetIter facet=Dune::get<dimgrid-1>(entityImps_[*level]).begin(),
-           facetEnd=Dune::get<dimgrid-1>(entityImps_[*level]).end();
-           facet != Dune::get<dimgrid-1>(entityImps_[*level]).end();)
+      // Update the leaf indices
+      leafIndexSet_.update(*this);
+    }
+    return haveRefined;
+  }
+
+  for (int level = maxLevel(); level >= 0; --level)
+  {
+    // First delete the pointers to vanishing entities
+    erasePointersToEntities(Dune::get<dimgrid>(entityImps_[level]));
+
+    // Now delete the vertices marked with willVanish_ == true
+    if (dimgrid > 1)
+      eraseVanishedEntities(Dune::get<0>(entityImps_[level]));
+
+    // erase vanished facets
+    // the erased element were replaced by the father, so we erase all facets that don't have elements
+    // on the same level
+    typedef typename std::list<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld> >::iterator FacetIter;
+    for (FacetIter facet=Dune::get<dimgrid-1>(entityImps_[level]).begin();
+         facet != Dune::get<dimgrid-1>(entityImps_[level]).end();)
+    {
+      typedef typename std::vector<const FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>::iterator ElementIter;
+      for (ElementIter elem=facet->elements_.begin(); elem != facet->elements_.end(); ++elem)
       {
-        bool hasSameLevelElements=false;
-        typedef typename std::vector<const FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>::const_iterator ElementIter;
-        for (ElementIter elem=facet->elements_.begin();
-             elem != facet->elements_.end(); ++elem)
-          hasSameLevelElements = hasSameLevelElements || (*elem)->level()==*level;
-
-        assert(facet->willVanish_!=hasSameLevelElements);
-
-        if (!hasSameLevelElements)
+        if((*elem)->willVanish_)
         {
-          assert(facet->willVanish_);
-          // erase returns next position
-          facet=Dune::get<dimgrid-1>(entityImps_[*level]).erase(facet);
+          *elem = (*elem)->father_;
         }
-        else
-          // increment
-          ++facet;
+      }
+
+      // check if we have same level elements, if so this facet stays
+      bool hasSameLevelElements=false;
+      for (ElementIter elem=facet->elements_.begin(); elem != facet->elements_.end(); ++elem)
+        hasSameLevelElements = hasSameLevelElements || (*elem)->level()==level;
+
+      assert(facet->willVanish_!=hasSameLevelElements);
+
+      if (!hasSameLevelElements && facet->willVanish_)
+      {
+        // erase returns next position
+        facet=Dune::get<dimgrid-1>(entityImps_[level]).erase(facet);
+      }
+      else
+      {
+        // increment
+        (*facet).willVanish_ = false;
+        ++facet;
       }
     }
 
     // And the elements
-    eraseVanishedEntities(Dune::get<dimgrid>(entityImps_[*level]));
+    eraseVanishedEntities(Dune::get<dimgrid>(entityImps_[level]));
 
-    if (Dune::get<0>(entityImps_[*level]).size())
+    if (Dune::get<0>(entityImps_[level]).size())
     {
-      assert(Dune::get<dimgrid-1>(entityImps_[*level]).size() &&
-             Dune::get<dimgrid>(entityImps_[*level]).size());
+      assert(Dune::get<dimgrid-1>(entityImps_[level]).size() &&
+             Dune::get<dimgrid>(entityImps_[level]).size());
       // Update the level indices.
-      levelIndexSets_[*level]->update(*this, *level);
+      levelIndexSets_[level]->update(*this, level);
     }
     else
     {
-      assert(!Dune::get<dimgrid-1>(entityImps_[*level]).size() &&
-             !Dune::get<dimgrid>(entityImps_[*level]).size());
-      if (static_cast<int>(*level)==maxLevel())
+      assert(!Dune::get<dimgrid-1>(entityImps_[level]).size() &&
+             !Dune::get<dimgrid>(entityImps_[level]).size());
+      if (static_cast<int>(level)==maxLevel())
         entityImps_.pop_back();
     }
   }
 
-  if (levelsChanged.size())
-    // Update the leaf indices
-    leafIndexSet_.update(*this);
+  // Update the leaf indices
+  leafIndexSet_.update(*this);
 
   globalRefined=0;
 
@@ -335,28 +346,31 @@ template <int dimgrid, int dimworld>
 void Dune::FoamGrid<dimgrid, dimworld>::erasePointersToEntities(std::list<FoamGridEntityImp<dimgrid, dimgrid, dimworld> >& elements)
 {
   typedef typename std::list<FoamGridEntityImp<dimgrid, dimgrid, dimworld> >::iterator EntityIterator;
-  for(EntityIterator element=elements.begin();
-      element != elements.end(); ++element)
+  for(EntityIterator element=elements.begin(); element != elements.end(); ++element)
   {
     if(element->willVanish_)
     {
       FoamGridEntityImp<dimgrid, dimgrid, dimworld>& father=*element->father_;
-
       for (unsigned int i=0; i<father.nSons_; i++)
         father.sons_[i]=nullptr;
+      // reset the number of sons for the father
+      father.nSons_ = 0;
       for (unsigned int i=0; i<father.corners(); i++)
-        if (father.vertex_[i]->sons_[0]!=nullptr)
-          if (father.vertex_[i]->sons_[0]->willVanish_)
-            father.vertex_[i]->sons_[0]=nullptr;
+        if (father.vertex_[i]->sons_[0]!=nullptr && father.vertex_[i]->sons_[0]->willVanish_)
+        {
+          father.vertex_[i]->sons_[0]=nullptr;
+          --father.vertex_[i]->nSons_;
+        }
       for (unsigned int i=0; i<father.corners(); i++)
-        if (father.facet_[i]->sons_[0]!=nullptr
-            && father.facet_[i]->sons_[0]->willVanish_)
+        if (father.facet_[i]->sons_[0]!=nullptr && father.facet_[i]->sons_[0]->willVanish_)
           for (unsigned int j=0; j<dimgrid; j++)
           {
             assert(father.facet_[i]->sons_[j]!=nullptr);
             assert(father.facet_[i]->sons_[j]->willVanish_);
             father.facet_[i]->sons_[j]=nullptr;
+            --father.facet_[i]->nSons_;
           }
+      assert(father.isLeaf());
     }
   }
 }
@@ -390,6 +404,8 @@ void Dune::FoamGrid<dimgrid, dimworld>::coarsenSimplexElement(FoamGridEntityImp<
 
   // The vertices that might be erased
   std::set<FoamGridEntityImp<0, dimgrid, dimworld>*> childVertices;
+
+  // Iterate over all children of the father -> elements to be erased
   typedef typename array<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*, 1<<dimgrid >::const_iterator ChildrenIter;
   for (ChildrenIter child=father.sons_.begin(); child != father.sons_.end(); ++child)
   {
@@ -397,19 +413,14 @@ void Dune::FoamGrid<dimgrid, dimworld>::coarsenSimplexElement(FoamGridEntityImp<
     (*child)->markState_=FoamGridEntityImp<dimgrid, dimgrid, dimworld>::IS_COARSENED;
     (*child)->willVanish_=true;
 
+    // Iterate over the facets of this vanishing element
     typedef typename array<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>*, dimgrid+1>::iterator FacetIter;
-
     for (FacetIter facet=(*child)->facet_.begin(); facet != (*child)->facet_.end(); ++facet)
     {
       // Remove references to elements that will be erased
-      typedef typename std::vector<const FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>::iterator
-                    ElementIter;
-      for (ElementIter element = (*facet)->elements_.begin();
-           element != (*facet)->elements_.end();
-           ++element)
-      {
-        for (ChildrenIter child1=father.sons_.begin(); child1 !=
-             father.sons_.end(); ++child1)
+      typedef typename std::vector<const FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>::iterator ElementIter;
+      for (ElementIter element = (*facet)->elements_.begin(); element != (*facet)->elements_.end(); ++element)
+        for (ChildrenIter child1=father.sons_.begin(); child1 != father.sons_.end(); ++child1)
           if(*element==*child1)
           {
             // To prevent removing an element from a vector
@@ -419,40 +430,38 @@ void Dune::FoamGrid<dimgrid, dimworld>::coarsenSimplexElement(FoamGridEntityImp<
             // level.
             *element=&father;
           }
-      }
     }
-
-    typedef FoamGridEntityImp<0, dimgrid, dimworld>** VertexIter;
-    for (VertexIter vertex=(*child)->vertex_; vertex != (*child)->vertex_+(*child)->corners();
-        ++vertex)
-      childVertices.insert(*vertex);
+    // Save potential sub entities that might be erased
+    if(dimgrid > 1)
+    {
+      typedef typename array<FoamGridEntityImp<0, dimgrid, dimworld>*, dimgrid+1>::iterator VertexIter;
+      for (VertexIter vertex=(*child)->vertex_.begin(); vertex != (*child)->vertex_.end(); ++vertex)
+        childVertices.insert(*vertex);
+    }
     typedef typename array<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>*, dimgrid+1>::iterator FacetIter;
-    for (FacetIter facet=(*child)->facet_.begin(); facet!= (*child)->facet_.end();
-        ++facet)
+    for (FacetIter facet=(*child)->facet_.begin(); facet!= (*child)->facet_.end(); ++facet)
       childFacets.insert(*facet);
   }
 
   // Check whether those guys are really erased.
-  // That is, we remove all vertices and facets that are part of a child element of one
-  // of the neighbours of the father element
+  // We remove all vertices and facets that are part of a child element of one
+  // of the neighbours of the father element from the "to be erased" lists
   typedef typename array<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>*, dimgrid+1>::const_iterator FacetIter;
-
   for(FacetIter facet=father.facet_.begin(); facet != father.facet_.end(); ++facet)
   {
     typedef typename std::vector<const FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>::iterator NeighborIter;
-    for (NeighborIter neighbor = (*facet)->elements_.begin();
-         neighbor != (*facet)->elements_.end();
-         ++neighbor)
+    for (NeighborIter neighbor = (*facet)->elements_.begin(); neighbor != (*facet)->elements_.end(); ++neighbor)
     {
       assert((*neighbor)->level()<=father.level());
-      if(*neighbor != &father && (*neighbor)->level()==father.level() &&
-         !(*neighbor)->isLeaf())
+      if(*neighbor == &father)
+        continue;
+
+      if((*neighbor)->level()==father.level() && !((*neighbor)->isLeaf()))
       {
         // This is a real neighbor element on the same level
         // Check whether one of its children is marked for coarsening
         bool coarsened=false;
-        for (ChildrenIter child=(*neighbor)->sons_.begin();
-             child != (*neighbor)->sons_.end(); ++child)
+        for (ChildrenIter child=(*neighbor)->sons_.begin(); child != (*neighbor)->sons_.end(); ++child)
           if((*child)->mightVanish())
           {
             coarsened=true;
@@ -462,30 +471,30 @@ void Dune::FoamGrid<dimgrid, dimworld>::coarsenSimplexElement(FoamGridEntityImp<
         if(!coarsened)
         {
           // Remove all entities that exist in the children of the neighbor
-          // from the list
-          for (ChildrenIter child=(*neighbor)->sons_.begin();
-               child != (*neighbor)->sons_.end(); ++child)
+          // from the removal list
+          for (ChildrenIter child=(*neighbor)->sons_.begin(); child != (*neighbor)->sons_.end(); ++child)
           {
             typedef typename array<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>*, dimgrid+1>::iterator FacetIter;
             for (FacetIter facet=(*child)->facet_.begin(); facet != (*child)->facet_.end(); ++facet)
               childFacets.erase(*facet);
-            typedef FoamGridEntityImp<0, dimgrid, dimworld>** VertexIter;
-            for (VertexIter vertex=(*child)->vertex_;
-                 vertex != (*child)->vertex_+(*child)->corners();
-                 ++vertex)
+            typedef typename array<FoamGridEntityImp<0, dimgrid, dimworld>*, dimgrid+1>::iterator VertexIter;
+            for (VertexIter vertex=(*child)->vertex_.begin(); vertex != (*child)->vertex_.end(); ++vertex)
               childVertices.erase(*vertex);
           }
         }
       }
     }
   }
-
+  // Mark the sub entities that are left for removal
   typedef typename std::set<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>*>::iterator SFacetIter;
   for (SFacetIter e=childFacets.begin(); e!=childFacets.end(); ++e)
     (*e)->willVanish_=true;
-  typedef typename std::set<FoamGridEntityImp<0, dimgrid, dimworld>*>::iterator VertexIter;
-  for (VertexIter v=childVertices.begin(); v!=childVertices.end(); ++v)
-   (*v)->willVanish_=true;
+  if(dimgrid > 1)
+  {
+    typedef typename std::set<FoamGridEntityImp<0, dimgrid, dimworld>*>::iterator VertexIter;
+    for (VertexIter v=childVertices.begin(); v!=childVertices.end(); ++v)
+      (*v)->willVanish_=true;
+  }
 }
 
 // Refine one simplex element (2D simplex)
@@ -493,31 +502,13 @@ template <int dimgrid, int dimworld>
 void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<2, dimgrid, dimworld>& element,
                                                     int refCount)
 {
-  if(refCount<0)
+  if(refCount<=0)
   {
-    // We always remove all the children from the father.
-    // Removing means:
-    // 1. remove pointers in father element, facets and vertices
-    // 2. Mark removed entities for deletion.
-    DUNE_THROW(NotImplemented, "Coarsening not implemented yet");
+    DUNE_THROW(NotImplemented, "Called refineSimplexElement with refCount <= 0");
     return;
   }
 
-
-  // TODO: Currently we are assuming that only globalRefine is available
-  // and therefore the next level is not yet present.
-  // For real adaptivity some of the facets and vertices might already be present.
-  // Therefore we need some kind of detection for this later on.
-
   unsigned int nextLevel=element.level()+1;
-
-
-  dvverb << "Vertices " << nextLevel << ": " << Dune::get<0>(entityImps_[nextLevel]).size()
-            << std::endl;
-  dvverb << "Facets " << nextLevel << ": " <<Dune::get<dimgrid-1>(entityImps_[nextLevel]).size()
-            << std::endl;
-  dvverb << "Elements " << nextLevel << ": " << Dune::get<dimgrid>(entityImps_[nextLevel]).size()
-            << std::endl;
 
   array<FoamGridEntityImp<0, dimgrid, dimworld>*, 3*dimgrid> nextLevelVertices;
   std::size_t vertexIndex=0;
@@ -525,9 +516,8 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<2
   // create copies of the vertices of the element
   for(unsigned int c=0; c<element.corners(); ++c)
   {
-    dverb<<"Processing vertex "<<element.vertex_[c]<<std::endl;
     if(element.vertex_[c]->sons_[0]==nullptr){
-      // Not refined yet
+      // Vertex doesn't exist yet on the next level
       Dune::get<0>(entityImps_[nextLevel])
       .push_back(FoamGridEntityImp<0, dimgrid, dimworld>(nextLevel,
                                                element.vertex_[c]->pos_,
@@ -581,7 +571,6 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<2
       nextLevelVertices[vertexIndex++]=&midVertex;
 
       // sanity check for DUNE numbering
-      dvverb<<"facet "<<facetIndex/2<<": "<<"("<<(*facet)->vertex_[0]->sons_[0]<<","<<(*facet)->vertex_[1]->sons_[0]<<") with father ("<<(*facet)->vertex_[0]<<","<<(*facet)->vertex_[1]<<")"<<std::endl;
       assert(v0->sons_[0]!=nullptr);
       assert(v1->sons_[0]!=nullptr);
       assert(v0->sons_[0] == nextLevelVertices[facetVertexMapping[facetIndex/2].first] ||
@@ -693,7 +682,6 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<2
   newElement->refinementIndex_=0;
   nextLevelElements[0]=newElement;
   element.sons_[0]=newElement;
-  dvverb<<"Pushed element "<<newElement<<" refindex="<<newElement->refinementIndex_<<std::endl;
 
   // Next the one that contains vertex 1 of the father.
   Dune::get<2>(entityImps_[nextLevel])
@@ -710,8 +698,6 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<2
   newElement->refinementIndex_=1;
   nextLevelElements[1]=newElement;
   element.sons_[1]=newElement;
-  dvverb<<"Pushed element "<<newElement<<" refindex="<<newElement->refinementIndex_<<std::endl;
-
 
   // Last the one that contains vertex 2 of the father.
   Dune::get<dimgrid>(entityImps_[nextLevel])
@@ -728,8 +714,6 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<2
   newElement->refinementIndex_=2;
   nextLevelElements[2]=newElement;
   element.sons_[2]=newElement;
-  dvverb<<"Pushed element "<<newElement<<" refindex="<<newElement->refinementIndex_<<std::endl;
-
 
   // create the triangle in the center
   Dune::get<dimgrid>(entityImps_[nextLevel])
@@ -746,17 +730,13 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<2
   newElement->refinementIndex_=3;
   nextLevelElements[3]=newElement;
   element.sons_[3]=newElement;
-  dvverb<<"Pushed element "<<newElement<<" refindex="<<newElement->refinementIndex_<<std::endl;
-
 
   // Now that all the triangle are created, we can update the elements attached
   // to the facets.
   // The new (inside) neighbors of the facets lying on facets of the father element.
   std::size_t neighbors[6] = {0, 1, 2, 0, 1, 2};
-  dvverb<<" element "<<&element<<std::endl;
   for(std::size_t i=0; i<6; ++i){
     // Overwrite the father element by the newly created elements.
-    dvverb<<" neighbour "<<i<<": ";
     overwriteFineLevelNeighbours(*nextLevelFacets[i], nextLevelElements[neighbors[i]],
                                  &element);
   }
@@ -769,30 +749,6 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<2
   nextLevelFacets[8]->elements_.push_back(nextLevelElements[3]);
   nextLevelFacets[8]->elements_.push_back(nextLevelElements[2]);
 
-#ifndef NDEBUG
-  for(std::size_t vidx=0; vidx<4; ++vidx)
-  {
-    dvverb<<std::endl<<" Element "<<nextLevelElements[vidx]<<": ";
-    for(FacetIterator facet=nextLevelElements[vidx]->facet_.begin();
-        facet != nextLevelElements[vidx]->facet_.end(); ++facet)
-    {
-      dvverb<<std::endl<<"   facet "<<*facet<<": ";
-      typedef typename std::vector<const FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>::iterator
-      ElementIterator;
-      bool selfFound=false;
-      for(ElementIterator elem=(*facet)->elements_.begin();
-          elem != (*facet)->elements_.end();
-          ++elem)
-      {
-        dvverb << *elem<<" ";
-        if(*elem == nextLevelElements[vidx])
-          selfFound=true;
-      }
-      assert(selfFound);
-    }
-  }
-
-#endif
   element.nSons_=4;
 
   if((refCount--)>1)
@@ -802,18 +758,9 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<2
     for(ElementIterator elem=nextLevelElements.begin();
         elem != nextLevelElements.end(); ++elem)
     {
-      dvverb<<std::endl<<"Refinining "<<(*elem)<<" (son of"<<&element<<") refCount="<<refCount<<" child="<<i++<<std::endl;
       refineSimplexElement(**elem, refCount);
     }
   }
-
-  dvverb << "end refineSimplex" << std::endl;
-  dvverb << "Vertices " << nextLevel << ": " << Dune::get<0>(entityImps_[nextLevel]).size()
-            << std::endl;
-  dvverb << "Facets " << nextLevel << ": " << Dune::get<1>(entityImps_[nextLevel]).size()
-            << std::endl;
-  dvverb << "Elements " << nextLevel << ": " << Dune::get<dimgrid>(entityImps_[nextLevel]).size()
-            << std::endl;
 }
 
 // Refine one simplex element (1D simplex element)
@@ -821,27 +768,13 @@ template <int dimgrid, int dimworld>
 void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<1, dimgrid, dimworld>& element,
                                                     int refCount)
 {
-  if(refCount<0)
+  if(refCount<=0)
   {
-    // We always remove all the children from the father.
-    // Removing means:
-    // 1. remove pointers in father element, facets and vertices
-    // 2. Mark removed entities for deletion.
-    DUNE_THROW(NotImplemented, "Coarsening not implemented yet");
+    DUNE_THROW(NotImplemented, "Called refineSimplexElement with refCount <= 0");
     return;
   }
 
-
-  // TODO: Currently we are assuming that only globalRefine is available
-  // and therefore the next level is not yet present.
-  // For real adaptivity some of the facets and vertices might already be present.
-  // Therefore we need some kind of detection for this later on.
-
   unsigned int nextLevel=element.level()+1;
-
-
-  dvverb << "Vertices " << nextLevel << ": " << Dune::get<0>(entityImps_[nextLevel]).size() << std::endl;
-  dvverb << "Elements " << nextLevel << ": " << Dune::get<dimgrid>(entityImps_[nextLevel]).size() << std::endl;
 
   array<FoamGridEntityImp<0, dimgrid, dimworld>*, 3*dimgrid> nextLevelVertices;
   std::size_t vertexIndex=0;
@@ -849,9 +782,8 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<1
   // create copies of the vertices of the element
   for(unsigned int c=0; c<element.corners(); ++c)
   {
-    dverb<<"Processing vertex "<<element.vertex_[c]<<std::endl;
     if(element.vertex_[c]->sons_[0]==nullptr){
-      // Not refined yet
+      // Vertex doesn't exist yet on the next level
       Dune::get<0>(entityImps_[nextLevel])
         .push_back(FoamGridEntityImp<0, dimgrid, dimworld>(nextLevel,
                                                element.vertex_[c]->pos_,
@@ -860,7 +792,6 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<1
         Dune::get<0>(entityImps_[nextLevel]).back();
 
       element.vertex_[c]->sons_[0] = &newVertex;
-      // Set nSons_ in analogy to 2D grid facets
       element.vertex_[c]->nSons_++;
       assert(element.vertex_[c]->nSons_==1); // Vertex can't have more than one son
       // Inherit the boundaryId_ and the boundarySegmentIndex
@@ -884,7 +815,7 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<1
   const FoamGridVertex* v1 = element.vertex_[1];
   FieldVector<double, dimworld> midPoint;
   for(int dim=0; dim<dimworld;++dim)
-         midPoint[dim]=(v0->pos_[dim] + v1->pos_[dim])*0.5;
+    midPoint[dim]=(v0->pos_[dim] + v1->pos_[dim])*0.5;
 
   // Create element midpoint
   Dune::get<0>(entityImps_[nextLevel]).push_back(FoamGridEntityImp<0, dimgrid, dimworld>(nextLevel, midPoint, freeIdCounter_[0]++));
@@ -899,7 +830,7 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<1
   // create the elements
   // First the one that contains vertex 0 of the father.
   Dune::get<dimgrid>(entityImps_[nextLevel])
-    .push_back(FoamGridEntityImp<1, 1, dimworld>(nextLevel, freeIdCounter_[dimgrid]++));
+    .push_back(FoamGridEntityImp<dimgrid, dimgrid, dimworld>(nextLevel, freeIdCounter_[dimgrid]++));
 
   FoamGridEntityImp<dimgrid, dimgrid, dimworld>* newElement = &(Dune::get<dimgrid>(entityImps_[nextLevel]).back());
   newElement->isNew_=true;
@@ -912,7 +843,6 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<1
   nextLevelElements[0]=newElement;
   element.sons_[0]=newElement;
   element.nSons_++;
-  dvverb<<"Pushed element "<<newElement<<" refindex="<<newElement->refinementIndex_<<std::endl;
 
   // Next the one that contains vertex 1 of the father.
   Dune::get<dimgrid>(entityImps_[nextLevel])
@@ -928,7 +858,6 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<1
   nextLevelElements[1]=newElement;
   element.sons_[1]=newElement;
   element.nSons_++;
-  dvverb<<"Pushed element "<<newElement<<" refindex="<<newElement->refinementIndex_<<std::endl;
 
   assert(element.nSons_== 1<<dimgrid); //==2
 
@@ -936,11 +865,9 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<1
   // to the facets.
   // The new (inside) neighbors of the facets lying on facets of the father element.
   std::size_t neighbors[2] = {0, 1};
-  dvverb<<" element "<<&element<<std::endl;
   for(std::size_t i=0; i<2; ++i)
   {
     // Overwrite the father element by the newly created elements.
-    dvverb<<" neighbour "<<i<<": ";
     overwriteFineLevelNeighbours(*nextLevelVertices[i], nextLevelElements[neighbors[i]],
                                     &element);
   }
@@ -955,14 +882,9 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<1
     for(ElementIterator elem=nextLevelElements.begin();
         elem != nextLevelElements.end(); ++elem)
     {
-      dvverb<<std::endl<<"Refinining "<<(*elem)<<" (son of"<<&element<<") refCount="<<refCount<<" child="<<i++<<std::endl;
       refineSimplexElement(**elem, refCount);
     }
   }
-
-  dvverb << "end refineSimplex" << std::endl;
-  dvverb << "Vertices " << nextLevel << ": " << Dune::get<0>(entityImps_[nextLevel]).size() << std::endl;
-  dvverb << "Elements " << nextLevel << ": " << Dune::get<dimgrid>(entityImps_[nextLevel]).size() << std::endl;
 }
 
 // Overwrites the neighbours of this and descendant facets
@@ -972,28 +894,17 @@ void Dune::FoamGrid<dimgrid, dimworld>::overwriteFineLevelNeighbours(FoamGridEnt
                                                             FoamGridEntityImp<dimgrid, dimgrid, dimworld>* father)
 {
   typedef typename std::vector<const FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>::iterator ElementIterator;
-#ifndef NDEBUG
-  bool fatherFound=false;
-#endif
+
   for(ElementIterator elem=facet.elements_.begin();
       elem != facet.elements_.end();
       ++elem)
   {
-    dvverb << *elem<<" ";
     // father is replaced by the son in the elements_ vector of the vertex
     if (*elem == father)
     {
-#ifndef NDEBUG
-      fatherFound=true;
-#endif
       *elem = son;
     }
   }
-
-#ifndef NDEBUG
-  dvverb<<std::endl;
-  assert(fatherFound);
-#endif
 
   for(std::size_t i=0; i<facet.nSons_; ++i)
     overwriteFineLevelNeighbours(*facet.sons_[i], son, father);
