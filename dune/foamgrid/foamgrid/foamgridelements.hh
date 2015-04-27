@@ -96,6 +96,9 @@ namespace Dune {
         }
 
         FieldVector<double, dimworld> corner(int i) const {
+            assert(i < this->corners());
+            assert(vertex_.size()==this->corners());
+            assert(vertex_[i]!=nullptr);
             return vertex_[i]->pos_;
         }
 
@@ -133,7 +136,7 @@ namespace Dune {
 
         MarkState markState_;
 
-        FoamGridEntityImp<0, dimgrid, dimworld>* vertex_[2];
+        array<FoamGridEntityImp<0, dimgrid, dimworld>*, 2> vertex_;
 
         array<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>*, 2> facet_;
 
