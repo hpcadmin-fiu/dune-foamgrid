@@ -18,7 +18,8 @@
 template<int dimworld, class ct>
 double c0 (const Dune::FieldVector<ct,dimworld>& x)
 {
-  return (x.two_norm()>0.125 && x.two_norm()<0.5) ? 1.0 : 0.0;
+  assert(dimworld>=3);
+  return (x[2]>1.5) ? 1.0 : 0.0;
 }
 
 // the boundary condition b on inflow boundary
@@ -32,7 +33,7 @@ double b (const Dune::FieldVector<ct,dimworld>& x, double t)
 template<int dimworld, class ct>
 Dune::FieldVector<double,dimworld> u (const Dune::FieldVector<ct,dimworld>& x, double t)
 {
-  return Dune::FieldVector<double,dimworld> (1.0);
+  return {0, 0, -1};
 }
 
 //! initialize the vector of unknowns with initial value
@@ -180,9 +181,8 @@ int main (int argc , char ** argv) try
   std::string gridFile = "y-grid.msh";
   grid = std::shared_ptr<Grid>(Dune::GmshReader<Grid>::read(path + "/" + gridFile));
 
-  grid->globalRefine(1);
-
-  // do time loop until end time 0.5
+  for (int i=0; i<4; i++)
+    grid->globalRefine(1);
 
   // make a mapper for codim 0 entities in the leaf grid
   Dune::LeafMultipleCodimMultipleGeomTypeMapper<Grid,Dune::MCMGElementLayout>
@@ -201,7 +201,7 @@ int main (int argc , char ** argv) try
 
   // now do the time steps
   double t=0,dt;
-  double tend=0.6;
+  double tend = 2.0;
   int k=0;
   const double saveInterval = 0.1;
   double saveStep = 0.1;
