@@ -4,10 +4,15 @@
 #include <iostream>               // for input/output to shell
 #include <fstream>                // for input/output to files
 #include <vector>                 // STL vector class
-#include <dune/grid/common/mcmgmapper.hh> // mapper class
-#include <dune/grid/yaspgrid.hh>
-#include <dune/grid/io/file/vtk.hh>
+#include <memory>
+
 #include <dune/common/parallel/mpihelper.hh> // include mpi helper class
+
+#include <dune/grid/common/mcmgmapper.hh> // mapper class
+#include <dune/grid/io/file/vtk.hh>
+#include <dune/grid/utility/structuredgridfactory.hh>
+
+#include <dune/foamgrid/foamgrid.hh>
 
 // the initial condition c0
 template<int dimworld, class ct>
@@ -115,13 +120,13 @@ void evolve (const GridView& gridView, const Mapper& mapper, std::vector<double>
       if (is->neighbor())
       {
         // access neighbor
-        int indexj = mapper.index(is->outside());
+        int indexj = mapper.index(*is->outside());
 
         // compute flux from one side only
         if (indexi<indexj)
         {
           // compute factor in neighbor
-          auto nbgeo = is->outside().geometry();
+          auto nbgeo = is->outside()->geometry();
           double nbvolume = nbgeo.volume();
           double nbfactor = velocity*integrationOuterNormal/nbvolume;
 
@@ -167,27 +172,28 @@ void evolve (const GridView& gridView, const Mapper& mapper, std::vector<double>
 
 int main (int argc , char ** argv) try
 {
-  typedef Dune::YaspGrid<2> Grid;
+  typedef Dune::FoamGrid<2,2> Grid;
 
-  // grid reference
-  std::array<int, 2> elements = {80,80};
-  Dune::FieldVector<double,2> upper(1);
-  Grid grid(upper, elements);
+  std::shared_ptr<Grid> grid;
+
+  Dune::FieldVector<double,2> lower(0), upper(1);
+  std::array<unsigned int,2> elements = {80,80};
+  grid = Dune::StructuredGridFactory<Grid>::createSimplexGrid(lower, upper, elements);
 
   // do time loop until end time 0.5
 
   // make a mapper for codim 0 entities in the leaf grid
   Dune::LeafMultipleCodimMultipleGeomTypeMapper<Grid,Dune::MCMGElementLayout>
-  mapper(grid);
+  mapper(*grid);
 
   // allocate a vector for the concentration
   std::vector<double> c(mapper.size());
 
   // initialize concentration with initial values
-  initialize(grid.leafGridView(),mapper,c);
+  initialize(grid->leafGridView(),mapper,c);
 
   // Write pvd header
-  Dune::VTKSequenceWriter<Grid::LeafGridView> vtkWriter(grid.leafGridView(), "concentration", ".", "");
+  Dune::VTKSequenceWriter<Grid::LeafGridView> vtkWriter(grid->leafGridView(), "concentration", ".", "");
   vtkWriter.addCellData(c,"celldata");
   vtkWriter.write( 0.0 );
 
@@ -205,7 +211,7 @@ int main (int argc , char ** argv) try
     ++k;
 
     // apply finite volume scheme
-    evolve(grid.leafGridView(),mapper,c,t,dt);
+    evolve(grid->leafGridView(),mapper,c,t,dt);
 
     // augment time
     t += dt;
@@ -224,7 +230,7 @@ int main (int argc , char ** argv) try
     }
 
     // print info about time, timestep size and counter
-    std::cout << "s=" << grid.size(0)
+    std::cout << "s=" << grid->size(0)
               << " k=" << k << " t=" << t << " dt=" << dt << std::endl;
   }
 
