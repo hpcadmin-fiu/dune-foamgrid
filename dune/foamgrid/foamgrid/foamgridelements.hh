@@ -164,7 +164,8 @@ namespace Dune {
 
         FoamGridEntityImp(int level, unsigned int id)
             : FoamGridEntityBase(level,id),
-              nSons_(0), refinementIndex_(-1),
+              refinementIndex_(-1),
+              nSons_(0),
               markState_(DO_NOTHING), isNew_(false)
         {
           sons_[0]= sons_[1] = sons_[2] = sons_[3] = nullptr;
