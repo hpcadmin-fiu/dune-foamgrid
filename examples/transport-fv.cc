@@ -9,8 +9,8 @@
 #include <dune/common/parallel/mpihelper.hh> // include mpi helper class
 
 #include <dune/grid/common/mcmgmapper.hh> // mapper class
+#include <dune/grid/io/file/gmshreader.hh>
 #include <dune/grid/io/file/vtk.hh>
-#include <dune/grid/utility/structuredgridfactory.hh>
 
 #include <dune/foamgrid/foamgrid.hh>
 
@@ -172,13 +172,15 @@ void evolve (const GridView& gridView, const Mapper& mapper, std::vector<double>
 
 int main (int argc , char ** argv) try
 {
-  typedef Dune::FoamGrid<2,2> Grid;
+  typedef Dune::FoamGrid<2,3> Grid;
 
   std::shared_ptr<Grid> grid;
 
-  Dune::FieldVector<double,2> lower(0), upper(1);
-  std::array<unsigned int,2> elements = {80,80};
-  grid = Dune::StructuredGridFactory<Grid>::createSimplexGrid(lower, upper, elements);
+  std::string path = "../../examples/data/";
+  std::string gridFile = "y-grid.msh";
+  grid = std::shared_ptr<Grid>(Dune::GmshReader<Grid>::read(path + "/" + gridFile));
+
+  grid->globalRefine(1);
 
   // do time loop until end time 0.5
 
