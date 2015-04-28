@@ -36,30 +36,6 @@ Dune::FieldVector<double,dimworld> u (const Dune::FieldVector<ct,dimworld>& x, d
   return {0, 0, -1};
 }
 
-//! initialize the vector of unknowns with initial value
-template<class GridView, class Mapper>
-void initialize (const GridView& gridView, const Mapper& mapper, std::vector<double>& c)
-{
-  // first we extract the dimensions of the grid
-  const int dimworld = GridView::dimensionworld;
-
-  // type used for coordinates in the grid
-  typedef typename GridView::ctype ct;
-
-  // iterate through leaf grid an evaluate c0 at cell center
-  for (auto it = gridView.template begin<0>(); it != gridView.template end<0>(); ++it)
-  {
-    // get geometry
-    auto geo = it->geometry();
-
-    // get global coordinate of cell center
-    Dune::FieldVector<ct,dimworld> global = geo.center();
-
-    // initialize cell concentration
-    c[mapper.index(*it)] = c0(global);
-  }
-}
-
 template<class GridView, class Mapper>
 void evolve (const GridView& gridView, const Mapper& mapper, std::vector<double>& c, double t, double& dt)
 {
@@ -77,8 +53,7 @@ void evolve (const GridView& gridView, const Mapper& mapper, std::vector<double>
   dt = std::numeric_limits<double>::max();
 
   // compute update vector and optimum dt in one grid traversal
-  auto endit = gridView.template end<0>();
-  for (auto it = gridView.template begin<0>(); it!=endit; ++it)
+  for (const auto& it : elements(gridView))
   {
     // cell geometry
     auto geo = it->geometry();
@@ -93,15 +68,13 @@ void evolve (const GridView& gridView, const Mapper& mapper, std::vector<double>
     double sumfactor = 0.0;
 
     // run through all intersections /*@$\gamma_{ij}$@*/ with neighbors and boundary
-    auto isend = gridView.iend(*it);
-    for (auto is = gridView.ibegin(*it); is!=isend; ++is)
+    for (const auto& is : intersections(gridView,*it))
     {
       // get geometry type of face
-      auto igeo = is->geometry();
+      auto igeo = is.geometry();
 
       // get normal vector scaled with volume
-      Dune::FieldVector<ct,dimworld> integrationOuterNormal
-        = is->centerUnitOuterNormal();
+      auto integrationOuterNormal = is.centerUnitOuterNormal();
       integrationOuterNormal *= igeo.volume();
 
       // center of face in global coordinates
@@ -118,16 +91,16 @@ void evolve (const GridView& gridView, const Mapper& mapper, std::vector<double>
         sumfactor += factor;
 
       // handle interior face
-      if (is->neighbor())
+      if (is.neighbor())
       {
         // access neighbor
-        int indexj = mapper.index(*is->outside());
+        int indexj = mapper.index(*is.outside());
 
         // compute flux from one side only
         if (indexi<indexj)
         {
           // compute factor in neighbor
-          auto nbgeo = is->outside()->geometry();
+          auto nbgeo = is.outside()->geometry();
           double nbvolume = nbgeo.volume();
           double nbfactor = velocity*integrationOuterNormal/nbvolume;
 
@@ -145,7 +118,7 @@ void evolve (const GridView& gridView, const Mapper& mapper, std::vector<double>
       }
 
       // handle boundary face
-      if (is->boundary())
+      if (is.boundary())
       {
         if (factor<0)                 // inflow, apply boundary condition
           update[indexi] -= b(faceglobal,t)*factor;
@@ -191,8 +164,10 @@ int main (int argc , char ** argv) try
   // allocate a vector for the concentration
   std::vector<double> c(mapper.size());
 
-  // initialize concentration with initial values
-  initialize(grid->leafGridView(),mapper,c);
+  // iterate through leaf grid and evaluate c0 at cell center
+  for (const auto& it : elements(grid->leafGridView()))
+    c[mapper.index(*it)] = c0(it->geometry().center());
+
 
   // Write pvd header
   Dune::VTKSequenceWriter<Grid::LeafGridView> vtkWriter(grid->leafGridView(), "concentration", ".", "");
