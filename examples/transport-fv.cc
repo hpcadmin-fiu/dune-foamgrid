@@ -197,8 +197,7 @@ int main (int argc , char ** argv) try
     if (t >= saveStep)
     {
       // write data
-      vtkWriter.clear();
-      vtkWriter.addCellData(c,"celldata");
+      // Note: we do not have to call addCellData again!
       vtkWriter.write( t );
 
       // increase counter and saveStep for next interval
