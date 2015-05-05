@@ -93,40 +93,24 @@ void evolve (const GridView& gridView, const Mapper& mapper, std::vector<double>
       if (factor>=0)
         sumfactor += factor;
 
-      // handle interior face
-      if (is.neighbor())
+      // compute local flux contribution
+      if (factor>0)        // outflow boundary?
       {
-        // access neighbor
-        int indexj = mapper.index(*is.outside());
-
-        // compute flux from one side only
-        if (indexi<indexj)
-        {
-          // compute factor in neighbor
-          auto nbgeo = is.outside()->geometry();
-          double nbvolume = nbgeo.volume();
-          double nbfactor = velocity*integrationOuterNormal/nbvolume;
-
-          if (factor<0)                         // inflow
-          {
-            update[indexi] -= c[indexj]*factor;
-            update[indexj] += c[indexj]*nbfactor;
-          }
-          else                         // outflow
-          {
-            update[indexi] -= c[indexi]*factor;
-            update[indexj] += c[indexi]*nbfactor;
-          }
-        }
+        update[indexi] -= c[indexi]*factor;
       }
-
-      // handle boundary face
-      if (is.boundary())
+      else  // inflow!
       {
-        if (factor<0)                 // inflow, apply boundary condition
+        // handle interior face
+        if (is.neighbor())
+        {
+          // access neighbor
+          int indexj = mapper.index(*is.outside());
+          update[indexi] -= c[indexj]*factor;
+        }
+
+        // handle boundary face
+        if (is.boundary())
           update[indexi] -= b(faceglobal,t)*factor;
-        else                 // outflow
-          update[indexi] -= c[indexi]*factor;
       }
     }             // end all intersections
 
