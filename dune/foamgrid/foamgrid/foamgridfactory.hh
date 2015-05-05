@@ -142,7 +142,9 @@ template <int dimworld>
 
         GridFactory() {}
 
-        GridFactory(FoamGrid<1, dimworld>* grid) {}
+        GridFactory(FoamGrid<1, dimworld>* grid):
+            GridFactoryBase<1,dimworld>(grid)
+        {}
 
         /** \brief Insert an element into the coarse grid
             \param type The GeometryType of the new element
@@ -229,7 +231,9 @@ template <int dimworld>
 
         GridFactory() {}
 
-        GridFactory(FoamGrid<2, dimworld>* grid) {}
+        GridFactory(FoamGrid<2, dimworld>* grid):
+            GridFactoryBase<2,dimworld>(grid)
+        {}
 
         /** \brief Insert an element into the coarse grid
             \param type The GeometryType of the new element
