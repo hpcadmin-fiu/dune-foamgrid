@@ -40,6 +40,7 @@ template<class GridView, class Mapper>
 void evolve (const GridView& gridView, const Mapper& mapper, std::vector<double>& c, double t, double& dt)
 {
   // first we extract the dimensions of the grid
+  const int dim      = GridView::dimension;
   const int dimworld = GridView::dimensionworld;
 
   // type used for coordinates in the grid
@@ -73,9 +74,11 @@ void evolve (const GridView& gridView, const Mapper& mapper, std::vector<double>
       // get geometry type of face
       auto igeo = is.geometry();
 
+      // get the midpoint of the intersection
+      auto intersectionCenter = Dune::ReferenceElements<double,dim-1>::general(is.type()).position(0,0);
+
       // get normal vector scaled with volume
-      auto integrationOuterNormal = is.centerUnitOuterNormal();
-      integrationOuterNormal *= igeo.volume();
+      auto integrationOuterNormal = is.integrationOuterNormal(intersectionCenter);
 
       // center of face in global coordinates
       Dune::FieldVector<ct,dimworld> faceglobal = igeo.center();
