@@ -4,7 +4,7 @@
 
 #include "make2din3dgrid.hh"
 #include <dune/grid/io/file/gmshreader.hh>
-#include <dune/grid/test/gridcheck.cc>
+#include <dune/grid/test/gridcheck.hh>
 #include <dune/grid/test/checkintersectionit.cc>
 #include <dune/grid/../../doc/grids/gridfactory/hybridtestgrids.hh>
 
@@ -15,7 +15,6 @@ void traversal (G& grid)
 {
   // first we extract the dimensions of the grid
   const int dimgrid = G::dimension;
-  const int dimworld = G::dimensionworld;
 
   // type used for coordinates in the grid
   // such a type is exported by every grid implementation
