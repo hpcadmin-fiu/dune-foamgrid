@@ -163,7 +163,7 @@ int main (int argc , char ** argv) try
 
   // now do the time steps
   double t=0,dt;
-  double tend = 2.0;
+  double tend = 2.5;
   int k=0;
   const double saveInterval = 0.1;
   double saveStep = 0.1;
