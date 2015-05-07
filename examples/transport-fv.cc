@@ -96,7 +96,22 @@ void evolve (const GridView& gridView, const Mapper& mapper, std::vector<double>
       // compute local flux contribution
       if (factor>0)        // outflow boundary?
       {
-        update[indexi] -= c[indexi]*factor;
+        if (is.boundary())
+          update[indexi] -= c[indexi]*factor;
+        else
+        {
+          Dune::FieldVector<double,dimworld> outerOuterNormal;
+          for (const auto& outerIs : intersections(gridView,*is.outside()))
+            if (outerIs.indexInInside() == is.indexInOutside())
+            {
+              outerOuterNormal = outerIs.outerNormal({0.5});
+              break;
+            }
+
+          bool outerIsInflow = (velocity * outerOuterNormal) < 0;
+          if (outerIsInflow)  // the current intersection is 'inflow' for the other element
+            update[indexi] -= c[indexi]*factor;
+        }
       }
       else  // inflow!
       {
@@ -105,7 +120,18 @@ void evolve (const GridView& gridView, const Mapper& mapper, std::vector<double>
         {
           // access neighbor
           int indexj = mapper.index(*is.outside());
-          update[indexi] -= c[indexj]*factor;
+
+          Dune::FieldVector<double,dimworld> outerOuterNormal;
+          for (const auto& outerIs : intersections(gridView,*is.outside()))
+            if (outerIs.indexInInside() == is.indexInOutside())
+            {
+              outerOuterNormal = outerIs.outerNormal({0.5});
+              break;
+            }
+
+          bool outerIsOutflow = (velocity * outerOuterNormal) > 0;
+          if (outerIsOutflow)  // the current intersection is 'outflow' for the other element
+            update[indexi] -= c[indexj]*factor;
         }
 
         // handle boundary face
