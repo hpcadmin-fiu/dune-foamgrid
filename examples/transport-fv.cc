@@ -93,53 +93,41 @@ void evolve (const GridView& gridView, const Mapper& mapper, std::vector<double>
       if (factor>=0)
         sumfactor += factor;
 
-      // compute local flux contribution
-      if (factor>0)        // outflow boundary?
-      {
-        if (is.boundary())
+      // Handling of boundaries
+      if (is.boundary())
+        if (factor>0)        // outflow boundary?
           update[indexi] -= c[indexi]*factor;
         else
-        {
-          Dune::FieldVector<double,dimworld> outerOuterNormal;
-          for (const auto& outerIs : intersections(gridView,*is.outside()))
-            if (outerIs.indexInInside() == is.indexInOutside())
-            {
-              outerOuterNormal = outerIs.outerNormal({0.5});
-              break;
-            }
+          update[indexi] -= b(faceglobal,t)*factor;
 
+      if (is.neighbor())
+      {
+        // The normal to the 'outside' element of the current intersection
+        // Unfortunately there is no interface method to get it directly.
+        Dune::FieldVector<double,dimworld> outerOuterNormal;
+        for (const auto& outerIs : intersections(gridView,*is.outside()))
+          if (outerIs.indexInInside() == is.indexInOutside())
+          {
+            outerOuterNormal = outerIs.outerNormal({0.5});
+            break;
+          }
+
+        if (factor>0)        // outflow boundary?
+        {
           bool outerIsInflow = (velocity * outerOuterNormal) < 0;
           if (outerIsInflow)  // the current intersection is 'inflow' for the other element
             update[indexi] -= c[indexi]*factor;
         }
-      }
-      else  // inflow!
-      {
-        // handle interior face
-        if (is.neighbor())
+        else  // inflow!
         {
           // access neighbor
           int indexj = mapper.index(*is.outside());
-
-          Dune::FieldVector<double,dimworld> outerOuterNormal;
-          for (const auto& outerIs : intersections(gridView,*is.outside()))
-            if (outerIs.indexInInside() == is.indexInOutside())
-            {
-              outerOuterNormal = outerIs.outerNormal({0.5});
-              break;
-            }
-
           bool outerIsOutflow = (velocity * outerOuterNormal) > 0;
           if (outerIsOutflow)  // the current intersection is 'outflow' for the other element
             update[indexi] -= c[indexj]*factor;
         }
-
-        // handle boundary face
-        if (is.boundary())
-          update[indexi] -= b(faceglobal,t)*factor;
-      }
-    }             // end all intersections
-
+      }             // end all intersections
+    }
     // compute dt restriction
     dt = std::min(dt,1.0/sumfactor);
 
