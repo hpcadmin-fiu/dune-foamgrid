@@ -47,8 +47,8 @@ class FoamGridEntityPointer
     {}
 
         //! equality
-        bool equals(const FoamGridEntityPointer<codim,GridImp>& i) const {
-            return GridImp::getRealImplementation(virtualEntity_).target_ == GridImp::getRealImplementation(i.virtualEntity_).target_;
+        bool equals(const FoamGridEntityPointer<codim,GridImp>& other) const {
+            return virtualEntity_ == other.virtualEntity_;
         }
 
 
