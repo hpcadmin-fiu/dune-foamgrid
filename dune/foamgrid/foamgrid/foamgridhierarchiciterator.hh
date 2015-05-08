@@ -36,7 +36,7 @@ class FoamGridHierarchicIterator :
 
     //! Constructor
     FoamGridHierarchicIterator(int maxlevel)
-        : FoamGridEntityPointer<0, GridImp>(nullptr),
+        : FoamGridEntityPointer<0, GridImp>(FoamGridNullIteratorFactory<dimgrid, dimgrid, dimworld>::null()),
           maxlevel_(maxlevel)
     {}
 
@@ -63,7 +63,7 @@ class FoamGridHierarchicIterator :
             }
 
             GridImp::getRealImplementation(this->virtualEntity_).setToTarget((elemStack.empty())
-                                             ? nullptr : elemStack.top());
+                                             ? &*FoamGridNullIteratorFactory<dimgrid, dimgrid, dimworld>::null() : elemStack.top());
         }
 
 

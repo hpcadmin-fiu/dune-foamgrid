@@ -17,6 +17,8 @@
 #include <dune/foamgrid/foamgrid/foamgridvertex.hh>
 #include <dune/foamgrid/foamgrid/foamgridgeometry.hh>
 
+#include "nulliteratorfactory.hh"
+
 namespace Dune {
 
 
@@ -90,6 +92,11 @@ class FoamGridEntity :
             target_(original.target_)
         {}
 
+        /** \brief Default constructor */
+        FoamGridEntity() :
+            target_(&*FoamGridNullIteratorFactory<dimgrid-codim, dimgrid, dimworld>::null())
+        {}
+
 
         //! \todo Please doc me !
         FoamGridEntity& operator=(const FoamGridEntity& original)
@@ -136,7 +143,7 @@ class FoamGridEntity :
         //! Create EntitySeed
         EntitySeed seed () const
         {
-            return EntitySeed(target_);
+            return EntitySeed(*this);
         }
 
         const FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld>* target_;
@@ -212,6 +219,10 @@ class FoamGridEntity<0, 2, GridImp> :
             target_(original.target_)
         {}
 
+        /** \brief Default constructor */
+        FoamGridEntity() :
+            target_(&*FoamGridNullIteratorFactory<dimgrid, dimgrid, dimworld>::null())
+        {}
 
         //! \todo Please doc me !
         FoamGridEntity& operator=(const FoamGridEntity& original)
@@ -250,7 +261,7 @@ class FoamGridEntity<0, 2, GridImp> :
         //! Create EntitySeed
         EntitySeed seed () const
         {
-            return EntitySeed(target_);
+            return EntitySeed(*this);
         }
 
 
@@ -530,6 +541,10 @@ class FoamGridEntity<0, 1, GridImp> :
             target_(original.target_)
         {}
 
+        /** \brief Default constructor */
+        FoamGridEntity() :
+            target_(&*FoamGridNullIteratorFactory<dimgrid, dimgrid, dimworld>::null())
+        {}
 
         //! \todo Please doc me !
         FoamGridEntity& operator=(const FoamGridEntity& original)
@@ -568,7 +583,7 @@ class FoamGridEntity<0, 1, GridImp> :
         //! Create EntitySeed
         EntitySeed seed () const
         {
-            return EntitySeed(target_);
+            return EntitySeed(*this);
         }
 
 
