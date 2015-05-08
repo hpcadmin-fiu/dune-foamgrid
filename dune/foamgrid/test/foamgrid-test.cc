@@ -5,7 +5,7 @@
 #include "make2din3dgrid.hh"
 #include <dune/grid/io/file/gmshreader.hh>
 #include <dune/grid/test/gridcheck.hh>
-#include <dune/grid/test/checkintersectionit.cc>
+#include <dune/grid/test/checkintersectionit.hh>
 #include <dune/grid/../../doc/grids/gridfactory/hybridtestgrids.hh>
 
 #include <dune/foamgrid/foamgrid.hh>
