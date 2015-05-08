@@ -332,7 +332,7 @@ class FoamGrid :
         {
           const int codim = EntitySeed::codimension;
           typedef typename Traits::template Codim<codim>::Entity Entity;
-          return Entity(FoamGridEntity<codim, dimgrid, FoamGrid>(FoamGrid::getRealImplementation(seed).target_));
+          return Entity(FoamGridEntity<codim, dimgrid, const FoamGrid>(FoamGrid::getRealImplementation(seed).getImplementationPointer()));
         }
 
 

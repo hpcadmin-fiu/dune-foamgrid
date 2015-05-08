@@ -90,6 +90,11 @@ class FoamGridEntity :
             target_(original.target_)
         {}
 
+        /** \brief Default constructor */
+        FoamGridEntity() :
+            target_(nullptr)
+        {}
+
 
         //! \todo Please doc me !
         FoamGridEntity& operator=(const FoamGridEntity& original)
@@ -136,7 +141,7 @@ class FoamGridEntity :
         //! Create EntitySeed
         EntitySeed seed () const
         {
-            return EntitySeed(target_);
+            return EntitySeed(*this);
         }
 
         const FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld>* target_;
@@ -212,6 +217,10 @@ class FoamGridEntity<0, 2, GridImp> :
             target_(original.target_)
         {}
 
+        /** \brief Default constructor */
+        FoamGridEntity() :
+            target_(nullptr)
+        {}
 
         //! \todo Please doc me !
         FoamGridEntity& operator=(const FoamGridEntity& original)
@@ -250,7 +259,7 @@ class FoamGridEntity<0, 2, GridImp> :
         //! Create EntitySeed
         EntitySeed seed () const
         {
-            return EntitySeed(target_);
+            return EntitySeed(*this);
         }
 
 
@@ -530,6 +539,10 @@ class FoamGridEntity<0, 1, GridImp> :
             target_(original.target_)
         {}
 
+        /** \brief Default constructor */
+        FoamGridEntity() :
+            target_(nullptr)
+        {}
 
         //! \todo Please doc me !
         FoamGridEntity& operator=(const FoamGridEntity& original)
@@ -568,7 +581,7 @@ class FoamGridEntity<0, 1, GridImp> :
         //! Create EntitySeed
         EntitySeed seed () const
         {
-            return EntitySeed(target_);
+            return EntitySeed(*this);
         }
 
 

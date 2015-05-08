@@ -23,8 +23,7 @@ class FoamGridLeafIterator :
 public:
 
     FoamGridLeafIterator(const GridImp& grid)
-        : FoamGridEntityPointer <codim,GridImp>(nullptr),
-          grid_(&grid)
+        : grid_(&grid)
     {
 
         /** \todo Can a make the fullRefineLevel work somehow? */
@@ -39,11 +38,12 @@ public:
             increment();
     }
 
-  //! Constructor
+    //! Default constructor
     FoamGridLeafIterator()
-        : FoamGridEntityPointer <codim,GridImp>(nullptr),
-          grid_(nullptr)
-    {}
+        : grid_(nullptr)
+    {
+        GridImp::getRealImplementation(this->virtualEntity_).setToTarget(nullptr);
+    }
 
     //! prefix increment
     void increment() {

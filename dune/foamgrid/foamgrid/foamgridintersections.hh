@@ -22,6 +22,12 @@ class FoamGridLevelIntersectionIterator;
 template <class GridImp>
 class FoamGridLeafIntersectionIterator;
 
+template <class GridImp>
+class FoamGridLevelIntersection;
+
+template <class GridImp>
+class FoamGridLeafIntersection;
+
 
 //! \brief Base class of all intersections within FoamGrid
 //!
@@ -39,6 +45,10 @@ class FoamGridIntersection
     // The iterators need access to all members
     friend class FoamGridLevelIntersectionIterator<GridImp>;
     friend class FoamGridLeafIntersectionIterator<GridImp>;
+
+    // As weĺl as the implementations
+    friend class FoamGridLevelIntersection<GridImp>;
+    friend class FoamGridLeafIntersection<GridImp>;
 
     template<typename, typename>
     friend class Dune::Intersection;
