@@ -309,7 +309,7 @@ namespace Dune {
 
         array<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>*, 3> facet_;
 
-        FoamGridEntityImp<0, dimgrid, dimworld>* vertex_[3];
+        array<FoamGridEntityImp<0, dimgrid, dimworld>*, 3> vertex_;
 
         /** \brief Stores requests for refinement and coarsening */
         MarkState markState_;
