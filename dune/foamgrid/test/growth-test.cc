@@ -158,7 +158,6 @@ void checkGridElementRemoval(Grid& grid)
 {
   using namespace Dune;
   typedef typename Grid::template Codim<0>::LeafIterator ElementIterator;
-  typedef typename ElementIterator::Entity EntityType;
   enum { dimworld = Grid::dimensionworld };
   enum { dim = Grid::dimension };
 
@@ -245,4 +244,4 @@ int main (int argc, char *argv[])
     return 1;
   }
   return 0;
-};
+}
