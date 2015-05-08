@@ -65,9 +65,7 @@ class FoamGridEntityPointer
     protected:
 
         //! virtual entity
-        mutable MakeableInterfaceObject<Entity> virtualEntity_;
-
-
+        Entity virtualEntity_;
 };
 
 

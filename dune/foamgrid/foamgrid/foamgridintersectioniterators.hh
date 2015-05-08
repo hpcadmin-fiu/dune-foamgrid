@@ -188,7 +188,7 @@ private:
         }
     }
 
-    mutable MakeableInterfaceObject<Intersection> intersection_;
+    Intersection intersection_;
 
     //! \brief pointer to map from facet index onto the intersections associated with the facet
     //!
@@ -379,7 +379,7 @@ private:
 
     /** \brief The actual intersection
     */
-    mutable MakeableInterfaceObject<Intersection> intersection_;
+    Intersection intersection_;
 
 };
 
