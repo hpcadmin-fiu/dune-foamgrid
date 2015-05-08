@@ -14,16 +14,12 @@ template <class Grid>
 void checkGridElementGrowth(Grid& grid)
 {
   using namespace Dune;
-	typedef typename Grid::template Codim<0>::LeafIterator ElementIterator;
-  typedef typename ElementIterator::Entity EntityType;
   enum { dimworld = Grid::dimensionworld };
   enum { dim = Grid::dimension };
 
-  const ElementIterator eEndIt = grid.leafGridView().template end<0>();
-  for (ElementIterator eIt = grid.leafGridView().template begin<0>(); eIt != eEndIt; ++eIt )
+  for (const auto& element : elements(grid.leafGridView()))
   {
-    const EntityType& entity = *eIt;
-    auto geo = entity.geometry();
+    const auto geo = element.geometry();
     if(geo.center()[1] >= 0.0 && geo.center()[0] < -1.0)
     {
       Dune::FieldVector<double, dimworld> growPoint = geo.center();
@@ -31,7 +27,7 @@ void checkGridElementGrowth(Grid& grid)
       for (int dimIdx = 0; dimIdx < dimworld; ++dimIdx)
         u[dimIdx] += 2.0;
       growPoint += u;
-      grid.markForGrowth(entity, 0, growPoint);
+      grid.markForGrowth(element, 0, growPoint);
     }
 	}
 
@@ -44,9 +40,8 @@ void checkGridElementGrowth(Grid& grid)
     DUNE_THROW(InvalidStateException,"grid.preGrow() does not return correct information");
 
   // check mightVanish
-  typedef typename Grid::template Codim<0>::LevelIterator LevelElementIterator;
-  for (LevelElementIterator it = grid.levelGridView(0).template begin<0>(); it != grid.levelGridView(0).template end<0>(); ++ it)
-    checkHierarchy(*it);
+  for (const auto& element : elements(grid.levelGridView(0)))
+    checkHierarchy(element);
 
 	bool newElementGenerated = grid.grow();
   if(!newElementGenerated)
@@ -57,22 +52,20 @@ void checkGridElementGrowth(Grid& grid)
   // Loop over all levels except the lowest one
   for (int level = 0 ; level <= grid.maxLevel(); ++level )
   {
-    typedef typename Grid::template Codim<0>::LevelIterator LevelElementIterator;
-    for (LevelElementIterator it = grid.levelGridView(level).template begin<0>(); it != grid.levelGridView(level).template end<0>(); ++ it)
-      if(it->isNew())
+      for (const auto& element : elements(grid.levelGridView(level)))
+        if(element.isNew())
         DUNE_THROW(InvalidStateException,"After postGrow() was called no entity is new, i.e., isNew() == false");
   }
 
-
   std::cout << "Boundary intersections after growth: " << std::endl;
   int isCounter = 0;
-  for (ElementIterator eIt = grid.leafGridView().template begin<0>(); eIt != eEndIt; ++eIt)
+  for (const auto& element : elements(grid.leafGridView()))
   {
-    for (auto isIt = grid.leafGridView().ibegin(*eIt); isIt != grid.leafGridView().iend(*eIt); ++isIt)
+    for (const auto& intersection : intersections(grid.leafGridView(), element))
     {
-      if(isIt->boundary())
+      if(intersection.boundary())
       {
-        std::cout << "Boundary Intersection no"<<isCounter<<" has segment index: " << isIt->boundarySegmentIndex() << std::endl;
+        std::cout << "Boundary Intersection no"<<isCounter<<" has segment index: " << intersection.boundarySegmentIndex() << std::endl;
         ++isCounter;
       }
     }
@@ -86,42 +79,38 @@ void checkGridElementGrowth(Grid& grid)
 template <class Grid>
 void checkGridElementMerge(Grid& grid)
 {
-  typedef typename Grid::template Codim<0>::LeafIterator ElementIterator;
-  typedef typename ElementIterator::Entity EntityType;
   enum { dimworld = Grid::dimensionworld };
   enum { dim = Grid::dimension };
 
   // connect all facets with their closest neighbor facet (if there is no connection already which gets checked by the grid)
-  const ElementIterator eEndIt = grid.leafGridView().template end<0>();
-  for (ElementIterator eIt = grid.leafGridView().template begin<0>(); eIt != eEndIt; ++eIt )
+  for (const auto& element : elements(grid.leafGridView()))
   {
-    const EntityType& entity = *eIt;
-    ElementIterator entity2It = eIt;
-    for(auto isIt = grid.leafGridView().ibegin(*eIt); isIt != grid.leafGridView().iend(*eIt); ++isIt)
+    auto otherElement = element;
+    for (const auto& intersection : intersections(grid.leafGridView(), element))
     {
-      Dune::FieldVector<double, dimworld> center = isIt->geometry().center();
+      Dune::FieldVector<double, dimworld> center = intersection.geometry().center();
       double dist = std::numeric_limits<double>::max();
-      int facetIndex = isIt->indexInInside();
+      int facetIndex = intersection.indexInInside();
       int facetIndex2 = 0;
-      for (ElementIterator eIt2 = grid.leafGridView().template begin<0>(); eIt2 != eEndIt; ++eIt2 )
+      for (const auto& element2 : elements(grid.leafGridView()))
       {
-        if(eIt2 == eIt)
+        if(element2 == element)
           continue;
         // find the closest of all facets
-        for(auto isIt2 = grid.leafGridView().ibegin(*eIt2); isIt2 != grid.leafGridView().iend(*eIt2); ++isIt2)
+        for (const auto& intersection2 : intersections(grid.leafGridView(), element2))
         {
-          Dune::FieldVector<double, dimworld> center2 = isIt2->geometry().center();
+          Dune::FieldVector<double, dimworld> center2 = intersection2.geometry().center();
           Dune::FieldVector<double, dimworld> diff = center;
           diff -= center2;
           if(diff.two_norm() < dist)
           {
             dist = diff.two_norm();
-            facetIndex2 = isIt2->indexInInside();
-            entity2It = eIt2;
+            facetIndex2 = intersection2.indexInInside();
+            otherElement = element2;
           }
         }
       }
-      grid.markForMerging(entity, facetIndex, *entity2It, facetIndex2);
+      grid.markForMerging(element, facetIndex, otherElement, facetIndex2);
     }
   }
 
@@ -136,13 +125,13 @@ void checkGridElementMerge(Grid& grid)
   std::cout << "Boundary intersections after merge: " << std::endl;
 
   int isCounter = 0;
-  for (ElementIterator eIt = grid.leafGridView().template begin<0>(); eIt != eEndIt; ++eIt)
+  for (const auto& element : elements(grid.leafGridView()))
   {
-    for (auto isIt = grid.leafGridView().ibegin(*eIt); isIt != grid.leafGridView().iend(*eIt); ++isIt)
+    for (const auto& intersection : intersections(grid.leafGridView(), element))
     {
-      if(isIt->boundary())
+      if(intersection.boundary())
       {
-        std::cout << "Boundary Intersection no"<<isCounter<<" has segment index: " << isIt->boundarySegmentIndex() << std::endl;
+        std::cout << "Boundary Intersection no"<<isCounter<<" has segment index: " << intersection.boundarySegmentIndex() << std::endl;
         ++isCounter;
       }
     }
@@ -157,14 +146,13 @@ template <class Grid>
 void checkGridElementRemoval(Grid& grid)
 {
   using namespace Dune;
-  typedef typename Grid::template Codim<0>::LeafIterator ElementIterator;
   enum { dimworld = Grid::dimensionworld };
   enum { dim = Grid::dimension };
 
   int counter = 0;
   // connect all facets with their closest neighbor facet (if there is no connection already which gets checked by the grid)
-  const ElementIterator eEndIt = grid.leafGridView().template end<0>();
-  for (ElementIterator eIt = grid.leafGridView().template begin<0>(); eIt != eEndIt; ++eIt, ++counter)
+  const auto eEndIt = grid.leafGridView().template end<0>();
+  for (auto eIt = grid.leafGridView().template begin<0>(); eIt != eEndIt; ++eIt, ++counter)
   {
     // delete the 9th and the 10th element
     if(counter == 9 || counter == 10)
@@ -185,13 +173,13 @@ void checkGridElementRemoval(Grid& grid)
   std::cout << "Boundary intersections after removal: " << std::endl;
 
   int isCounter = 0;
-  for (ElementIterator eIt = grid.leafGridView().template begin<0>(); eIt != eEndIt; ++eIt)
+  for (const auto& element : elements(grid.leafGridView()))
   {
-    for (auto isIt = grid.leafGridView().ibegin(*eIt); isIt != grid.leafGridView().iend(*eIt); ++isIt)
+    for (const auto& intersection : intersections(grid.leafGridView(), element))
     {
-      if(isIt->boundary())
+      if(intersection.boundary())
       {
-        std::cout << "Boundary Intersection no"<<isCounter<<" has segment index: " << isIt->boundarySegmentIndex() << std::endl;
+        std::cout << "Boundary Intersection no"<<isCounter<<" has segment index: " << intersection.boundarySegmentIndex() << std::endl;
         ++isCounter;
       }
     }
