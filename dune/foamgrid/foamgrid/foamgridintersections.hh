@@ -36,6 +36,7 @@ class FoamGridIntersection
     typedef typename GridImp::ctype ctype;
     typedef typename GridImp::Traits::template Codim<1>::GeometryImpl GeometryImpl;
 
+    // The iterators need access to all members
     friend class FoamGridLevelIntersectionIterator<GridImp>;
     friend class FoamGridLeafIntersectionIterator<GridImp>;
 
@@ -46,10 +47,6 @@ class FoamGridIntersection
       : center_(nullptr),
         facetIndex_(-1) // marker for invalid intersection
     {}
-
-public:
-
-    typedef typename GridImp::template Codim<0>::Entity Entity;
 
     /**
      * \brief Initalizes an intersection.
@@ -63,10 +60,15 @@ public:
         : center_(center), facetIndex_(facet)
     {}
 
+public:
+
+    typedef typename GridImp::template Codim<0>::Entity Entity;
+
+
         //! return Entity on the inside of this intersection
         //! (that is the Entity where we started this Iterator)
         Entity inside() const {
-            return Entity(FoamGridEntityImp<dimgrid, dimgrid, dimworld> (center_));
+            return Entity(FoamGridEntity<0, dimgrid, GridImp> (center_));
         }
 
 
@@ -74,7 +76,7 @@ public:
         //! (that is the neighboring Entity)
         Entity outside(/*std::size_t neighborIndex = 0*/) const {
             // Return the 'other' element on the current facet
-            return Entity(FoamGridEntityImp<dimgrid, dimgrid, dimworld> ((*neighbor_)));
+            return Entity(FoamGridEntity<0, dimgrid, GridImp> ((*neighbor_)));
         }
 
         //! equality
@@ -239,7 +241,13 @@ class FoamGridLevelIntersection
 {
     friend class FoamGridLevelIntersectionIterator<GridImp>;
 
+    template<typename, typename>
+    friend class Dune::Intersection;
+
+    FoamGridLevelIntersection() : FoamGridIntersection<GridImp>() {}
+
     enum {dimgrid = GridImp::dimension};
+    enum{ dimworld = GridImp::dimensionworld };
 
     // Geometry is a CachedMultiLinearGeometry
     typedef typename GridImp::template Codim<1>::Geometry Geometry;
@@ -248,12 +256,11 @@ class FoamGridLevelIntersection
     typedef typename GridImp::Traits::template Codim<1>::GeometryImpl GeometryImpl;
     typedef typename GridImp::Traits::template Codim<1>::LocalGeometryImpl LocalGeometryImpl;
 
-public:
-    enum{ dimworld = GridImp::dimensionworld };
-
     FoamGridLevelIntersection(const FoamGridEntityImp<dimgrid, dimgrid ,dimworld>* center, std::size_t facet)
                               : FoamGridIntersection<GridImp>(center, facet)
     {}
+
+public:
 
     //! Return true if this is a conforming intersection
     bool conforming () const {
@@ -379,7 +386,10 @@ class FoamGridLeafIntersection
 
     friend class FoamGridLeafIntersectionIterator<GridImp>;
 
-    public:
+    template<typename, typename>
+    friend class Dune::Intersection;
+
+    FoamGridLeafIntersection() : FoamGridIntersection<GridImp>() {}
 
     enum {dimworld = GridImp::dimensionworld};
     enum {dimgrid  = GridImp::dimension};
@@ -396,6 +406,8 @@ class FoamGridLeafIntersection
                              std::size_t facet)
         : FoamGridIntersection<GridImp>(center, facet)
     {}
+
+public:
 
     //! Return true if this is a conforming intersection
     bool conforming () const {

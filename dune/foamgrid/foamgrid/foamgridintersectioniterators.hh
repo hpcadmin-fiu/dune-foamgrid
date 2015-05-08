@@ -16,15 +16,6 @@
 
 namespace Dune {
 
-template<class GridImp>
-class FoamGridLevelIntersectionIterator;
-
-template <class GridImp>
-class FoamGridLeafIntersection;
-
-template <class GridImp>
-class FoamGridLevelIntersection;
-
 /** \brief Iterator over all element neighbors
 * \ingroup FoamGrid
 * Mesh entities of codimension 0 ("elements") allow to visit all neighbors, where
@@ -44,13 +35,14 @@ class FoamGridLeafIntersectionIterator
 
     typedef std::map<int, ElementVector> MapType;
 
+    // Only the codim-0 entity is allowed to call the constructors
+    friend class FoamGridEntity<0,dimgrid,GridImp>;
+
     template<typename, typename, typename>
     friend class Dune::IntersectionIterator;
 
     FoamGridLeafIntersectionIterator()
     {}
-
-public:
 
     //! Constructor for a given grid entity and a given neighbor
     FoamGridLeafIntersectionIterator(const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* center, int facet)
@@ -96,6 +88,8 @@ public:
           leafFacet_(make_shared<MapType>())
     {
     }
+
+public:
 
     typedef Dune::Intersection<const GridImp, typename Dune::FoamGridLeafIntersection<GridImp> > Intersection;
 
@@ -227,8 +221,6 @@ class FoamGridLevelIntersectionIterator
     FoamGridLevelIntersectionIterator()
     {}
 
-    /** \todo Make this private once FoamGridLeafIntersectionIterator doesn't derive from this class anymore */
-protected:
     //! \brief Constructor for a given grid entity and a given neighbor
     //! \param center Pointer to the element where the iterator was created.
     //! \param facet The index of the facet to start the investigation.
