@@ -82,21 +82,21 @@ void Dune::FoamGrid<dimgrid, dimworld>::globalRefine (int refCount)
       {
         vIt->sons_[0]=nullptr;
         if(dimgrid == 1)
-        	vIt->nSons_=0;
+          vIt->nSons_=0;
       }
 
       if(dimgrid == 2)
       {
-      	typename std::list<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld> >::iterator edIt
-        	= Dune::get<dimgrid-1>(entityImps_[maxLevel()]).begin();
-      	typename std::list<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld> >::iterator edEndIt
-        	= Dune::get<dimgrid-1>(entityImps_[maxLevel()]).end();
-      	for (; edIt!=edEndIt; ++edIt)
-      	{
-        	edIt->sons_[0]=nullptr;
-        	edIt->sons_[1]=nullptr;
-        	edIt->nSons_=0;
-      	}
+        typename std::list<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld> >::iterator edIt
+          = Dune::get<dimgrid-1>(entityImps_[maxLevel()]).begin();
+        typename std::list<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld> >::iterator edEndIt
+          = Dune::get<dimgrid-1>(entityImps_[maxLevel()]).end();
+        for (; edIt!=edEndIt; ++edIt)
+        {
+          edIt->sons_[0]=nullptr;
+          edIt->sons_[1]=nullptr;
+          edIt->nSons_=0;
+        }
       }
 
       typename std::list<FoamGridEntityImp<dimgrid, dimgrid, dimworld> >::iterator elIt
@@ -237,7 +237,7 @@ bool Dune::FoamGrid<dimgrid, dimworld>::adapt()
     }
   }
 
-  if(!willCoarsen)
+  if (!willCoarsen)
   {
     if(haveRefined)
     {
@@ -346,7 +346,8 @@ template <int dimgrid, int dimworld>
 void Dune::FoamGrid<dimgrid, dimworld>::erasePointersToEntities(std::list<FoamGridEntityImp<dimgrid, dimgrid, dimworld> >& elements)
 {
   typedef typename std::list<FoamGridEntityImp<dimgrid, dimgrid, dimworld> >::iterator EntityIterator;
-  for(EntityIterator element=elements.begin(); element != elements.end(); ++element)
+  for(EntityIterator element=elements.begin();
+      element != elements.end(); ++element)
   {
     if(element->willVanish_)
     {
@@ -362,7 +363,8 @@ void Dune::FoamGrid<dimgrid, dimworld>::erasePointersToEntities(std::list<FoamGr
           --father.vertex_[i]->nSons_;
         }
       for (unsigned int i=0; i<father.corners(); i++)
-        if (father.facet_[i]->sons_[0]!=nullptr && father.facet_[i]->sons_[0]->willVanish_)
+        if (father.facet_[i]->sons_[0]!=nullptr
+            && father.facet_[i]->sons_[0]->willVanish_)
           for (unsigned int j=0; j<dimgrid; j++)
           {
             assert(father.facet_[i]->sons_[j]!=nullptr);
@@ -418,9 +420,14 @@ void Dune::FoamGrid<dimgrid, dimworld>::coarsenSimplexElement(FoamGridEntityImp<
     for (FacetIter facet=(*child)->facet_.begin(); facet != (*child)->facet_.end(); ++facet)
     {
       // Remove references to elements that will be erased
-      typedef typename std::vector<const FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>::iterator ElementIter;
-      for (ElementIter element = (*facet)->elements_.begin(); element != (*facet)->elements_.end(); ++element)
-        for (ChildrenIter child1=father.sons_.begin(); child1 != father.sons_.end(); ++child1)
+      typedef typename std::vector<const FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>::iterator
+                    ElementIter;
+      for (ElementIter element = (*facet)->elements_.begin();
+           element != (*facet)->elements_.end();
+           ++element)
+      {
+        for (ChildrenIter child1=father.sons_.begin(); child1 !=
+             father.sons_.end(); ++child1)
           if(*element==*child1)
           {
             // To prevent removing an element from a vector
@@ -430,6 +437,7 @@ void Dune::FoamGrid<dimgrid, dimworld>::coarsenSimplexElement(FoamGridEntityImp<
             // level.
             *element=&father;
           }
+      }
     }
     // Save potential sub entities that might be erased
     if(dimgrid > 1)
@@ -439,7 +447,8 @@ void Dune::FoamGrid<dimgrid, dimworld>::coarsenSimplexElement(FoamGridEntityImp<
         childVertices.insert(*vertex);
     }
     typedef typename array<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>*, dimgrid+1>::iterator FacetIter;
-    for (FacetIter facet=(*child)->facet_.begin(); facet!= (*child)->facet_.end(); ++facet)
+    for (FacetIter facet=(*child)->facet_.begin(); facet!= (*child)->facet_.end();
+        ++facet)
       childFacets.insert(*facet);
   }
 
@@ -450,7 +459,9 @@ void Dune::FoamGrid<dimgrid, dimworld>::coarsenSimplexElement(FoamGridEntityImp<
   for(FacetIter facet=father.facet_.begin(); facet != father.facet_.end(); ++facet)
   {
     typedef typename std::vector<const FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>::iterator NeighborIter;
-    for (NeighborIter neighbor = (*facet)->elements_.begin(); neighbor != (*facet)->elements_.end(); ++neighbor)
+    for (NeighborIter neighbor = (*facet)->elements_.begin();
+         neighbor != (*facet)->elements_.end();
+         ++neighbor)
     {
       assert((*neighbor)->level()<=father.level());
       if(*neighbor == &father)
@@ -461,7 +472,8 @@ void Dune::FoamGrid<dimgrid, dimworld>::coarsenSimplexElement(FoamGridEntityImp<
         // This is a real neighbor element on the same level
         // Check whether one of its children is marked for coarsening
         bool coarsened=false;
-        for (ChildrenIter child=(*neighbor)->sons_.begin(); child != (*neighbor)->sons_.end(); ++child)
+        for (ChildrenIter child=(*neighbor)->sons_.begin();
+             child != (*neighbor)->sons_.end(); ++child)
           if((*child)->mightVanish())
           {
             coarsened=true;
@@ -472,13 +484,16 @@ void Dune::FoamGrid<dimgrid, dimworld>::coarsenSimplexElement(FoamGridEntityImp<
         {
           // Remove all entities that exist in the children of the neighbor
           // from the removal list
-          for (ChildrenIter child=(*neighbor)->sons_.begin(); child != (*neighbor)->sons_.end(); ++child)
+          for (ChildrenIter child=(*neighbor)->sons_.begin();
+               child != (*neighbor)->sons_.end(); ++child)
           {
             typedef typename array<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>*, dimgrid+1>::iterator FacetIter;
             for (FacetIter facet=(*child)->facet_.begin(); facet != (*child)->facet_.end(); ++facet)
               childFacets.erase(*facet);
             typedef typename array<FoamGridEntityImp<0, dimgrid, dimworld>*, dimgrid+1>::iterator VertexIter;
-            for (VertexIter vertex=(*child)->vertex_.begin(); vertex != (*child)->vertex_.end(); ++vertex)
+            for (VertexIter vertex=(*child)->vertex_.begin();
+                 vertex != (*child)->vertex_.end();
+                 ++vertex)
               childVertices.erase(*vertex);
           }
         }
