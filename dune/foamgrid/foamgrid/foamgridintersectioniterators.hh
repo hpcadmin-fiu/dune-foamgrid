@@ -43,6 +43,13 @@ class FoamGridLeafIntersectionIterator
     typedef std::vector<const FoamGridEntityImp<dimgrid, dimgrid, dimworld>*> ElementVector;
 
     typedef std::map<int, ElementVector> MapType;
+
+    template<typename, typename, typename>
+    friend class Dune::IntersectionIterator;
+
+    FoamGridLeafIntersectionIterator()
+    {}
+
 public:
 
     //! Constructor for a given grid entity and a given neighbor
@@ -213,6 +220,12 @@ class FoamGridLevelIntersectionIterator
 
     // Only the codim-0 entity is allowed to call the constructors
     friend class FoamGridEntity<0, dimgrid, GridImp>;
+
+    template<typename, typename, typename>
+    friend class Dune::IntersectionIterator;
+
+    FoamGridLevelIntersectionIterator()
+    {}
 
     /** \todo Make this private once FoamGridLeafIntersectionIterator doesn't derive from this class anymore */
 protected:

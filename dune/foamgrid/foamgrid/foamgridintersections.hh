@@ -8,6 +8,7 @@
 */
 #include <dune/grid/common/intersection.hh>
 #include <dune/common/shared_ptr.hh>
+#include <dune/common/nullptr.hh>
 
 #include <dune/foamgrid/foamgrid/foamgridintersectioniterators.hh>
 #include <dune/foamgrid/foamgrid/foamgridvertex.hh>
@@ -37,6 +38,14 @@ class FoamGridIntersection
 
     friend class FoamGridLevelIntersectionIterator<GridImp>;
     friend class FoamGridLeafIntersectionIterator<GridImp>;
+
+    template<typename, typename>
+    friend class Dune::Intersection;
+
+    FoamGridIntersection()
+      : center_(nullptr),
+        facetIndex_(-1) // marker for invalid intersection
+    {}
 
 public:
 
