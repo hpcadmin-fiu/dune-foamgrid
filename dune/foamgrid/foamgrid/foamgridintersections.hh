@@ -12,7 +12,6 @@
 #include <dune/foamgrid/foamgrid/foamgridintersectioniterators.hh>
 #include <dune/foamgrid/foamgrid/foamgridvertex.hh>
 #include <dune/foamgrid/foamgrid/foamgridgeometry.hh>
-#include <dune/foamgrid/foamgrid/foamgridentitypointer.hh>
 
 namespace Dune {
 
@@ -41,7 +40,6 @@ class FoamGridIntersection
 
 public:
 
-    typedef typename GridImp::template Codim<0>::EntityPointer EntityPointer;
     typedef typename GridImp::template Codim<0>::Entity Entity;
 
     /**
@@ -56,18 +54,18 @@ public:
         : center_(center), facetIndex_(facet)
     {}
 
-        //! return EntityPointer to the Entity on the inside of this intersection
+        //! return Entity on the inside of this intersection
         //! (that is the Entity where we started this Iterator)
-        EntityPointer inside() const {
-            return FoamGridEntityPointer<0, GridImp> (center_);
+        Entity inside() const {
+            return Entity(FoamGridEntityImp<dimgrid, dimgrid, dimworld> (center_));
         }
 
 
-        //! return EntityPointer to the Entity on the outside of this intersection
+        //! return Entity on the outside of this intersection
         //! (that is the neighboring Entity)
-        EntityPointer outside(/*std::size_t neighborIndex = 0*/) const {
+        Entity outside(/*std::size_t neighborIndex = 0*/) const {
             // Return the 'other' element on the current facet
-            return FoamGridEntityPointer<0, GridImp> ((*neighbor_));
+            return Entity(FoamGridEntityImp<dimgrid, dimgrid, dimworld> ((*neighbor_)));
         }
 
         //! equality
