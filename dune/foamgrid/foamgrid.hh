@@ -316,13 +316,23 @@ class FoamGrid :
 
         /** \brief Create EntityPointer from EnitySeed */
         template < class EntitySeed >
-        typename Traits::template Codim<EntitySeed::codimension>::EntityPointer
-            entityPointer(const EntitySeed& seed) const
+        static typename Traits::template Codim<EntitySeed::codimension>::EntityPointer
+        entityPointer(const EntitySeed& seed)
         {
             typedef FoamGridEntityPointer<EntitySeed::codimension, const FoamGrid> EntityPointerImpl;
             typedef typename Traits::template Codim<EntitySeed::codimension>::EntityPointer EntityPointer;
 
-            return EntityPointer(EntityPointerImpl(this->getRealImplementation(seed).getImplementationPointer()));
+            return EntityPointer(EntityPointerImpl(FoamGrid::getRealImplementation(seed).getImplementationPointer()));
+        }
+
+        /** \brief Create an Entity from an EntitySeed */
+        template <class EntitySeed>
+        static typename Traits::template Codim<EntitySeed::codimension>::Entity
+        entity(const EntitySeed& seed)
+        {
+          const int codim = EntitySeed::codimension;
+          typedef typename Traits::template Codim<codim>::Entity Entity;
+          return Entity(FoamGridEntity<codim, dimgrid, FoamGrid>(FoamGrid::getRealImplementation(seed).target_));
         }
 
 
