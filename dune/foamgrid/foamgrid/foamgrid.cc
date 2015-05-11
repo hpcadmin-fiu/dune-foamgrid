@@ -541,7 +541,6 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<2
       Dune::get<0>(entityImps_[nextLevel]).back();
       element.vertex_[c]->sons_[0]=&newVertex;
     }
-    check_for_duplicates(nextLevelVertices, element.vertex_[c]->sons_[0], vertexIndex);
     nextLevelVertices[vertexIndex++]=element.vertex_[c]->sons_[0];
   }
 
@@ -582,7 +581,6 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<2
                                                freeIdCounter_[0]++));
       FoamGridEntityImp<0, dimgrid, dimworld>& midVertex =
         Dune::get<0>(entityImps_[nextLevel]).back();
-      check_for_duplicates(nextLevelVertices, &midVertex, vertexIndex);
       nextLevelVertices[vertexIndex++]=&midVertex;
 
       // sanity check for DUNE numbering
@@ -645,10 +643,8 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<2
          (*facet)->sons_[0]->vertex_[0]->id_!=(*facet)->vertex_[1]->id_)
       {
         //vertex 0 is the midpoint
-        check_for_duplicates(nextLevelVertices, (*facet)->sons_[0]->vertex_[0], vertexIndex);
         nextLevelVertices[vertexIndex++]=const_cast<FoamGridEntityImp<0, dimgrid, dimworld>*>((*facet)->sons_[0]->vertex_[0]);
       } else {
-        check_for_duplicates(nextLevelVertices, (*facet)->sons_[0]->vertex_[1], vertexIndex);
         nextLevelVertices[vertexIndex++]=const_cast<FoamGridEntityImp<0, dimgrid, dimworld>*>((*facet)->sons_[0]->vertex_[1]);
       }
     }
@@ -818,7 +814,6 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<1
       element.vertex_[c]->sons_[0]->elements_= element.vertex_[c]->elements_;
     }
     //add vertex to nextLevelVertices
-    check_for_duplicates(nextLevelVertices, element.vertex_[c]->sons_[0], vertexIndex);
     nextLevelVertices[vertexIndex++]=element.vertex_[c]->sons_[0];
   }
   assert(vertexIndex==2);
@@ -835,7 +830,6 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<1
   // Create element midpoint
   Dune::get<0>(entityImps_[nextLevel]).push_back(FoamGridEntityImp<0, dimgrid, dimworld>(nextLevel, midPoint, freeIdCounter_[0]++));
   FoamGridEntityImp<0, dimgrid, dimworld>& midVertex = Dune::get<0>(entityImps_[nextLevel]).back();
-  check_for_duplicates(nextLevelVertices, &midVertex, vertexIndex);
   nextLevelVertices[vertexIndex++]=&midVertex;
 
   assert(vertexIndex==nextLevelVertices.size()); //==3
