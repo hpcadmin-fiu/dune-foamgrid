@@ -53,7 +53,7 @@ class FoamGridEntityPointer
 
 
         //! dereferencing
-        Entity& dereference() const {
+        const Entity& dereference() const {
             return virtualEntity_;
         }
 
