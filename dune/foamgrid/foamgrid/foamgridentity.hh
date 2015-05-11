@@ -17,8 +17,6 @@
 #include <dune/foamgrid/foamgrid/foamgridvertex.hh>
 #include <dune/foamgrid/foamgrid/foamgridgeometry.hh>
 
-#include "nulliteratorfactory.hh"
-
 namespace Dune {
 
 
@@ -94,7 +92,7 @@ class FoamGridEntity :
 
         /** \brief Default constructor */
         FoamGridEntity() :
-            target_(&*FoamGridNullIteratorFactory<dimgrid-codim, dimgrid, dimworld>::null())
+            target_(nullptr)
         {}
 
 
@@ -221,7 +219,7 @@ class FoamGridEntity<0, 2, GridImp> :
 
         /** \brief Default constructor */
         FoamGridEntity() :
-            target_(&*FoamGridNullIteratorFactory<dimgrid, dimgrid, dimworld>::null())
+            target_(nullptr)
         {}
 
         //! \todo Please doc me !
@@ -543,7 +541,7 @@ class FoamGridEntity<0, 1, GridImp> :
 
         /** \brief Default constructor */
         FoamGridEntity() :
-            target_(&*FoamGridNullIteratorFactory<dimgrid, dimgrid, dimworld>::null())
+            target_(nullptr)
         {}
 
         //! \todo Please doc me !

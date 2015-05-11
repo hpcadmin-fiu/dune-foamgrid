@@ -33,11 +33,12 @@ class FoamGridHierarchicIterator :
     public:
 
         typedef typename GridImp::template Codim<0>::Entity Entity;
+        typedef const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* StackEntry;
 
     //! Constructor
     FoamGridHierarchicIterator(int maxlevel)
-        : FoamGridEntityPointer<0, GridImp>(FoamGridNullIteratorFactory<dimgrid, dimgrid, dimworld>::null()),
-          maxlevel_(maxlevel)
+        : FoamGridEntityPointer<0, GridImp>(nullptr),
+          maxlevel_(maxlevel), elemStack()
     {}
 
         //! \todo Please doc me !
@@ -46,7 +47,7 @@ class FoamGridHierarchicIterator :
             if (elemStack.empty())
                 return;
 
-            const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* old_target = elemStack.top();
+            StackEntry old_target = elemStack.top();
             elemStack.pop();
 
             // Traverse the tree no deeper than maxlevel
@@ -63,7 +64,7 @@ class FoamGridHierarchicIterator :
             }
 
             GridImp::getRealImplementation(this->virtualEntity_).setToTarget((elemStack.empty())
-                                             ? &*FoamGridNullIteratorFactory<dimgrid, dimgrid, dimworld>::null() : elemStack.top());
+                                             ? nullptr : elemStack.top());
         }
 
 
@@ -73,7 +74,7 @@ private:
     int maxlevel_;
 
     /** \brief For depth-first search */
-    std::stack<const FoamGridEntityImp<dimgrid, dimgrid, dimworld>*> elemStack;
+    std::stack<StackEntry> elemStack;
 };
 
 

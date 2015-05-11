@@ -17,7 +17,6 @@
 #include <dune/grid/common/grid.hh>
 
 // Implementation classes
-#include "foamgrid/nulliteratorfactory.hh"
 #include "foamgrid/foamgridvertex.hh"
 #include "foamgrid/foamgridedge.hh"
 #include "foamgrid/foamgridelements.hh"

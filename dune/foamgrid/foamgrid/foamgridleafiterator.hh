@@ -42,7 +42,7 @@ public:
     FoamGridLeafIterator()
         : grid_(nullptr)
     {
-        GridImp::getRealImplementation(this->virtualEntity_).setToTarget(&*FoamGridNullIteratorFactory<dimgrid-codim, dimgrid, dimworld>::null());
+        GridImp::getRealImplementation(this->virtualEntity_).setToTarget(nullptr);
     }
 
     //! prefix increment
