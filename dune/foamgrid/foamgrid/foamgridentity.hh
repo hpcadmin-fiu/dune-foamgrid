@@ -148,16 +148,10 @@ class FoamGridEntity :
             target_ = target;
         }
 
-        /** \brief Get this FoamGridEntityImp object */
-        const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* getTarget() const
-        {
-            return target_;
-        }
-
         //! equality
         bool equals(const Dune::FoamGridEntity<codim, dimgrid, GridImp>& other) const
         {
-            return getTarget() == other.getTarget();
+            return target_ == other.target_;
         }
 
 };
@@ -467,16 +461,10 @@ class FoamGridEntity<0, 2, GridImp> :
             target_ = target;
         }
 
-        /** \brief Get this FoamGridEntityImp object */
-        const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* getTarget() const
-        {
-            return target_;
-        }
-
         //! equality
         bool equals(const Dune::FoamGridEntity<0, dimgrid, GridImp>& other) const
         {
-            return getTarget() == other.getTarget();
+            return target_ == other.target_;
         }
 
         const FoamGridEntityImp<dimgrid, dimgrid ,dimworld>* target_;
@@ -769,16 +757,10 @@ class FoamGridEntity<0, 1, GridImp> :
             target_ = target;
         }
 
-        /** \brief Get this FoamGridEntityImp object */
-        const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* getTarget() const
-        {
-            return target_;
-        }
-
         //! equality
         bool equals(const Dune::FoamGridEntity<0, dimgrid, GridImp>& other) const
         {
-            return getTarget() == other.getTarget();
+            return target_ == other.target_;
         }
 
         const FoamGridEntityImp<dimgrid, dimgrid ,dimworld>* target_;
