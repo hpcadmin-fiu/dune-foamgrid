@@ -81,7 +81,7 @@ class FoamGridEntity :
 
 
         //! Constructor for an entity in a given grid level
-        FoamGridEntity(const FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld>* target) :
+        explicit FoamGridEntity(const FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld>* target) :
             target_(target)
         {}
 
@@ -198,9 +198,17 @@ class FoamGridEntity<0, 2, GridImp> :
         //! The type of the EntitySeed interface class
         typedef typename GridImp::template Codim<0>::EntitySeed EntitySeed;
 
+        template<int codim>
+        struct Codim
+        {
+          typedef typename GridImp::Traits::template Codim<codim>::Entity Entity;
+        };
+
+        typedef typename GridImp::Traits::template Codim<0>::Entity Entity;
+
 
         //! Constructor for an entity in a given grid level
-        FoamGridEntity(const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* hostEntity) :
+        explicit FoamGridEntity(const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* hostEntity) :
             target_(hostEntity)
         {}
 
@@ -506,9 +514,16 @@ class FoamGridEntity<0, 1, GridImp> :
         //! The type of the EntitySeed interface class
         typedef typename GridImp::template Codim<0>::EntitySeed EntitySeed;
 
+        template<int codim>
+        struct Codim
+        {
+          typedef typename GridImp::Traits::template Codim<codim>::Entity Entity;
+        };
+
+        typedef typename GridImp::Traits::template Codim<0>::Entity Entity;
 
         //! Constructor for an entity in a given grid level
-        FoamGridEntity(const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* hostEntity) :
+        explicit FoamGridEntity(const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* hostEntity) :
             target_(hostEntity)
         {}
 
