@@ -95,11 +95,7 @@ public:
 
     //! equality
     bool equals(const FoamGridLeafIntersectionIterator<GridImp>& other) const {
-        return GridImp::getRealImplementation(intersection_).center_   == GridImp::getRealImplementation(other.intersection_).center_ &&
-            GridImp::getRealImplementation(intersection_).facetIndex_ == GridImp::getRealImplementation(other.intersection_).facetIndex_ &&
-            (GridImp::getRealImplementation(intersection_).facetIndex_ == GridImp::getRealImplementation(intersection_).center_->corners()  ||
-             (GridImp::getRealImplementation(intersection_).neighbor_ ==
-              GridImp::getRealImplementation(other.intersection_).neighbor_));
+        return GridImp::getRealImplementation(intersection_).equals(GridImp::getRealImplementation(other.intersection_));
     }
 
     //! prefix increment
@@ -290,9 +286,7 @@ public:
 
   //! equality
   bool equals(const FoamGridLevelIntersectionIterator<GridImp>& other) const {
-      return (GridImp::getRealImplementation(this->intersection_).center_   == GridImp::getRealImplementation(other.intersection_).center_)
-          && (GridImp::getRealImplementation(this->intersection_).facetIndex_ == GridImp::getRealImplementation(other.intersection_).facetIndex_)
-          && (GridImp::getRealImplementation(this->intersection_).neighborIndex_ == GridImp::getRealImplementation(other.intersection_).neighborIndex_);
+      return GridImp::getRealImplementation(this->intersection_).equals(GridImp::getRealImplementation(other.intersection_));
   }
 
     //! prefix increment
