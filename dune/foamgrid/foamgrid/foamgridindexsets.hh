@@ -218,18 +218,18 @@ public:
             because the const class is not instantiated yet.
         */
         template<int codim>
-        int index (const typename remove_const<GridImp>::type::template Codim<codim>::Entity& e) const
+        int index (const typename GridImp::Traits::template Codim<codim>::Entity& e) const
         {
             return GridImp::getRealImplementation(e).target_->leafIndex_;
         }
 
         //! get index of subentity of an entity
         template<int cc>
-        int subIndex (const typename remove_const<GridImp>::type::Traits::template Codim<cc>::Entity& e,
+        int subIndex (const typename GridImp::Traits::template Codim<cc>::Entity& e,
                       int i,
                       unsigned int codim) const
         {
-            return GridImp::getRealImplementation(e).target_->subLevelIndex(i,codim);
+            return GridImp::getRealImplementation(e).target_->subLeafIndex(i,codim);
         }
 
         //! get number of entities of given codim, type and on this level
