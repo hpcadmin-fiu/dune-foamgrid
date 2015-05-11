@@ -510,15 +510,6 @@ class FoamGrid :
                                       FoamGridEntityImp<dimgrid, dimgrid, dimworld>* son,
                                       FoamGridEntityImp<dimgrid, dimgrid, dimworld>* father);
 
-    template<class C, class T>
-    void check_for_duplicates(C& cont, const T& elem, std::size_t vertexIndex)
-    {
-#ifndef NDEBUG
-        for(std::size_t i=0; i<vertexIndex; ++i)
-            assert(cont[i]!=elem);
-#endif
-    }
-
     //! compute the grid indices and ids
     void setIndices();
 
