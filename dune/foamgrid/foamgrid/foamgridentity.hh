@@ -375,8 +375,8 @@ class FoamGridEntity<0, 2, GridImp> :
         }
         //! Inter-level access to father element on coarser grid.
         //! Assumes that meshes are nested.
-        FoamGridEntityPointer<0, GridImp> father () const {
-            return FoamGridEntityPointer<0, GridImp>(target_->father_);
+        Entity father () const {
+            return Entity(FoamGridEntity<0, dimgrid, GridImp>(target_->father_));
         }
 
 
@@ -683,8 +683,8 @@ class FoamGridEntity<0, 1, GridImp> :
 
         //! Inter-level access to father element on coarser grid.
         //! Assumes that meshes are nested.
-        FoamGridEntityPointer<0, GridImp> father () const {
-            return FoamGridEntityPointer<0, GridImp>(target_->father_);
+        Entity father () const {
+            return Entity(FoamGridEntity<0, dimgrid, GridImp>(target_->father_));
         }
 
 
