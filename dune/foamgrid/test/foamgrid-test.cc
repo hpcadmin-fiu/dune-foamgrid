@@ -273,6 +273,7 @@ int main (int argc, char *argv[]) try
         gridcheck(*gridTJunction);
 
         std::cout << "  Calling checkIntersectionIterator" << std::endl;
+        std::cout << "  Warning: This will fail if you enabled checking for the property if the sum of outer normals is 0. This property is not true for non-manifolds." << std::endl;
         checkIntersectionIterator(*gridTJunction);
 
         //std::cout << "  Check if has multiple neighbor functionality" << std::endl;
@@ -288,6 +289,7 @@ int main (int argc, char *argv[]) try
         gridcheck(*gridStar);
 
         std::cout << "  Calling checkIntersectionIterator" << std::endl;
+        std::cout << "  Warning: This will fail if you enabled checking for the property if the sum of outer normals is 0. This property is not true for non-manifolds." << std::endl;
         checkIntersectionIterator(*gridStar);
 
         std::cout << "  Check if has multiple neighbor functionality" << std::endl;
