@@ -366,6 +366,8 @@ public:
 
     private:
     int neighborIndex_;
+    /** \brief One-after-last iterator to the neighbor */
+    typename std::vector<const FoamGridEntityImp<dimgrid, dimgrid ,dimworld>*>::const_iterator neighborEnd_;
     //! pointer to global and local intersection geometries
     mutable Dune::shared_ptr<GeometryImpl> geometry_;
     mutable Dune::shared_ptr<LocalGeometryImpl> geometryInInside_;
