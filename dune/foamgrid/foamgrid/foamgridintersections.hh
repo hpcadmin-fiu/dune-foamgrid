@@ -115,6 +115,7 @@ public:
         //! local number of codim 1 entity in self where intersection is contained in
         int indexInInside () const
         {
+            assert(facetIndex_ < center_->corners());
             return facetIndex_;
         }
 
