@@ -357,7 +357,7 @@ class FoamGrid :
         */
         bool mark(int refCount, const typename Traits::template Codim<0>::Entity & e)
         {
-            if (not e->isLeaf())
+            if (not e.isLeaf())
                 return false;
 
             /** \todo Why do I need those const_casts here? */
