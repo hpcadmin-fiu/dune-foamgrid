@@ -278,11 +278,6 @@ public:
         return true;
     }
 
-    //! Return number of elements connected to this intersection
-    std::size_t numNeighbors () const {
-        return this->center_->facet_[this->facetIndex_]->elements_.size();
-    }
-
     //! local number of codim 1 entity in neighbor where intersection is contained
     int indexInOutside (std::size_t neighborIndex = 0) const {
         //Not necessarily 2 anymore for foamgrid t-junctions
