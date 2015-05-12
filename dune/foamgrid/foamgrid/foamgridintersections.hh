@@ -13,6 +13,7 @@
 #include <dune/foamgrid/foamgrid/foamgridintersectioniterators.hh>
 #include <dune/foamgrid/foamgrid/foamgridvertex.hh>
 #include <dune/foamgrid/foamgrid/foamgridgeometry.hh>
+#include <dune/foamgrid/foamgrid/foamgridnulliteratorfactory.hh>
 
 namespace Dune {
 
@@ -55,7 +56,7 @@ class FoamGridIntersection
 
     FoamGridIntersection()
       : center_(nullptr),
-        facetIndex_(-1) // marker for invalid intersection
+        neighbor_(FoamGridNullIteratorFactory<dimgrid, dimworld>::null())
     {}
 
     /**
@@ -67,7 +68,7 @@ class FoamGridIntersection
      */
     FoamGridIntersection(const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* center,
                          std::size_t facet)
-        : center_(center), facetIndex_(facet)
+        : center_(center), facetIndex_(facet), neighbor_(FoamGridNullIteratorFactory<dimgrid, dimworld>::null())
     {}
 
 public:
