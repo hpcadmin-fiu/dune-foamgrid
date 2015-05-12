@@ -18,12 +18,12 @@ include(DuneMacros)
 # start a dune project with information from dune.module
 dune_project()
 
-add_subdirectory("src")
-add_subdirectory("m4")
-add_subdirectory("dune")
-add_subdirectory("doc")
-add_subdirectory("cmake/modules")
-add_subdirectory("examples")
+add_subdirectory(src)
+add_subdirectory(m4)
+add_subdirectory(dune EXCLUDE_FROM_ALL)
+add_subdirectory(doc)
+add_subdirectory(cmake/modules)
+add_subdirectory(examples EXCLUDE_FROM_ALL)
 
 # finalize the dune project, e.g. generating config.h etc.
 finalize_dune_project(GENERATE_CONFIG_H_CMAKE)
