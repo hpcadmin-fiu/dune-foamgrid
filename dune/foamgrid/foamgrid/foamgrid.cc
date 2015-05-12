@@ -764,7 +764,6 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<2
 
   if((refCount--)>1)
   {
-    int i=0;
     typedef typename array<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*, 1<<dimgrid>::iterator ElementIterator;
     for(ElementIterator elem=nextLevelElements.begin();
         elem != nextLevelElements.end(); ++elem)
@@ -886,7 +885,6 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<1
 
   if((refCount--)>1)
   {
-    int i=0;
     typedef typename array<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*, 1<<dimgrid >::iterator ElementIterator;
     for(ElementIterator elem=nextLevelElements.begin();
         elem != nextLevelElements.end(); ++elem)
