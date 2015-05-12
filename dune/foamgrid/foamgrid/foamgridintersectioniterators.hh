@@ -286,6 +286,7 @@ public:
            GridImp::getRealImplementation(intersection_).center_->corners())
         {
             // This is already the end iterator
+            DUNE_THROW(InvalidStateException, "Cannot increment a one past the end iterator");
             return;
         }
         if(GridImp::getRealImplementation(intersection_).center_->facet_[GridImp::getRealImplementation(intersection_).facetIndex_]->elements_.size()==1)
