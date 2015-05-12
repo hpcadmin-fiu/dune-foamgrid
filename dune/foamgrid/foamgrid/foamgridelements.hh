@@ -132,10 +132,6 @@ namespace Dune {
             DUNE_THROW(GridError, "Non-existing codimension requested!");
         }
 
-        int refinementIndex_;
-
-        MarkState markState_;
-
         array<FoamGridEntityImp<0, dimgrid, dimworld>*, 2> vertex_;
 
         array<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>*, 2> facet_;
@@ -149,7 +145,11 @@ namespace Dune {
         /** \brief Pointer to father element */
         FoamGridEntityImp<dimgrid, dimgrid, dimworld>* father_;
 
-         bool isNew_;
+        int refinementIndex_;
+
+        MarkState markState_;
+
+        bool isNew_;
     };
 
     /** \brief Element specialization of FoamGridEntityImp for 2d grids. Element is a grid entity of topological codimension 0 and dimension dimgrid.*/
@@ -305,8 +305,6 @@ namespace Dune {
 
         array<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*, 4> sons_;
 
-        FoamGridEntityImp<dimgrid, dimgrid ,dimworld>* father_;
-
         array<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>*, 3> facet_;
 
         array<FoamGridEntityImp<0, dimgrid, dimworld>*, 3> vertex_;
@@ -316,6 +314,8 @@ namespace Dune {
 
         /** \brief This flag is set by adapt() if this element has been newly created. */
         bool isNew_;
+
+        FoamGridEntityImp<dimgrid, dimgrid ,dimworld>* father_;
 
     };
 }
