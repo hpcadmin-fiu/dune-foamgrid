@@ -280,10 +280,6 @@ public:
 
     //! local number of codim 1 entity in neighbor where intersection is contained
     int indexInOutside (std::size_t neighborIndex = 0) const {
-        //Not necessarily 2 anymore for foamgrid t-junctions
-    	//assert(this->center_->facet_[this->facetIndex_]->elements_.size()==2);
-        assert(this->neighborIndex_!=this->center_->facet_[this->facetIndex_]->elements_.size());
-
         return std::find((*this->neighbor_)->facet_.begin(), (*this->neighbor_)->facet_.end(),
                          this->center_->facet_[this->facetIndex_])
             - (*this->neighbor_)->facet_.begin();
@@ -291,7 +287,7 @@ public:
 
     //! return true if across the facet a neighbor on this level exists
     bool neighbor () const {
-      return this->neighborIndex_!=this->center_->facet_[this->facetIndex_]->elements_.size();
+      return this->neighbor_!=neighborEnd_;
     }
 
     //! intersection of codimension 1 of this neighbor with element where
@@ -365,7 +361,6 @@ public:
 
 
     private:
-    int neighborIndex_;
     /** \brief One-after-last iterator to the neighbor */
     typename std::vector<const FoamGridEntityImp<dimgrid, dimgrid ,dimworld>*>::const_iterator neighborEnd_;
     //! pointer to global and local intersection geometries
