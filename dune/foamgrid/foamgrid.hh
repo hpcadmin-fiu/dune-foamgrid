@@ -316,13 +316,23 @@ class FoamGrid :
 
         /** \brief Create EntityPointer from EnitySeed */
         template < class EntitySeed >
-        typename Traits::template Codim<EntitySeed::codimension>::EntityPointer
-            entityPointer(const EntitySeed& seed) const
+        static typename Traits::template Codim<EntitySeed::codimension>::EntityPointer
+        entityPointer(const EntitySeed& seed)
         {
             typedef FoamGridEntityPointer<EntitySeed::codimension, const FoamGrid> EntityPointerImpl;
             typedef typename Traits::template Codim<EntitySeed::codimension>::EntityPointer EntityPointer;
 
-            return EntityPointer(EntityPointerImpl(this->getRealImplementation(seed).getImplementationPointer()));
+            return EntityPointer(EntityPointerImpl(FoamGrid::getRealImplementation(seed).getImplementationPointer()));
+        }
+
+        /** \brief Create an Entity from an EntitySeed */
+        template <class EntitySeed>
+        static typename Traits::template Codim<EntitySeed::codimension>::Entity
+        entity(const EntitySeed& seed)
+        {
+          const int codim = EntitySeed::codimension;
+          typedef typename Traits::template Codim<codim>::Entity Entity;
+          return Entity(FoamGridEntity<codim, dimgrid, const FoamGrid>(FoamGrid::getRealImplementation(seed).getImplementationPointer()));
         }
 
 
@@ -345,18 +355,18 @@ class FoamGrid :
         * <li> false, if marking was not possible </li>
         * </ul>
         */
-        bool mark(int refCount, const typename Traits::template Codim<0>::EntityPointer & e)
+        bool mark(int refCount, const typename Traits::template Codim<0>::Entity & e)
         {
-            if (not e->isLeaf())
+            if (!e.isLeaf())
                 return false;
 
             /** \todo Why do I need those const_casts here? */
             if (refCount>=1)
-                const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(*e).target_)->markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::REFINE;
+                const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(e).target_)->markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::REFINE;
             else if (refCount<0)
-                const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(*e).target_)->markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::COARSEN;
+                const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(e).target_)->markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::COARSEN;
             else
-                const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(*e).target_)->markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::DO_NOTHING;
+                const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(e).target_)->markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::DO_NOTHING;
 
             return true;
         }
@@ -365,11 +375,11 @@ class FoamGrid :
         *
         * \return refinement mark (1,0,-1)
         */
-        int getMark(const typename Traits::template Codim<0>::EntityPointer & e) const
+        int getMark(const typename Traits::template Codim<0>::Entity & e) const
         {
-            if (this->getRealImplementation(*e).target_->markState_ == FoamGridEntityImp<dimgrid, dimgrid, dimworld>::REFINE)
+            if (this->getRealImplementation(e).target_->markState_ == FoamGridEntityImp<dimgrid, dimgrid, dimworld>::REFINE)
                 return 1;
-            if (this->getRealImplementation(*e).target_->markState_ == FoamGridEntityImp<dimgrid, dimgrid, dimworld>::COARSEN)
+            if (this->getRealImplementation(e).target_->markState_ == FoamGridEntityImp<dimgrid, dimgrid, dimworld>::COARSEN)
                 return -1;
 
             return 0;
@@ -499,15 +509,6 @@ class FoamGrid :
     void overwriteFineLevelNeighbours(FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>& edge,
                                       FoamGridEntityImp<dimgrid, dimgrid, dimworld>* son,
                                       FoamGridEntityImp<dimgrid, dimgrid, dimworld>* father);
-
-    template<class C, class T>
-    void check_for_duplicates(C& cont, const T& elem, std::size_t vertexIndex)
-    {
-#ifndef NDEBUG
-        for(std::size_t i=0; i<vertexIndex; ++i)
-            assert(cont[i]!=elem);
-#endif
-    }
 
     //! compute the grid indices and ids
     void setIndices();

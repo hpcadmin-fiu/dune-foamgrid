@@ -4,12 +4,12 @@
 
 #include "make2din3dgrid.hh"
 #include <dune/grid/io/file/gmshreader.hh>
-#include <dune/grid/test/gridcheck.cc>
-#include <dune/grid/test/checkintersectionit.cc>
+#include <dune/grid/test/gridcheck.hh>
+#include <dune/grid/test/checkintersectionit.hh>
 #include <dune/grid/../../doc/grids/gridfactory/hybridtestgrids.hh>
 
 #include <dune/foamgrid/foamgrid.hh>
-#include <dune/grid/test/checkgeometryinfather.cc>
+#include <dune/grid/test/checkgeometryinfather.hh>
 #include <dune/grid/common/gridinfo.hh>
 #include <dune/grid/utility/structuredgridfactory.hh>
 #include <dune/grid/io/file/vtk/vtkwriter.hh>

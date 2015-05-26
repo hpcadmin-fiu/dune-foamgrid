@@ -81,13 +81,18 @@ class FoamGridEntity :
 
 
         //! Constructor for an entity in a given grid level
-        FoamGridEntity(const FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld>* target) :
+        explicit FoamGridEntity(const FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld>* target) :
             target_(target)
         {}
 
         /** \brief Copy constructor */
         FoamGridEntity(const FoamGridEntity& original) :
             target_(original.target_)
+        {}
+
+        /** \brief Default constructor */
+        FoamGridEntity() :
+            target_(nullptr)
         {}
 
 
@@ -136,7 +141,7 @@ class FoamGridEntity :
         //! Create EntitySeed
         EntitySeed seed () const
         {
-            return EntitySeed(target_);
+            return EntitySeed(*this);
         }
 
         const FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld>* target_;
@@ -148,16 +153,10 @@ class FoamGridEntity :
             target_ = target;
         }
 
-        /** \brief Get this FoamGridEntityImp object */
-        const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* getTarget() const
-        {
-            return target_;
-        }
-
         //! equality
         bool equals(const Dune::FoamGridEntity<codim, dimgrid, GridImp>& other) const
         {
-            return getTarget() == other.getTarget();
+            return target_ == other.target_;
         }
 
 };
@@ -198,9 +197,17 @@ class FoamGridEntity<0, 2, GridImp> :
         //! The type of the EntitySeed interface class
         typedef typename GridImp::template Codim<0>::EntitySeed EntitySeed;
 
+        template<int codim>
+        struct Codim
+        {
+          typedef typename GridImp::Traits::template Codim<codim>::Entity Entity;
+        };
+
+        typedef typename GridImp::Traits::template Codim<0>::Entity Entity;
+
 
         //! Constructor for an entity in a given grid level
-        FoamGridEntity(const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* hostEntity) :
+        explicit FoamGridEntity(const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* hostEntity) :
             target_(hostEntity)
         {}
 
@@ -210,6 +217,10 @@ class FoamGridEntity<0, 2, GridImp> :
             target_(original.target_)
         {}
 
+        /** \brief Default constructor */
+        FoamGridEntity() :
+            target_(nullptr)
+        {}
 
         //! \todo Please doc me !
         FoamGridEntity& operator=(const FoamGridEntity& original)
@@ -248,7 +259,7 @@ class FoamGridEntity<0, 2, GridImp> :
         //! Create EntitySeed
         EntitySeed seed () const
         {
-            return EntitySeed(target_);
+            return EntitySeed(*this);
         }
 
 
@@ -298,22 +309,31 @@ class FoamGridEntity<0, 2, GridImp> :
             DUNE_THROW(GridError, "Non-existing codimension requested!");
         }
 
-        /** \brief Provide access to sub entity i of given codimension. Entities
-        *  are numbered 0 ... count<cc>()-1
-        */
+        /** \brief Access to codim 0 subentities */
         template<int codim>
-        typename GridImp::template Codim<codim>::EntityPointer subEntity (int i) const{
-            if (codim==0) {
-                // The cast is correct when this if clause is executed
-                return FoamGridEntityPointer<codim, GridImp>( (FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld>*)this->target_);
-            } else if (codim==1) {
-                // The cast is correct when this if clause is executed
-                return FoamGridEntityPointer<codim, GridImp>( (FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld>*)this->target_->facet_[i]);
-            } else if (codim==2) {
-                // The cast is correct when this if clause is executed
-                return FoamGridEntityPointer<codim, GridImp>( (FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld>*)this->target_->vertex_[i]);
-            }
-            DUNE_THROW(GridError, "Non-existing codimension requested!");
+        typename std::enable_if<codim==0, typename Codim<0>::Entity>::type
+        subEntity (int i) const
+        {
+          assert(i==0);
+          return typename Codim<0>::Entity(FoamGridEntity<0, dimgrid, GridImp>(this->target_));
+        }
+
+        /** \brief Access to codim 1 subentities */
+        template<int codim>
+        typename std::enable_if<codim==1, typename Codim<1>::Entity>::type
+        subEntity (int i) const
+        {
+          assert(i==0 || i==1 || i==2);
+          return typename Codim<1>::Entity(FoamGridEntity<1, dimgrid, GridImp>(this->target_->facet_[i]));
+        }
+
+        /** \brief Access to codim 2 subentities */
+        template<int codim>
+        typename std::enable_if<codim==2, typename Codim<2>::Entity>::type
+        subEntity (int i) const
+        {
+          assert(i==0 || i==1 || i==2);
+          return typename Codim<2>::Entity(FoamGridEntity<2, dimgrid, GridImp>(this->target_->vertex_[i]));
         }
 
         //! First level intersection
@@ -364,8 +384,8 @@ class FoamGridEntity<0, 2, GridImp> :
         }
         //! Inter-level access to father element on coarser grid.
         //! Assumes that meshes are nested.
-        FoamGridEntityPointer<0, GridImp> father () const {
-            return FoamGridEntityPointer<0, GridImp>(target_->father_);
+        Entity father () const {
+            return Entity(FoamGridEntity<0, dimgrid, GridImp>(target_->father_));
         }
 
 
@@ -459,16 +479,10 @@ class FoamGridEntity<0, 2, GridImp> :
             target_ = target;
         }
 
-        /** \brief Get this FoamGridEntityImp object */
-        const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* getTarget() const
-        {
-            return target_;
-        }
-
         //! equality
         bool equals(const Dune::FoamGridEntity<0, dimgrid, GridImp>& other) const
         {
-            return getTarget() == other.getTarget();
+            return target_ == other.target_;
         }
 
         const FoamGridEntityImp<dimgrid, dimgrid ,dimworld>* target_;
@@ -506,9 +520,16 @@ class FoamGridEntity<0, 1, GridImp> :
         //! The type of the EntitySeed interface class
         typedef typename GridImp::template Codim<0>::EntitySeed EntitySeed;
 
+        template<int codim>
+        struct Codim
+        {
+          typedef typename GridImp::Traits::template Codim<codim>::Entity Entity;
+        };
+
+        typedef typename GridImp::Traits::template Codim<0>::Entity Entity;
 
         //! Constructor for an entity in a given grid level
-        FoamGridEntity(const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* hostEntity) :
+        explicit FoamGridEntity(const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* hostEntity) :
             target_(hostEntity)
         {}
 
@@ -518,6 +539,10 @@ class FoamGridEntity<0, 1, GridImp> :
             target_(original.target_)
         {}
 
+        /** \brief Default constructor */
+        FoamGridEntity() :
+            target_(nullptr)
+        {}
 
         //! \todo Please doc me !
         FoamGridEntity& operator=(const FoamGridEntity& original)
@@ -556,7 +581,7 @@ class FoamGridEntity<0, 1, GridImp> :
         //! Create EntitySeed
         EntitySeed seed () const
         {
-            return EntitySeed(target_);
+            return EntitySeed(*this);
         }
 
 
@@ -604,18 +629,22 @@ class FoamGridEntity<0, 1, GridImp> :
             DUNE_THROW(GridError, "Non-existing codimension requested!");
         }
 
-        /** \brief Provide access to sub entity i of given codimension. Entities
-        *  are numbered 0 ... count<cc>()-1
-        */
+        /** \brief Access to codim 0 subentities */
         template<int codim>
-        typename GridImp::template Codim<codim>::EntityPointer subEntity (int i) const{
-            if (codim==0) {
-                // The cast is correct when this if clause is executed
-                return FoamGridEntityPointer<codim,GridImp>( (FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld>*)this->target_);
-            } else if (codim==1) {
-                // The cast is correct when this if clause is executed
-                return FoamGridEntityPointer<codim,GridImp>( (FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld>*)this->target_->vertex_[i]);
-            }
+        typename std::enable_if<codim==0, typename Codim<0>::Entity>::type
+        subEntity (int i) const
+        {
+          assert(i==0);
+          return typename Codim<0>::Entity(FoamGridEntity<0, dimgrid, GridImp>(this->target_));
+        }
+
+        /** \brief Access to codim 1 subentities */
+        template<int codim>
+        typename std::enable_if<codim==1, typename Codim<1>::Entity>::type
+        subEntity (int i) const
+        {
+          assert(i==0 || i==1);
+          return typename Codim<1>::Entity(FoamGridEntity<1, dimgrid, GridImp>(this->target_->vertex_[i]));
         }
 
         //! First level intersection
@@ -667,8 +696,8 @@ class FoamGridEntity<0, 1, GridImp> :
 
         //! Inter-level access to father element on coarser grid.
         //! Assumes that meshes are nested.
-        FoamGridEntityPointer<0, GridImp> father () const {
-            return FoamGridEntityPointer<0, GridImp>(target_->father_);
+        Entity father () const {
+            return Entity(FoamGridEntity<0, dimgrid, GridImp>(target_->father_));
         }
 
 
@@ -754,16 +783,10 @@ class FoamGridEntity<0, 1, GridImp> :
             target_ = target;
         }
 
-        /** \brief Get this FoamGridEntityImp object */
-        const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* getTarget() const
-        {
-            return target_;
-        }
-
         //! equality
         bool equals(const Dune::FoamGridEntity<0, dimgrid, GridImp>& other) const
         {
-            return getTarget() == other.getTarget();
+            return target_ == other.target_;
         }
 
         const FoamGridEntityImp<dimgrid, dimgrid ,dimworld>* target_;

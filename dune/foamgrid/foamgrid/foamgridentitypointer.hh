@@ -33,27 +33,35 @@ class FoamGridEntityPointer
 
     typedef typename GridImp::template Codim<codim>::Entity Entity;
 
+    FoamGridEntityPointer()
+      : virtualEntity_(FoamGridEntity<codim, dimgrid, GridImp>())
+    {}
+
     //! Constructor from a FoamGrid entity
     FoamGridEntityPointer (const FoamGridEntity<codim, dimgrid, GridImp>& entity)
-        : virtualEntity_(entity.target_)
+        : virtualEntity_(entity)
     {}
 
     FoamGridEntityPointer (const typename std::list<FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld> >::const_iterator& it)
-        : virtualEntity_(&(*it))
-    {}
+        : virtualEntity_(FoamGridEntity<codim, dimgrid, GridImp>())
+    {
+        GridImp::getRealImplementation(virtualEntity_).setToTarget(&*it);
+    }
 
-    FoamGridEntityPointer (const FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld>* target)
-        : virtualEntity_(target)
-    {}
+    FoamGridEntityPointer (const FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld>* it)
+        : virtualEntity_(FoamGridEntity<codim, dimgrid, GridImp>())
+    {
+        GridImp::getRealImplementation(virtualEntity_).setToTarget(it);
+    }
 
         //! equality
-        bool equals(const FoamGridEntityPointer<codim,GridImp>& i) const {
-            return GridImp::getRealImplementation(virtualEntity_).target_ == GridImp::getRealImplementation(i.virtualEntity_).target_;
+        bool equals(const FoamGridEntityPointer<codim,GridImp>& other) const {
+            return virtualEntity_ == other.virtualEntity_;
         }
 
 
         //! dereferencing
-        Entity& dereference() const {
+        const Entity& dereference() const {
             return virtualEntity_;
         }
 
@@ -65,9 +73,7 @@ class FoamGridEntityPointer
     protected:
 
         //! virtual entity
-        mutable MakeableInterfaceObject<Entity> virtualEntity_;
-
-
+        Entity virtualEntity_;
 };
 
 

@@ -3,19 +3,19 @@
 
 /**
  * \file
- * \brief The SubGridEntitySeed class
+ * \brief Implementation of EntitySeed for the FoamGrid grid manager
  */
 
 #include <dune/common/nullptr.hh>
 
-#include <dune/foamgrid/foamgrid/foamgridentity.hh>
+#include "foamgridentity.hh"
 
 namespace Dune {
 
 
 /**
  * \brief The EntitySeed class provides the minmal information needed to restore an Entity using the grid.
- * \ingroup SubGrid
+ * \ingroup FoamGrid
  *
  */
 template<int codim, class GridImp>
@@ -37,48 +37,36 @@ class FoamGridEntitySeed
 
         enum {codimension = codim};
 
-        /**
-         * \brief Create EntitySeed from hostgrid Entity
-         *
-         * We call hostEntity.seed() directly in the constructor
-         * of SubGridEntitySeed to allow for return value optimization.
-         *
-         * If would use SubGridEntitySeed(hostEntity.seed())
-         * we would have one copy even with optimization enabled.
-         */
+        //! default construct an invalid entity seed
         FoamGridEntitySeed() :
-            entityImplPointer_(nullptr)
+            target_(nullptr)
         {}
 
-        /**
-         * \brief Create EntitySeed from hostgrid Entity
-         *
-         * We call hostEntity.seed() directly in the constructor
-         * of SubGridEntitySeed to allow for return value optimization.
-         *
-         * If would use SubGridEntitySeed(hostEntity.seed())
-         * we would have one copy even with optimization enabled.
-         */
-        FoamGridEntitySeed(const EntityImplType* impl) :
-            entityImplPointer_(impl)
+        //! construct entity seed from entity
+        FoamGridEntitySeed(const FoamGridEntity<codim, dimgrid, GridImp>& entity) :
+            target_(entity.target_)
+        {}
+
+        FoamGridEntitySeed(const FoamGridEntity<codim, dimgrid, GridImp>* target) :
+            target_(target)
         {}
 
         /** \brief check whether it is safe to create an Entity from this Seed */
         bool isValid() const
         {
-          return entityImplPointer_;
+          return target_ != nullptr;
         }
 
     protected:
 
         const EntityImplType* getImplementationPointer() const
         {
-            return entityImplPointer_;
+            return target_;
         }
 
     private:
 
-        const FoamGridEntityImp<mydim, dimgrid, dimworld>* entityImplPointer_;
+        const EntityImplType* target_;
 };
 
 } // namespace Dune
