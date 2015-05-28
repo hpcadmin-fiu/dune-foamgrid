@@ -21,7 +21,7 @@ int main (int argc, char *argv[]) try
 
     Dune::FieldVector<double,2> lower = {0,0};
     Dune::FieldVector<double,2> upper = {1,1};
-    std::array<unsigned int,2> elements = {1,1};
+    std::array<unsigned int,2> elements = {6,6};
 
     std::cout << "Checking FoamGrid<2, 2> (2d in 2d grid)" << std::endl;
     std::cout << "  Creating grid" << std::endl;
