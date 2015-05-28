@@ -32,8 +32,8 @@ namespace Dune {
 
     public:
 
-        FoamGridLevelIndexSet()
-        : level_(0), numQuads_(0), numTriangles_(0), numEdges_(0), numVertices_(0)
+        FoamGridLevelIndexSet(const GridImp& grid, int level)
+        : grid_(&grid), level_(level), numQuads_(0), numTriangles_(0), numEdges_(0), numVertices_(0)
         {}
 
         //! get index of an entity
@@ -115,11 +115,8 @@ namespace Dune {
         }
 
         /** \brief Set up the index set */
-        void update(const GridImp& grid, int level)
+        void update()
         {
-            grid_ = &grid;
-            level_ = level;
-
             numQuads_ = 0;
             numTriangles_ = 0;
             numEdges_ = 0;

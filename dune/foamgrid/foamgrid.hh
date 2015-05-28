@@ -284,9 +284,12 @@ class FoamGrid :
         /** \brief Access to the LevelIndexSets */
         const typename Traits::LevelIndexSet& levelIndexSet(int level) const
         {
-            if (level<0 || level>maxLevel())
-                DUNE_THROW(GridError, "levelIndexSet of nonexisting level " << level << " requested!");
-            return *levelIndexSets_[level];
+          if (! levelIndexSets_[level])
+          {
+            levelIndexSets_[level] = new FoamGridLevelIndexSet<const FoamGrid>(*this, level);
+            levelIndexSets_[level]->update();
+          }
+          return *levelIndexSets_[level];
         }
 
 
@@ -543,7 +546,7 @@ class FoamGrid :
                    >::type EntityTuple;
 
     //! Our set of level indices
-    std::vector<FoamGridLevelIndexSet<const FoamGrid>*> levelIndexSets_;
+    mutable std::vector<FoamGridLevelIndexSet<const FoamGrid>*> levelIndexSets_;
 
     //! The leaf index set
     FoamGridLeafIndexSet<const FoamGrid > leafIndexSet_;

@@ -36,7 +36,8 @@ void Dune::FoamGrid<dimgrid, dimworld>::globalRefine (int refCount)
   for (int i=0; i < refCount; ++i)
   {
     entityImps_.push_back(EntityTuple());
-    levelIndexSets_.push_back(new FoamGridLevelIndexSet<const FoamGrid >());
+    // add space for new LevelIndexSets. They are not created until requested
+    levelIndexSets_.push_back( (FoamGridLevelIndexSet<const FoamGrid > *) 0 );
   }
 
   if (refCount < 0)
@@ -138,9 +139,6 @@ void Dune::FoamGrid<dimgrid, dimworld>::globalRefine (int refCount)
       if (!foundLeaf)
         break;
     }
-
-    for (levelIndex+=2;levelIndex!=entityImps_.size(); ++levelIndex)
-      levelIndexSets_[levelIndex]->update(*this, levelIndex);
   }
 
   // Update the leaf indices
@@ -193,7 +191,8 @@ bool Dune::FoamGrid<dimgrid, dimworld>::preAdapt()
   if (addLevels)
   {
     entityImps_.push_back(EntityTuple());
-    levelIndexSets_.push_back(new FoamGridLevelIndexSet<const FoamGrid >());
+    // add space for new LevelIndexSets. They are not created until requested
+    levelIndexSets_.push_back( (FoamGridLevelIndexSet<const FoamGrid > *) 0);
   }
 
   return willCoarsen;
@@ -300,7 +299,7 @@ bool Dune::FoamGrid<dimgrid, dimworld>::adapt()
       assert(Dune::get<dimgrid-1>(entityImps_[level]).size() &&
              Dune::get<dimgrid>(entityImps_[level]).size());
       // Update the level indices.
-      levelIndexSets_[level]->update(*this, level);
+      levelIndexSets_[level]->update();
     }
     else
     {
@@ -926,14 +925,13 @@ void Dune::FoamGrid<dimgrid, dimworld>::setIndices()
   //   Create the index sets
   // //////////////////////////////////////////
   for (int i=levelIndexSets_.size(); i<=maxLevel(); i++) {
-    FoamGridLevelIndexSet<const FoamGrid >* p
-      = new FoamGridLevelIndexSet<const FoamGrid >();
-    levelIndexSets_.push_back(p);
+    // add space for new LevelIndexSets. They are not created until requested
+    levelIndexSets_.push_back((FoamGridLevelIndexSet< const FoamGrid > *) 0);
   }
 
   for (int i=0; i<=maxLevel(); i++)
     if (levelIndexSets_[i])
-      levelIndexSets_[i]->update(*this, i);
+      levelIndexSets_[i]->update();
 
   // Update the leaf indices
   leafIndexSet_.update(*this);
