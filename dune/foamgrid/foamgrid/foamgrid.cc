@@ -293,25 +293,18 @@ bool Dune::FoamGrid<dimgrid, dimworld>::adapt()
 
     // And the elements
     eraseVanishedEntities(Dune::get<dimgrid>(entityImps_[level]));
-
-    if (Dune::get<0>(entityImps_[level]).size())
-    {
-      assert(Dune::get<dimgrid-1>(entityImps_[level]).size() &&
-             Dune::get<dimgrid>(entityImps_[level]).size());
-      // Update the level indices.
-      levelIndexSets_[level]->update();
-    }
-    else
-    {
-      assert(!Dune::get<dimgrid-1>(entityImps_[level]).size() &&
-             !Dune::get<dimgrid>(entityImps_[level]).size());
-      if (static_cast<int>(level)==maxLevel())
-        entityImps_.pop_back();
-    }
   }
 
-  // Update the leaf indices
-  leafIndexSet_.update(*this);
+  // delete uppermost level if there are no entities in this level anymore
+  if(!Dune::get<0>(entityImps_.back()).size())
+  {
+    assert(!Dune::get<dimgrid-1>(entityImps_.back()).size() &&
+           !Dune::get<dimgrid>(entityImps_.back()).size());
+    entityImps_.pop_back();
+  }
+
+  // Renumber the entities
+  setIndices();
 
   globalRefined=0;
 
