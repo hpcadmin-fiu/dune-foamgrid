@@ -142,7 +142,7 @@ void Dune::FoamGrid<dimgrid, dimworld>::globalRefine (int refCount)
   }
 
   // Update the leaf indices
-  leafIndexSet_.update(*this);
+  leafIndexSet_.update();
 
   globalRefined=std::max(globalRefined+refCount,0);
   postAdapt();
@@ -241,7 +241,7 @@ bool Dune::FoamGrid<dimgrid, dimworld>::adapt()
     if(haveRefined)
     {
       // Update the leaf indices
-      leafIndexSet_.update(*this);
+      leafIndexSet_.update();
     }
     return haveRefined;
   }
@@ -929,10 +929,18 @@ void Dune::FoamGrid<dimgrid, dimworld>::setIndices()
     levelIndexSets_.push_back((FoamGridLevelIndexSet< const FoamGrid > *) 0);
   }
 
+  // Delete old LevelIndexSets if the grid hierarchy got lower
+  int excess = levelIndexSets_.size() - (maxLevel() + 1);
+  for (int i=0; i<excess; i++) {
+    if (levelIndexSets_.back())
+      delete(levelIndexSets_.back());
+    levelIndexSets_.pop_back();
+  }
+
   for (int i=0; i<=maxLevel(); i++)
     if (levelIndexSets_[i])
       levelIndexSets_[i]->update();
 
   // Update the leaf indices
-  leafIndexSet_.update(*this);
+  leafIndexSet_.update();
 }

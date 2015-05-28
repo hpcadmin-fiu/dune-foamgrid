@@ -206,7 +206,7 @@ class FoamGridLeafIndexSet :
 public:
 
     /** \brief Copy constructor */
-    FoamGridLeafIndexSet(const GridImp& g)
+    FoamGridLeafIndexSet(const GridImp& g): grid_(g)
     {}
 
         //! get index of an entity
@@ -289,7 +289,7 @@ public:
         }
 
         /** Recompute the leaf numbering */
-        void update(const GridImp& grid)
+        void update()
         {
 
         numQuads_ = 0;
@@ -300,8 +300,8 @@ public:
         // ///////////////////////////////
         //  Init codim 0 entity indices
         // ///////////////////////////////
-        typename GridImp::Traits::template Codim<0>::LeafIterator eIt    = grid.template leafbegin<0>();
-        typename GridImp::Traits::template Codim<0>::LeafIterator eEndIt = grid.template leafend<0>();
+        typename GridImp::Traits::template Codim<0>::LeafIterator eIt    = grid_.template leafbegin<0>();
+        typename GridImp::Traits::template Codim<0>::LeafIterator eEndIt = grid_.template leafend<0>();
 
         for (; eIt!=eEndIt; ++eIt){
             if(eIt->type().isTriangle() && dimgrid == 2)
@@ -316,10 +316,10 @@ public:
         //   Init the codim 1 entitiy indices
         // //////////////////////////////
 
-        for (int i=grid.maxLevel(); i>=0; i--) {
+        for (int i=grid_.maxLevel(); i>=0; i--) {
 
-            typename GridImp::Traits::template Codim<1>::LevelIterator edIt    = grid.template lbegin<1>(i);
-            typename GridImp::Traits::template Codim<1>::LevelIterator edEndIt = grid.template lend<1>(i);
+            typename GridImp::Traits::template Codim<1>::LevelIterator edIt    = grid_.template lbegin<1>(i);
+            typename GridImp::Traits::template Codim<1>::LevelIterator edEndIt = grid_.template lend<1>(i);
 
             for (; edIt!=edEndIt; ++edIt) {
 
@@ -349,10 +349,10 @@ public:
 
         if(dimgrid==2){
 
-            for (int i=grid.maxLevel(); i>=0; i--) {
+            for (int i=grid_.maxLevel(); i>=0; i--) {
 
-                typename GridImp::Traits::template Codim<dimgrid>::LevelIterator vIt    = grid.template lbegin<dimgrid>(i);
-                typename GridImp::Traits::template Codim<dimgrid>::LevelIterator vEndIt = grid.template lend<dimgrid>(i);
+                typename GridImp::Traits::template Codim<dimgrid>::LevelIterator vIt    = grid_.template lbegin<dimgrid>(i);
+                typename GridImp::Traits::template Codim<dimgrid>::LevelIterator vEndIt = grid_.template lend<dimgrid>(i);
 
                 for (; vIt!=vEndIt; ++vIt) {
 
@@ -393,6 +393,8 @@ public:
         }
 
 private:
+
+    const GridImp& grid_;
 
     int numQuads_;
     int numTriangles_;
