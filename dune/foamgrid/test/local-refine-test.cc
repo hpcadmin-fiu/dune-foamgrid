@@ -5,6 +5,7 @@
 #include "make2din3dgrid.hh"
 #include <dune/grid/io/file/gmshreader.hh>
 #include <dune/grid/test/gridcheck.hh>
+#include <dune/grid/test/checkindexset.hh>
 #include <dune/grid/test/checkintersectionit.hh>
 #include <dune/grid/test/checkadaptation.hh>
 #include <dune/grid/../../doc/grids/gridfactory/hybridtestgrids.hh>
@@ -60,12 +61,22 @@ int main (int argc, char *argv[]) try
     // check grid adaptation interface
     checkAdaptation(*grid1d);
 
+    // check the index sets
+    checkIndexSet(*grid1d, grid1d->leafGridView(), Dune::dverb);
+    for (int i = 0; i < grid1d->maxLevel(); i++)
+        checkIndexSet(*grid1d, grid1d->levelGridView(i), Dune::dverb, true );
+
     // check grid after adaptive refinement
     checkAdaptRefinement(*grid1d);
     {
         Dune::VTKWriter<typename FoamGrid<1, 3>::LeafGridView > writer(grid1d->leafGridView(), VTK::nonconforming);
         writer.write("1d_refined-l");
     }
+    // check the index sets after adaptive refinement
+    checkIndexSet(*grid1d, grid1d->leafGridView(), Dune::dverb);
+    for (int i = 0; i < grid1d->maxLevel(); i++)
+        checkIndexSet(*grid1d, grid1d->levelGridView(i), Dune::dverb, true );
+
     Dune::gridinfo(*grid1d);
     gridcheck(*grid1d);
     checkGeometryInFather(*grid1d);
