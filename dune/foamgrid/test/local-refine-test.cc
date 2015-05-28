@@ -35,6 +35,9 @@ int main (int argc, char *argv[]) try
 
     // check grid adaptation interface
     checkAdaptation(*grid2d);
+
+    // check grid after adaptive refinement
+    checkAdaptRefinement(*grid2d);
     {
         Dune::VTKWriter<typename FoamGrid<2, 2>::LeafGridView > writer(grid2d->leafGridView(), VTK::nonconforming);
         writer.write("2d_refined-l");
@@ -56,6 +59,9 @@ int main (int argc, char *argv[]) try
 
     // check grid adaptation interface
     checkAdaptation(*grid1d);
+
+    // check grid after adaptive refinement
+    checkAdaptRefinement(*grid1d);
     {
         Dune::VTKWriter<typename FoamGrid<1, 3>::LeafGridView > writer(grid1d->leafGridView(), VTK::nonconforming);
         writer.write("1d_refined-l");
