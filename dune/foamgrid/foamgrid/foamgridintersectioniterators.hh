@@ -7,8 +7,6 @@
 #include <dune/foamgrid/foamgrid/foamgridentity.hh>
 #include <dune/foamgrid/foamgrid/foamgridvertex.hh>
 #include <dune/foamgrid/foamgrid/foamgridnulliteratorfactory.hh>
-
-#include <map>
 #include <dune/common/shared_ptr.hh>
 
 /** \file
@@ -33,8 +31,6 @@ class FoamGridLeafIntersectionIterator
     enum {dimgrid  = GridImp::dimension};
 
     typedef std::vector<const FoamGridEntityImp<dimgrid, dimgrid, dimworld>*> ElementVector;
-
-    typedef std::map<int, ElementVector> MapType;
 
     // Only the codim-0 entity is allowed to call the constructors
     friend class FoamGridEntity<0,dimgrid,GridImp>;
