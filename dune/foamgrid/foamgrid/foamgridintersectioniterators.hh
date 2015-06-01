@@ -30,7 +30,8 @@ class FoamGridLeafIntersectionIterator
     enum {dimworld = GridImp::dimensionworld};
     enum {dimgrid  = GridImp::dimension};
 
-    typedef std::vector<const FoamGridEntityImp<dimgrid, dimgrid, dimworld>*> ElementVector;
+    typedef std::vector<typename std::vector<const FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>::const_iterator> ElementVector;
+    typedef typename ElementVector::const_iterator ElementVectorIterator;
 
     // Only the codim-0 entity is allowed to call the constructors
     friend class FoamGridEntity<0,dimgrid,GridImp>;
@@ -100,6 +101,20 @@ class FoamGridLeafIntersectionIterator
     FoamGridLeafIntersectionIterator(const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* center)
         : intersection_(FoamGridLeafIntersection<GridImp>(center,center->corners()))
     {
+    }
+
+    //! fill the element vector with all leaf neighbors. leafNeighbours is the element vector we need for the iterator.
+    void pushBackLeafNeighbours_(const FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>* facet, Dune::shared_ptr<ElementVector> leafNeighbours)
+    {
+      if (facet->isLeaf())
+        for(auto it = facet->elements_.begin(); it != facet->elements_.end(); ++it)
+          leafNeighbours->push_back(it);
+      else
+      {
+        // do it recursively until the leaf level
+        for(auto&& son : facet->sons_)
+          pushBackLeafNeighbours_(son, leafNeighbours);
+      }
     }
 
 public:
@@ -198,6 +213,9 @@ public:
 private:
 
     Intersection intersection_;
+    //! The neighbor elements on the leaf level. Shared pointer to prevent copying when copying the iterator
+    Dune::shared_ptr<ElementVector> leafNeighbors_;
+    ElementVectorIterator leafNeighborIterator_;
 };
 
 
