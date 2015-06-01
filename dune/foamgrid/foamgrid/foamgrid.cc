@@ -889,8 +889,8 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<1
 // Overwrites the neighbours of this and descendant facets
 template <int dimgrid, int dimworld>
 void Dune::FoamGrid<dimgrid, dimworld>::overwriteFineLevelNeighbours(FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>& facet,
-                                                            FoamGridEntityImp<dimgrid, dimgrid, dimworld>* son,
-                                                            FoamGridEntityImp<dimgrid, dimgrid, dimworld>* father)
+                                                            const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* son,
+                                                            const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* father)
 {
   typedef typename std::vector<const FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>::iterator ElementIterator;
 

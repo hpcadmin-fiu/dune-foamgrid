@@ -510,8 +510,8 @@ class FoamGrid :
      * \param father Pointer to the father element that is to be substituted.
      */
     void overwriteFineLevelNeighbours(FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>& edge,
-                                      FoamGridEntityImp<dimgrid, dimgrid, dimworld>* son,
-                                      FoamGridEntityImp<dimgrid, dimgrid, dimworld>* father);
+                                      const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* son,
+                                      const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* father);
 
     //! compute the grid indices and ids
     void setIndices();
