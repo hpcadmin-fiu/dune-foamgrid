@@ -10,7 +10,9 @@
 
 #include <vector>
 #include <map>
+#include <memory>
 
+#include <dune/common/function.hh>
 #include <dune/common/fvector.hh>
 
 #include <dune/grid/common/gridfactory.hh>
@@ -137,6 +139,7 @@ template <int dimworld>
         /** \brief Grid dimension */
         enum {dimgrid = 1};
         typedef typename std::list<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld> >::iterator FacetIterator;
+        typedef typename FoamGrid<1, dimworld>::ctype ctype;
 
     public:
 
@@ -160,6 +163,26 @@ template <int dimworld>
 
             Dune::get<1>(this->grid_->entityImps_[0]).push_back(newElement);
 
+        }
+
+        /** \brief Insert a parametrized element into the coarse grid
+        \param type The GeometryType of the new element
+        \param vertices The vertices of the new element, using the DUNE numbering
+        \param elementParametrization A function prescribing the shape of this element
+        */
+        virtual void insertElement(const GeometryType& type,
+                                   const std::vector<unsigned int>& vertices,
+                                   const std::shared_ptr<VirtualFunction<FieldVector<ctype,dimgrid>,FieldVector<ctype,dimworld> > >& elementParametrization)
+        {
+            assert(type.isLine());
+            FoamGridEntityImp<1, dimgrid, dimworld> newElement(this->vertexArray_[vertices[0]],
+                                                               this->vertexArray_[vertices[1]],
+                                                               0,
+                                                               this->grid_->freeIdCounter_[1]++);
+            // save the pointer to the element parametrization
+            newElement.elementParametrization_ = elementParametrization;
+
+            std::get<dimgrid>(this->grid_->entityImps_[0]).push_back(newElement);
         }
 
         /** \brief Finalize grid creation and hand over the grid
@@ -226,6 +249,7 @@ template <int dimworld>
         /** \brief Grid dimension */
         enum {dimgrid = 2};
         typedef typename std::list<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld> >::iterator FacetIterator;
+        typedef typename FoamGrid<2, dimworld>::ctype ctype;
 
     public:
 
@@ -251,6 +275,27 @@ template <int dimworld>
             newElement.vertex_[2] = this->vertexArray_[vertices[2]];
 
             Dune::get<dimgrid>(this->grid_->entityImps_[0]).push_back(newElement);
+        }
+
+        /** \brief Insert a parametrized element into the coarse grid
+        \param type The GeometryType of the new element
+        \param vertices The vertices of the new element, using the DUNE numbering
+        \param elementParametrization A function prescribing the shape of this element
+        */
+        virtual void insertElement(const GeometryType& type,
+                                   const std::vector<unsigned int>& vertices,
+                                   const std::shared_ptr<VirtualFunction<FieldVector<ctype,dimgrid>,FieldVector<ctype,dimworld> > >& elementParametrization)
+        {
+            assert(type.isTriangle());
+            FoamGridEntityImp<dimgrid, dimgrid, dimworld> newElement(0,   // level
+                                       this->grid_->freeIdCounter_[dimgrid]++);  // id
+            newElement.vertex_[0] = this->vertexArray_[vertices[0]];
+            newElement.vertex_[1] = this->vertexArray_[vertices[1]];
+            newElement.vertex_[2] = this->vertexArray_[vertices[2]];
+            // save the pointer to the element parametrization
+            newElement.elementParametrization_ = elementParametrization;
+
+            std::get<dimgrid>(this->grid_->entityImps_[0]).push_back(newElement);
         }
 
         /** \brief Finalize grid creation and hand over the grid
