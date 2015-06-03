@@ -3,7 +3,10 @@
 #ifndef DUNE_FOAMGRID_ELEMENTS_HH
 #define DUNE_FOAMGRID_ELEMENTS_HH
 
+#include <memory>
+
 #include <dune/common/fmatrix.hh>
+#include <dune/common/function.hh>
 
 #include <dune/foamgrid/foamgrid/foamgridvertex.hh>
 #include <dune/foamgrid/foamgrid/foamgridedge.hh>
@@ -150,6 +153,9 @@ namespace Dune {
         MarkState markState_;
 
         bool isNew_;
+
+        /** \brief The element parametrization */
+        std::shared_ptr<VirtualFunction<FieldVector<double, dimgrid>, FieldVector<double, dimworld> > > elementParametrization_;
     };
 
     /** \brief Element specialization of FoamGridEntityImp for 2d grids. Element is a grid entity of topological codimension 0 and dimension dimgrid.*/
@@ -317,6 +323,8 @@ namespace Dune {
 
         FoamGridEntityImp<dimgrid, dimgrid ,dimworld>* father_;
 
+        /** \brief The element parametrization */
+        std::shared_ptr<VirtualFunction<FieldVector<double, dimgrid>, FieldVector<double, dimworld> > > elementParametrization_;
     };
 }
 
