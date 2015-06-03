@@ -432,7 +432,7 @@ class FoamGridEntity<0, 2, GridImp> :
                             mapping[target_->refinementIndex_][corner][entry];
 
                 // return LocalGeomety by value
-                return LocalGeometry(FoamGridGeometry<dimgrid, dimgrid, GridImp>(target_->type(),
+                return LocalGeometry(FoamGridGeometry<dimgrid, dimgrid, const GridImp>(target_->type(),
                                                                         coordinates));
             }else{
                 DUNE_THROW(NotImplemented, "geometryInFather only supported for triangles!");
@@ -736,7 +736,7 @@ class FoamGridEntity<0, 1, GridImp> :
                     coordinates[corner][0] = mapping[target_->refinementIndex_][corner];
 
                 // return LocalGeomety by value
-                return LocalGeometry(FoamGridGeometry<dimgrid, dimgrid, GridImp>(target_->type(), coordinates));
+                return LocalGeometry(FoamGridGeometry<dimgrid, dimgrid, const GridImp>(target_->type(), coordinates));
             }
             else
             {
