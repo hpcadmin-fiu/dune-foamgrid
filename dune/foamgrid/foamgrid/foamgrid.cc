@@ -818,6 +818,20 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<1
   for(int dim=0; dim<dimworld;++dim)
     midPoint[dim]=(v0->pos_[dim] + v1->pos_[dim])*0.5;
 
+  // if the element is parametrized we obtain the new point by the parametrization
+  if(element.elementParametrization_)
+  {
+    // we know the local coordinates of the midpoint
+    FoamGridEntity<0, dimgrid, Dune::FoamGrid<dimgrid, dimworld> > e(&element);
+    FieldVector<double, dimgrid> localMidPoint(0.5);
+    while(e.hasFather())
+    {
+      localMidPoint = e.geometryInFather().global(localMidPoint);
+      e.target_ = e.target_->father_;
+    }
+    // overwrite the midpoint with the coordinates mapped by the parametrization
+    element.elementParametrization_->evaluate(localMidPoint, midPoint);
+  }
   // Create element midpoint
   Dune::get<0>(entityImps_[nextLevel]).push_back(FoamGridEntityImp<0, dimgrid, dimworld>(nextLevel, midPoint, freeIdCounter_[0]++));
   FoamGridEntityImp<0, dimgrid, dimworld>& midVertex = Dune::get<0>(entityImps_[nextLevel]).back();
@@ -844,6 +858,10 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<1
   element.sons_[0]=newElement;
   element.nSons_++;
 
+  // if the father is parametrized the son will be parametrized too
+  if(element.elementParametrization_)
+    newElement->elementParametrization_ = element.elementParametrization_;
+
   // Next the one that contains vertex 1 of the father.
   Dune::get<dimgrid>(entityImps_[nextLevel])
     .push_back(FoamGridEntityImp<dimgrid, dimgrid, dimworld>(nextLevel, freeIdCounter_[dimgrid]++));
@@ -858,6 +876,10 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<1
   nextLevelElements[1]=newElement;
   element.sons_[1]=newElement;
   element.nSons_++;
+
+  // if the father is parametrized the son will be parametrized too
+  if(element.elementParametrization_)
+    newElement->elementParametrization_ = element.elementParametrization_;
 
   assert(element.nSons_== 1<<dimgrid); //==2
 
