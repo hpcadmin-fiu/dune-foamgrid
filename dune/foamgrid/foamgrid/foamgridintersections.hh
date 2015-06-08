@@ -421,7 +421,6 @@ public:
 
     //! local number of codim 1 entity in neighbor where intersection is contained
     int indexInOutside (std::size_t neighborIndex = 0) const {
-        assert(this->neighbor_!=neighborEnd_);
         // Move to the father of the facet until its level is the same as
         // the level of the neighbor
         FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>* facet=(this->center_->facet_[this->facetIndex_]);
@@ -510,14 +509,12 @@ public:
 
     //! return true if across the facet a neighbor on this level exists
     bool neighbor () const {
-        return this->neighbor_!=neighborEnd_;
+        return this->neighbor_!=FoamGridNullIteratorFactory<dimgrid, dimworld>::null();
     }
 
 private:
 
     FoamGridEntityImp<dimgrid-1, dimgrid ,dimworld>* facetPointer_;
-    /** \brief Iterator to the other neighbor of the intersection. */
-    typename std::vector<const FoamGridEntityImp<dimgrid, dimgrid ,dimworld>*>::const_iterator neighborEnd_;
     //! pointer to global and local intersection geometries
     mutable Dune::shared_ptr<GeometryImpl> geometry_;
     mutable Dune::shared_ptr<LocalGeometryImpl> geometryInInside_;

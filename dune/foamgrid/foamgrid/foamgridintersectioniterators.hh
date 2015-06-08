@@ -44,47 +44,50 @@ class FoamGridLeafIntersectionIterator
 
     //! Constructor for a given grid entity and a given neighbor
     FoamGridLeafIntersectionIterator(const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* center, int facet)
-        : intersection_(FoamGridLeafIntersection<GridImp>(center,facet))
+        : intersection_(FoamGridLeafIntersection<GridImp>(center,facet)), leafNeighbors_(Dune::make_shared<ElementVector>())
     {
-        // If the starting entity is not on a leaf there is nothing to iterate
-        if(!center->isLeaf())
-          return;
-
         if(facet==center->corners())
         {
             // This is the end iterator
+            GridImp::getRealImplementation(intersection_).neighbor_=FoamGridNullIteratorFactory<dimgrid, dimworld>::null();
             return;
         }
 
-        if(center->facet_[GridImp::getRealImplementation(intersection_).facetIndex_]->elements_.size()==1)
+        pushBackLeafNeighbours_(GridImp::getRealImplementation(intersection_).center_->facet_[GridImp::getRealImplementation(intersection_).facetIndex_], leafNeighbors_);
+        if(leafNeighbors_->size()==1)
         {
             // This is a boundary facet.
-            GridImp::getRealImplementation(intersection_).neighbor_ =
-              GridImp::getRealImplementation(intersection_).neighborEnd_=
-              GridImp::getRealImplementation(intersection_).center_->facet_[GridImp::getRealImplementation(intersection_).facetIndex_]->elements_.begin();
+            GridImp::getRealImplementation(intersection_).neighbor_ = FoamGridNullIteratorFactory<dimgrid, dimworld>::null();
             return;
         }
 
         // Search for the first intersection
         while(GridImp::getRealImplementation(intersection_).facetIndex_ != center->corners()) // not an  end iterator
         {
-            GridImp::getRealImplementation(intersection_).neighbor_=GridImp::getRealImplementation(intersection_).center_->facet_[GridImp::getRealImplementation(intersection_).facetIndex_]->elements_.begin();
-            GridImp::getRealImplementation(intersection_).neighborEnd_=GridImp::getRealImplementation(intersection_).center_->facet_[GridImp::getRealImplementation(intersection_).facetIndex_]->elements_.end();
-            while(GridImp::getRealImplementation(intersection_).neighbor_!=GridImp::getRealImplementation(intersection_).neighborEnd_ &&
-                   GridImp::getRealImplementation(intersection_).center_==*GridImp::getRealImplementation(intersection_).neighbor_)
+            leafNeighborIterator_ = leafNeighbors_->begin();
+            GridImp::getRealImplementation(intersection_).neighbor_=*leafNeighborIterator_;
+            while(leafNeighborIterator_!=leafNeighbors_->end() &&
+                   GridImp::getRealImplementation(intersection_).center_==**leafNeighborIterator_)
             {
-                ++GridImp::getRealImplementation(intersection_).neighbor_;
+                ++leafNeighborIterator_;
+                GridImp::getRealImplementation(intersection_).neighbor_ = *leafNeighborIterator_;
             }
-            if(GridImp::getRealImplementation(intersection_).neighbor_==GridImp::getRealImplementation(intersection_).neighborEnd_)
+            if(leafNeighborIterator_==leafNeighbors_->end())
             {
-                if(GridImp::getRealImplementation(intersection_).center_->facet_[GridImp::getRealImplementation(intersection_).facetIndex_]->elements_.size()==1)
+                if(leafNeighbors_->size()==1)
                 {
                     // This is a boundary intersection.
-                     GridImp::getRealImplementation(intersection_).neighborEnd_=GridImp::getRealImplementation(intersection_).neighbor_;
                     return;
                 }else
+                {
                     // No valid intersection found on this facet, move to next one.
                     ++GridImp::getRealImplementation(intersection_).facetIndex_;
+                    if(GridImp::getRealImplementation(intersection_).facetIndex_ != center->corners())
+                    {
+                      leafNeighbors_->clear();
+                      pushBackLeafNeighbours_(GridImp::getRealImplementation(intersection_).center_->facet_[GridImp::getRealImplementation(intersection_).facetIndex_], leafNeighbors_);
+                    }
+                }
             }else
                 // intersection with another element found!
                 break;
@@ -135,14 +138,16 @@ public:
             DUNE_THROW(InvalidStateException, "Cannot increment a one past the end iterator");
             return;
         }
-        if(GridImp::getRealImplementation(intersection_).center_->facet_[GridImp::getRealImplementation(intersection_).facetIndex_]->elements_.size()==1)
+        if(leafNeighbors_->size()==1)
         {
-            // This was a boundary intersection.
+            // This was a boundary intersection go to the next facet
             ++GridImp::getRealImplementation(intersection_).facetIndex_;
             if(GridImp::getRealImplementation(intersection_).facetIndex_ < GridImp::getRealImplementation(intersection_).center_->corners()){
                 // There is another facet, initialize neighbor_ iterator.
-                GridImp::getRealImplementation(intersection_).neighbor_=GridImp::getRealImplementation(intersection_).center_->facet_[GridImp::getRealImplementation(intersection_).facetIndex_]->elements_.begin();
-                GridImp::getRealImplementation(intersection_).neighborEnd_=GridImp::getRealImplementation(intersection_).center_->facet_[GridImp::getRealImplementation(intersection_).facetIndex_]->elements_.end();;
+                leafNeighbors_->clear();
+                pushBackLeafNeighbours_(GridImp::getRealImplementation(intersection_).center_->facet_[GridImp::getRealImplementation(intersection_).facetIndex_], leafNeighbors_);
+                leafNeighborIterator_ = leafNeighbors_->begin();
+                GridImp::getRealImplementation(intersection_).neighbor_=*leafNeighborIterator_;
             }
             else
             {
@@ -153,32 +158,33 @@ public:
         }else
         {
             // Move to the next intersection of this facet
-            ++GridImp::getRealImplementation(intersection_).neighbor_;
+            ++leafNeighborIterator_;
+            GridImp::getRealImplementation(intersection_).neighbor_=*leafNeighborIterator_;
         }
 
-        // Search for the first intersection with a same level neighbor
+        // Search for the first intersection with a neighbor
         while(GridImp::getRealImplementation(intersection_).facetIndex_ != GridImp::getRealImplementation(intersection_).center_->corners()) // still a valid facet
         {
-            if(GridImp::getRealImplementation(intersection_).center_->facet_[GridImp::getRealImplementation(intersection_).facetIndex_]->elements_.size()==1)
+            if(leafNeighbors_->size()==1)
             {
                 // This is a boundary intersection.
-                GridImp::getRealImplementation(intersection_).neighborEnd_=GridImp::getRealImplementation(intersection_).neighbor_;
+                GridImp::getRealImplementation(intersection_).neighbor_=FoamGridNullIteratorFactory<dimgrid, dimworld>::null();
                 return;
             }
 
-            while(GridImp::getRealImplementation(intersection_).neighbor_!=GridImp::getRealImplementation(intersection_).neighborEnd_ &&
-                   GridImp::getRealImplementation(intersection_).center_==*GridImp::getRealImplementation(intersection_).neighbor_)
+            while(leafNeighborIterator_ != leafNeighbors_->end() &&
+                   GridImp::getRealImplementation(intersection_).center_==**leafNeighborIterator_)
             {
                 // Wrong level or neighbor points to center. In both cases this intersection is invalid.
-                ++GridImp::getRealImplementation(intersection_).neighbor_;
+                ++leafNeighborIterator_;
+                GridImp::getRealImplementation(intersection_).neighbor_=*leafNeighborIterator_;
             }
-            if(GridImp::getRealImplementation(intersection_).neighbor_==
-               GridImp::getRealImplementation(intersection_).neighborEnd_)
+            if(leafNeighborIterator_==leafNeighbors_->end())
             {
-                if(GridImp::getRealImplementation(intersection_).center_->facet_[GridImp::getRealImplementation(intersection_).facetIndex_]->elements_.size()==1)
+                if(leafNeighbors_->size()==1)
                 {
                     // This is a boundary intersection.
-                    GridImp::getRealImplementation(intersection_).neighborEnd_=GridImp::getRealImplementation(intersection_).neighbor_;
+                    GridImp::getRealImplementation(intersection_).neighbor_=FoamGridNullIteratorFactory<dimgrid, dimworld>::null();
                     return;
                 }
                 else
@@ -187,9 +193,11 @@ public:
                     ++GridImp::getRealImplementation(intersection_).facetIndex_;
                     if(GridImp::getRealImplementation(intersection_).facetIndex_ < GridImp::getRealImplementation(intersection_).center_->corners())
                     {
+                        leafNeighbors_->clear();
+                        pushBackLeafNeighbours_(GridImp::getRealImplementation(intersection_).center_->facet_[GridImp::getRealImplementation(intersection_).facetIndex_], leafNeighbors_);
                         // There is another facet, initialize neighbor_ iterator.
-                        GridImp::getRealImplementation(intersection_).neighbor_=GridImp::getRealImplementation(intersection_).center_->facet_[GridImp::getRealImplementation(intersection_).facetIndex_]->elements_.begin();
-                        GridImp::getRealImplementation(intersection_).neighborEnd_=GridImp::getRealImplementation(intersection_).center_->facet_[GridImp::getRealImplementation(intersection_).facetIndex_]->elements_.end();
+                        leafNeighborIterator_ = leafNeighbors_->begin();
+                        GridImp::getRealImplementation(intersection_).neighbor_=*leafNeighborIterator_;
                     }
                 }
             }else
