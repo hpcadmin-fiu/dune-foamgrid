@@ -92,7 +92,7 @@ public:
 
         //! equality
         bool equals(const FoamGridIntersection<GridImp>& i) const {
-            return center_==i.center_ && neighbor_ == i.neighbor_;
+            return center_==i.center_ && neighbor_ == i.neighbor_ && facetIndex_ == i.facetIndex_;
         }
 
         /** \brief return true if intersection is with boundary.
