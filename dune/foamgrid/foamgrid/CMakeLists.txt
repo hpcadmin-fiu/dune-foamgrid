@@ -13,6 +13,7 @@ install(FILES foamgrid.cc
               foamgridintersections.hh
               foamgridleafiterator.hh
               foamgridleveliterator.hh
+              foamgridnulliteratorfactory.hh
               foamgridvertex.hh
               foamgridviews.hh
          DESTINATION include/dune/foamgrid/foamgrid)
