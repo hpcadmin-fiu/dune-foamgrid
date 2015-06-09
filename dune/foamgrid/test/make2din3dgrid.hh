@@ -1,7 +1,6 @@
 #ifndef DUNE_FOAMGRID_MAKE2DIN3DGRID_HH
 #define DUNE_FOAMGRID_MAKE2DIN3DGRID_HH
 
-#include <dune/grid/../../doc/grids/gridfactory/hybridtestgrids.hh>
 #include <dune/foamgrid/foamgrid.hh>
 
 

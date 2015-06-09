@@ -8,7 +8,6 @@
 #include <dune/grid/test/checkindexset.hh>
 #include <dune/grid/test/checkintersectionit.hh>
 #include <dune/grid/test/checkadaptation.hh>
-#include <dune/grid/../../doc/grids/gridfactory/hybridtestgrids.hh>
 
 #include <dune/foamgrid/foamgrid.hh>
 #include <dune/grid/test/checkgeometryinfather.hh>
