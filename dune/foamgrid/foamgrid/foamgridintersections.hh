@@ -6,8 +6,8 @@
 /** \file
 * \brief The FoamGridLeafIntersection and FoamGridLevelIntersection classes
 */
+#include <memory>
 #include <dune/grid/common/intersection.hh>
-#include <dune/common/shared_ptr.hh>
 #include <dune/common/nullptr.hh>
 
 #include <dune/foamgrid/foamgrid/foamgridintersectioniterators.hh>
@@ -307,7 +307,7 @@ public:
         for (int idx = 0; idx < dimgrid; ++idx)
             coordinates[idx] = refElement.position(refElement.subEntity(this->facetIndex_, 1, idx, dimgrid), dimgrid);
 
-        geometryInInside_ = make_shared<LocalGeometryImpl>(this->type(), coordinates);
+        geometryInInside_ = std::make_shared<LocalGeometryImpl>(this->type(), coordinates);
 
       return LocalGeometry(*geometryInInside_);
     }
@@ -338,7 +338,7 @@ public:
              if (vtx[j] == (*this->neighbor_)->vertex_[refElementOther.subEntity(0, 0, i, dimgrid)])
               coordinates[j] = refElement.position(refElement.subEntity(0, 0, i, dimgrid), dimgrid);
 
-        geometryInOutside_ = make_shared<LocalGeometryImpl>(this->type(), coordinates);
+        geometryInOutside_ = std::make_shared<LocalGeometryImpl>(this->type(), coordinates);
 
         return LocalGeometry(*geometryInOutside_);
     }
@@ -356,7 +356,7 @@ public:
         for (std::size_t idx = 0; idx < dimgrid; ++idx)
             coordinates[idx] = this->center_->vertex_[refElement.subEntity(this->facetIndex_, 1, idx, dimgrid)]->pos_;
 
-        geometry_ = make_shared<GeometryImpl>(this->type(), coordinates);
+        geometry_ = std::make_shared<GeometryImpl>(this->type(), coordinates);
 
         return Geometry(*geometry_);
     }
@@ -366,9 +366,9 @@ public:
     /** \brief One-after-last iterator to the neighbor */
     typename std::vector<const FoamGridEntityImp<dimgrid, dimgrid ,dimworld>*>::const_iterator neighborEnd_;
     //! pointer to global and local intersection geometries
-    mutable Dune::shared_ptr<GeometryImpl> geometry_;
-    mutable Dune::shared_ptr<LocalGeometryImpl> geometryInInside_;
-    mutable Dune::shared_ptr<LocalGeometryImpl> geometryInOutside_;
+    mutable std::shared_ptr<GeometryImpl> geometry_;
+    mutable std::shared_ptr<LocalGeometryImpl> geometryInInside_;
+    mutable std::shared_ptr<LocalGeometryImpl> geometryInOutside_;
 
 };
 
@@ -453,7 +453,7 @@ public:
         for (std::size_t idx = 0; idx < dimgrid; ++idx)
             coordinates[idx] = refElement.position(refElement.subEntity(this->facetIndex_, 1, idx, dimgrid), dimgrid);
 
-        geometryInInside_ = make_shared<LocalGeometryImpl>(this->type(), coordinates);
+        geometryInInside_ = std::make_shared<LocalGeometryImpl>(this->type(), coordinates);
 
       return LocalGeometry(*geometryInInside_);
     }
@@ -484,7 +484,7 @@ public:
              if (vtx[j] == (*this->neighbor_)->vertex_[refElementOther.subEntity(0, 0, i, dimgrid)])
               coordinates[j] = refElement.position(refElement.subEntity(0, 0, i, dimgrid), dimgrid);
 
-        geometryInOutside_ = make_shared<LocalGeometryImpl>(this->type(), coordinates);
+        geometryInOutside_ = std::make_shared<LocalGeometryImpl>(this->type(), coordinates);
 
         return LocalGeometry(*geometryInOutside_);
     }
@@ -502,7 +502,7 @@ public:
         for (std::size_t idx = 0; idx < dimgrid; ++idx)
             coordinates[idx] = this->center_->vertex_[refElement.subEntity(this->facetIndex_, 1, idx, dimgrid)]->pos_;
 
-        geometry_ = make_shared<GeometryImpl>(this->type(), coordinates);
+        geometry_ = std::make_shared<GeometryImpl>(this->type(), coordinates);
 
         return Geometry(*geometry_);
     }
@@ -516,9 +516,9 @@ private:
 
     FoamGridEntityImp<dimgrid-1, dimgrid ,dimworld>* facetPointer_;
     //! pointer to global and local intersection geometries
-    mutable Dune::shared_ptr<GeometryImpl> geometry_;
-    mutable Dune::shared_ptr<LocalGeometryImpl> geometryInInside_;
-    mutable Dune::shared_ptr<LocalGeometryImpl> geometryInOutside_;
+    mutable std::shared_ptr<GeometryImpl> geometry_;
+    mutable std::shared_ptr<LocalGeometryImpl> geometryInInside_;
+    mutable std::shared_ptr<LocalGeometryImpl> geometryInOutside_;
 };
 
 

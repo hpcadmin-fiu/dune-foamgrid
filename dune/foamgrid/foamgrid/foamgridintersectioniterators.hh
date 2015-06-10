@@ -3,11 +3,11 @@
 #ifndef DUNE_FOAMGRID_INTERSECTIONITERATORS_HH
 #define DUNE_FOAMGRID_INTERSECTIONITERATORS_HH
 
+#include <memory>
 #include <dune/foamgrid/foamgrid/foamgridintersections.hh>
 #include <dune/foamgrid/foamgrid/foamgridentity.hh>
 #include <dune/foamgrid/foamgrid/foamgridvertex.hh>
 #include <dune/foamgrid/foamgrid/foamgridnulliteratorfactory.hh>
-#include <dune/common/shared_ptr.hh>
 
 /** \file
 * \brief The FoamGridLeafIntersectionIterator and FoamGridLevelIntersectionIterator classes
@@ -44,7 +44,7 @@ class FoamGridLeafIntersectionIterator
 
     //! Constructor for a given grid entity and a given neighbor
     FoamGridLeafIntersectionIterator(const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* center, int facet)
-        : intersection_(FoamGridLeafIntersection<GridImp>(center,facet)), leafNeighbors_(Dune::make_shared<ElementVector>())
+        : intersection_(FoamGridLeafIntersection<GridImp>(center,facet)), leafNeighbors_(std::make_shared<ElementVector>())
     {
         if(facet==center->corners())
         {
@@ -107,7 +107,7 @@ class FoamGridLeafIntersectionIterator
     }
 
     //! fill the element vector with all leaf neighbors. leafNeighbours is the element vector we need for the iterator.
-    void pushBackLeafNeighbours_(const FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>* facet, Dune::shared_ptr<ElementVector> leafNeighbours)
+    void pushBackLeafNeighbours_(const FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>* facet, std::shared_ptr<ElementVector> leafNeighbours)
     {
       if (facet->isLeaf())
         for(auto it = facet->elements_.begin(); it != facet->elements_.end(); ++it)
@@ -222,7 +222,7 @@ private:
 
     Intersection intersection_;
     //! The neighbor elements on the leaf level. Shared pointer to prevent copying when copying the iterator
-    Dune::shared_ptr<ElementVector> leafNeighbors_;
+    std::shared_ptr<ElementVector> leafNeighbors_;
     ElementVectorIterator leafNeighborIterator_;
 };
 
