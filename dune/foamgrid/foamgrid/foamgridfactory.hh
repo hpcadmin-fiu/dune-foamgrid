@@ -67,10 +67,10 @@ template <int dimgrid, int dimworld>
 
         /** \brief Insert a vertex into the coarse grid */
         virtual void insertVertex(const FieldVector<ctype,dimworld>& pos) {
-            Dune::get<0>(grid_->entityImps_[0]).push_back(FoamGridEntityImp<0, dimgrid, dimworld> (0,   // level
+            std::get<0>(grid_->entityImps_[0]).push_back(FoamGridEntityImp<0, dimgrid, dimworld> (0,   // level
                                                                          pos,  // position
                                                                          grid_->freeIdCounter_[0]++));
-            vertexArray_.push_back(&*Dune::get<0>(grid_->entityImps_[0]).rbegin());
+            vertexArray_.push_back(&*std::get<0>(grid_->entityImps_[0]).rbegin());
         }
 
         /** \brief Insert a boundary segment.
@@ -161,7 +161,7 @@ template <int dimworld>
                                                                0,
                                                                this->grid_->freeIdCounter_[1]++);
 
-            Dune::get<1>(this->grid_->entityImps_[0]).push_back(newElement);
+            std::get<1>(this->grid_->entityImps_[0]).push_back(newElement);
 
         }
 
@@ -195,8 +195,8 @@ template <int dimworld>
             if (this->grid_==nullptr)
                 return nullptr;
 
-            typename std::list<FoamGridEntityImp<1, dimgrid, dimworld> >::iterator eIt    = Dune::get<1>(this->grid_->entityImps_[0]).begin();
-            typename std::list<FoamGridEntityImp<1, dimgrid, dimworld> >::iterator eEndIt = Dune::get<1>(this->grid_->entityImps_[0]).end();
+            typename std::list<FoamGridEntityImp<1, dimgrid, dimworld> >::iterator eIt    = std::get<1>(this->grid_->entityImps_[0]).begin();
+            typename std::list<FoamGridEntityImp<1, dimgrid, dimworld> >::iterator eEndIt = std::get<1>(this->grid_->entityImps_[0]).end();
 
             for(;eIt!=eEndIt;eIt++) {
 
@@ -222,8 +222,8 @@ template <int dimworld>
             unsigned int boundaryFacetCounter = 0;
 
             // Iterate over all facets (=vertices in 1d)
-            FacetIterator fIt = Dune::get<0>(this->grid_->entityImps_[0]).begin();
-            const FacetIterator fEndIt = Dune::get<0>(this->grid_->entityImps_[0]).end();
+            FacetIterator fIt = std::get<0>(this->grid_->entityImps_[0]).begin();
+            const FacetIterator fEndIt = std::get<0>(this->grid_->entityImps_[0]).end();
             for (; fIt != fEndIt; ++fIt)
                 if(fIt->elements_.size()==1) // if boundary facet
                     fIt->boundarySegmentIndex_ = boundaryFacetCounter++;
@@ -274,7 +274,7 @@ template <int dimworld>
             newElement.vertex_[1] = this->vertexArray_[vertices[1]];
             newElement.vertex_[2] = this->vertexArray_[vertices[2]];
 
-            Dune::get<dimgrid>(this->grid_->entityImps_[0]).push_back(newElement);
+            std::get<dimgrid>(this->grid_->entityImps_[0]).push_back(newElement);
         }
 
         /** \brief Insert a parametrized element into the coarse grid
@@ -317,8 +317,8 @@ template <int dimworld>
             // For fast retrieval: a map from pairs of vertices to the edge that connects them
             std::map<std::pair<const FoamGridEntityImp<0, dimgrid, dimworld>*, const FoamGridEntityImp<0, dimgrid, dimworld>*>, FoamGridEntityImp<1, dimgrid, dimworld>*> edgeMap;
 
-            typename std::list<FoamGridEntityImp<dimgrid, dimgrid, dimworld> >::iterator eIt    = Dune::get<dimgrid>(this->grid_->entityImps_[0]).begin();
-            typename std::list<FoamGridEntityImp<dimgrid, dimgrid, dimworld> >::iterator eEndIt = Dune::get<dimgrid>(this->grid_->entityImps_[0]).end();
+            typename std::list<FoamGridEntityImp<dimgrid, dimgrid, dimworld> >::iterator eIt    = std::get<dimgrid>(this->grid_->entityImps_[0]).begin();
+            typename std::list<FoamGridEntityImp<dimgrid, dimgrid, dimworld> >::iterator eEndIt = std::get<dimgrid>(this->grid_->entityImps_[0]).end();
 
             for (; eIt!=eEndIt; ++eIt) {
 
@@ -348,13 +348,13 @@ template <int dimworld>
                     if (existingEdge == nullptr) {
 
                         // The current edge has not been inserted already.  We do that now.
-                        Dune::get<1>(this->grid_->entityImps_[0]).push_back(FoamGridEntityImp<1, dimgrid, dimworld>(v0,
+                        std::get<1>(this->grid_->entityImps_[0]).push_back(FoamGridEntityImp<1, dimgrid, dimworld>(v0,
                                                                                                     v1,
                                                                                                     0,   // level
                                                                                                     this->grid_->freeIdCounter_[1]++    // id
                                                                                                     ));
 
-                        existingEdge = &*Dune::get<1>(this->grid_->entityImps_[0]).rbegin();
+                        existingEdge = &*std::get<1>(this->grid_->entityImps_[0]).rbegin();
 
                         edgeMap.insert(std::make_pair(std::make_pair(v0,v1), existingEdge));
 
@@ -379,8 +379,8 @@ template <int dimworld>
             unsigned int boundaryFacetCounter = 0;
 
             // Iterate over all facets (=edges in 2D)
-            FacetIterator fIt = Dune::get<1>(this->grid_->entityImps_[0]).begin();
-            const FacetIterator fEndIt = Dune::get<1>(this->grid_->entityImps_[0]).end();
+            FacetIterator fIt = std::get<1>(this->grid_->entityImps_[0]).begin();
+            const FacetIterator fEndIt = std::get<1>(this->grid_->entityImps_[0]).end();
             for (; fIt!=fEndIt; ++fIt)
                 if(fIt->elements_.size()==1) //if boundary facet
                     fIt->boundarySegmentIndex_ = boundaryFacetCounter++;

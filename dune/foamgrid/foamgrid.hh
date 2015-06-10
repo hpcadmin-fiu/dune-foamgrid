@@ -167,7 +167,7 @@ class FoamGrid :
             if (level<0 || level>maxLevel())
                 DUNE_THROW(Dune::GridError, "LevelIterator in nonexisting level " << level << " requested!");
 
-            return Dune::FoamGridLevelIterator<codim,All_Partition, const Dune::FoamGrid<dimgrid, dimworld> >(Dune::get<dimgrid-codim>(entityImps_[level]).begin());
+            return Dune::FoamGridLevelIterator<codim,All_Partition, const Dune::FoamGrid<dimgrid, dimworld> >(std::get<dimgrid-codim>(entityImps_[level]).begin());
         }
 
 
@@ -177,7 +177,7 @@ class FoamGrid :
             if (level<0 || level>maxLevel())
                 DUNE_THROW(GridError, "LevelIterator in nonexisting level " << level << " requested!");
 
-            return Dune::FoamGridLevelIterator<codim,All_Partition, const Dune::FoamGrid<dimgrid, dimworld> >(Dune::get<dimgrid-codim>(entityImps_[level]).end());
+            return Dune::FoamGridLevelIterator<codim,All_Partition, const Dune::FoamGrid<dimgrid, dimworld> >(std::get<dimgrid-codim>(entityImps_[level]).end());
         }
 
 
@@ -187,7 +187,7 @@ class FoamGrid :
             if (level<0 || level>maxLevel())
                 DUNE_THROW(Dune::GridError, "LevelIterator in nonexisting level " << level << " requested!");
 
-            return Dune::FoamGridLevelIterator<codim,PiType, const Dune::FoamGrid<dimgrid, dimworld> >(Dune::get<dimgrid-codim>(entityImps_[level]).begin());
+            return Dune::FoamGridLevelIterator<codim,PiType, const Dune::FoamGrid<dimgrid, dimworld> >(std::get<dimgrid-codim>(entityImps_[level]).begin());
         }
 
 
@@ -197,7 +197,7 @@ class FoamGrid :
             if (level<0 || level>maxLevel())
                 DUNE_THROW(GridError, "LevelIterator in nonexisting level " << level << " requested!");
 
-            return Dune::FoamGridLevelIterator<codim,PiType, const Dune::FoamGrid<dimgrid, dimworld> >(Dune::get<dimgrid-codim>(entityImps_[level]).end());
+            return Dune::FoamGridLevelIterator<codim,PiType, const Dune::FoamGrid<dimgrid, dimworld> >(std::get<dimgrid-codim>(entityImps_[level]).end());
         }
 
 
@@ -235,11 +235,11 @@ class FoamGrid :
 
             // Turn dynamic index into static index
             if ((codim==2 && dimgrid==2) || (codim==1 && dimgrid==1))
-                return Dune::get<0>(entityImps_[level]).size();
+                return std::get<0>(entityImps_[level]).size();
             if ((codim==1 && dimgrid==2))
-                return Dune::get<1>(entityImps_[level]).size();
+                return std::get<1>(entityImps_[level]).size();
             if (codim==0)
-                return Dune::get<dimgrid>(entityImps_[level]).size();
+                return std::get<dimgrid>(entityImps_[level]).size();
 
             return 0;
         }

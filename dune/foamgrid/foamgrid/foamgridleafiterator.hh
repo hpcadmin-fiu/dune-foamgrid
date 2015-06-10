@@ -29,7 +29,7 @@ public:
         /** \todo Can a make the fullRefineLevel work somehow? */
         const int fullRefineLevel = 0;
 
-        const std::list<FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld> >& entities = Dune::get<dimgrid-codim>(grid_->entityImps_[fullRefineLevel]);
+        const std::list<FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld> >& entities = std::get<dimgrid-codim>(grid_->entityImps_[fullRefineLevel]);
         // The &* turns an iterator into a plain pointer
         GridImp::getRealImplementation(this->virtualEntity_).setToTarget(&*entities.begin());
         levelIterator_ = entities.begin();
@@ -51,7 +51,7 @@ public:
         do {
             globalIncrement();
 
-        } while (levelIterator_!=Dune::get<dimgrid-codim>(grid_->entityImps_[grid_->maxLevel()]).end()
+        } while (levelIterator_!=std::get<dimgrid-codim>(grid_->entityImps_[grid_->maxLevel()]).end()
                  && !GridImp::getRealImplementation(this->virtualEntity_).target_->isLeaf());
     }
 
@@ -67,13 +67,13 @@ private:
         // Increment on this level
         ++levelIterator_;
         GridImp::getRealImplementation(this->virtualEntity_).setToTarget(&(*levelIterator_));
-        if (levelIterator_==Dune::get<dimgrid-codim>(grid_->entityImps_[oldLevel]).end())
+        if (levelIterator_==std::get<dimgrid-codim>(grid_->entityImps_[oldLevel]).end())
             GridImp::getRealImplementation(this->virtualEntity_).setToTarget(nullptr);
 
         // If beyond the end of this level set to first of next level
-        if (levelIterator_==Dune::get<dimgrid-codim>(grid_->entityImps_[oldLevel]).end() && oldLevel < grid_->maxLevel()) {
+        if (levelIterator_==std::get<dimgrid-codim>(grid_->entityImps_[oldLevel]).end() && oldLevel < grid_->maxLevel()) {
 
-            const std::list<FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld> >& entities = Dune::get<dimgrid-codim>(grid_->entityImps_[oldLevel+1]);
+            const std::list<FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld> >& entities = std::get<dimgrid-codim>(grid_->entityImps_[oldLevel+1]);
             levelIterator_ = entities.begin();
             GridImp::getRealImplementation(this->virtualEntity_).setToTarget(&*entities.begin());
 

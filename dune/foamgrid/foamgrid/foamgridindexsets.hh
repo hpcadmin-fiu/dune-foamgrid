@@ -126,8 +126,8 @@ namespace Dune {
             //   Init the vertex indices
             // //////////////////////////////
             typename std::list<FoamGridEntityImp<0, dimgrid, dimworld> >::const_iterator vIt;
-            for (vIt =  Dune::get<0>(grid_->entityImps_[level_]).begin();
-                 vIt != Dune::get<0>(grid_->entityImps_[level_]).end();
+            for (vIt =  std::get<0>(grid_->entityImps_[level_]).begin();
+                 vIt != std::get<0>(grid_->entityImps_[level_]).end();
                  ++vIt)
                 /** \todo Remove this const cast */
                 *const_cast<unsigned int*>(&(vIt->levelIndex_)) = numVertices_++;
@@ -136,8 +136,8 @@ namespace Dune {
             //   Init the edges(2d) / element(1d) indices
             // ///////////////////////////////
             typename std::list<FoamGridEntityImp<1, dimgrid, dimworld> >::const_iterator edIt;
-            for (edIt =  Dune::get<1>(grid_->entityImps_[level_]).begin();
-                 edIt != Dune::get<1>(grid_->entityImps_[level_]).end();
+            for (edIt =  std::get<1>(grid_->entityImps_[level_]).begin();
+                 edIt != std::get<1>(grid_->entityImps_[level_]).end();
                  ++edIt)
              /** \todo Remove this const cast */
                  *const_cast<unsigned int*>(&(edIt->levelIndex_)) = numEdges_++;
@@ -149,8 +149,8 @@ namespace Dune {
             if(dimgrid == 2) {
 
                 typename std::list<FoamGridEntityImp<dimgrid, dimgrid, dimworld> >::const_iterator eIt;
-                for (eIt =  Dune::get<dimgrid>(grid_->entityImps_[level_]).begin();
-                    eIt != Dune::get<dimgrid>(grid_->entityImps_[level_]).end();
+                for (eIt =  std::get<dimgrid>(grid_->entityImps_[level_]).begin();
+                    eIt != std::get<dimgrid>(grid_->entityImps_[level_]).end();
                     ++eIt)
                     /** \todo Remove this const cast */
                     *const_cast<unsigned int*>(&(eIt->levelIndex_)) = (eIt->type().isTriangle()) ? numTriangles_++ : numQuads_++;
