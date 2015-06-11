@@ -4,16 +4,24 @@
 
 #include "make2din3dgrid.hh"
 #include <dune/grid/io/file/gmshreader.hh>
+#include <dune/grid/common/gridinfo.hh>
+#include <dune/grid/utility/structuredgridfactory.hh>
+#include <dune/grid/io/file/vtk/vtkwriter.hh>
+#if DUNE_VERSION_NEWER(DUNE_GRID, 2, 4)
 #include <dune/grid/test/gridcheck.hh>
 #include <dune/grid/test/checkindexset.hh>
 #include <dune/grid/test/checkintersectionit.hh>
 #include <dune/grid/test/checkadaptation.hh>
+#include <dune/grid/test/checkgeometryinfather.hh>
+#else
+#include <dune/grid/test/gridcheck.cc>
+#include <dune/grid/test/checkindexset.cc>
+#include <dune/grid/test/checkintersectionit.cc>
+#include <dune/grid/test/checkadaptation.cc>
+#include <dune/grid/test/checkgeometryinfather.cc>
+#endif
 
 #include <dune/foamgrid/foamgrid.hh>
-#include <dune/grid/test/checkgeometryinfather.hh>
-#include <dune/grid/common/gridinfo.hh>
-#include <dune/grid/utility/structuredgridfactory.hh>
-#include <dune/grid/io/file/vtk/vtkwriter.hh>
 
 int main (int argc, char *argv[]) try
 {

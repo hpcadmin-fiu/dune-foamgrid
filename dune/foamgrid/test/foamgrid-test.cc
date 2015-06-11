@@ -2,10 +2,18 @@
 
 #include <iostream>
 
+#include <dune/common/version.hh>
+
 #include "make2din3dgrid.hh"
 #include <dune/grid/io/file/gmshreader.hh>
+
+#if DUNE_VERSION_NEWER(DUNE_GRID, 2, 4)
 #include <dune/grid/test/gridcheck.hh>
 #include <dune/grid/test/checkintersectionit.hh>
+#else
+#include <dune/grid/test/gridcheck.cc>
+#include <dune/grid/test/checkintersectionit.cc>
+#endif
 
 #include <dune/foamgrid/foamgrid.hh>
 
