@@ -219,8 +219,11 @@ public:
     }
 
 private:
-
+#if DUNE_VERSION_NEWER(DUNE_COMMON,2,4)
     Intersection intersection_;
+#else
+    mutable MakeableInterfaceObject<Intersection> intersection_;
+#endif
     //! The neighbor elements on the leaf level. Shared pointer to prevent copying when copying the iterator
     std::shared_ptr<ElementVector> leafNeighbors_;
     ElementVectorIterator leafNeighborIterator_;
@@ -401,11 +404,13 @@ public:
         return intersection_;
     }
 private:
-
+#if DUNE_VERSION_NEWER(DUNE_COMMON,2,4)
     /** \brief The actual intersection
     */
     Intersection intersection_;
-
+#else
+    mutable MakeableInterfaceObject<Intersection> intersection_;
+#endif
 };
 
 

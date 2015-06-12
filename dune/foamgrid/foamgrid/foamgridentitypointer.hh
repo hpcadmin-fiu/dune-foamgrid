@@ -53,27 +53,40 @@ class FoamGridEntityPointer
     {
         GridImp::getRealImplementation(virtualEntity_).setToTarget(it);
     }
-
+#if DUNE_VERSION_NEWER(DUNE_COMMON,2,4)
         //! equality
         bool equals(const FoamGridEntityPointer<codim,GridImp>& other) const {
             return virtualEntity_ == other.virtualEntity_;
         }
+#else
+        bool equals(const FoamGridEntityPointer<codim,GridImp>& i) const {
+            return GridImp::getRealImplementation(virtualEntity_).target_ == GridImp::getRealImplementation(i.virtualEntity_).target_;
+        }
+#endif
 
-
+#if DUNE_VERSION_NEWER(DUNE_COMMON,2,4)
         //! dereferencing
         const Entity& dereference() const {
             return virtualEntity_;
         }
-
+#else
+        //! dereferencing
+        Entity& dereference() const {
+            return virtualEntity_;
+        }
+#endif
         //! ask for level of entity
         int level () const {
             return virtualEntity_.level();
         }
 
     protected:
-
+#if DUNE_VERSION_NEWER(DUNE_COMMON,2,4)
         //! virtual entity
         Entity virtualEntity_;
+#else
+        mutable MakeableInterfaceObject<Entity> virtualEntity_;
+#endif
 };
 
 
