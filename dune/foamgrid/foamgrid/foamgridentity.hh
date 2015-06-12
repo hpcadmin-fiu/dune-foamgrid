@@ -309,6 +309,7 @@ class FoamGridEntity<0, 2, GridImp> :
             DUNE_THROW(GridError, "Non-existing codimension requested!");
         }
 
+#if DUNE_VERSION_NEWER(DUNE_COMMON,2,4)
         /** \brief Access to codim 0 subentities */
         template<int codim>
         typename std::enable_if<codim==0, typename Codim<0>::Entity>::type
@@ -335,6 +336,26 @@ class FoamGridEntity<0, 2, GridImp> :
           assert(i==0 || i==1 || i==2);
           return typename Codim<2>::Entity(FoamGridEntity<2, dimgrid, GridImp>(this->target_->vertex_[i]));
         }
+#else
+
+                /** \brief Provide access to sub entity i of given codimension. Entities
+        *  are numbered 0 ... count<cc>()-1
+        */
+        template<int codim>
+        typename GridImp::template Codim<codim>::EntityPointer subEntity (int i) const{
+            if (codim==0) {
+                // The cast is correct when this if clause is executed
+                return FoamGridEntityPointer<codim, GridImp>( (FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld>*)this->target_);
+            } else if (codim==1) {
+                // The cast is correct when this if clause is executed
+                return FoamGridEntityPointer<codim, GridImp>( (FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld>*)this->target_->facet_[i]);
+            } else if (codim==2) {
+                // The cast is correct when this if clause is executed
+                return FoamGridEntityPointer<codim, GridImp>( (FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld>*)this->target_->vertex_[i]);
+            }
+            DUNE_THROW(GridError, "Non-existing codimension requested!");
+        }
+#endif
 
         //! First level intersection
         FoamGridLevelIntersectionIterator<GridImp> ilevelbegin () const{
@@ -629,6 +650,7 @@ class FoamGridEntity<0, 1, GridImp> :
             DUNE_THROW(GridError, "Non-existing codimension requested!");
         }
 
+#if DUNE_VERSION_NEWER(DUNE_COMMON,2,4)
         /** \brief Access to codim 0 subentities */
         template<int codim>
         typename std::enable_if<codim==0, typename Codim<0>::Entity>::type
@@ -646,6 +668,21 @@ class FoamGridEntity<0, 1, GridImp> :
           assert(i==0 || i==1);
           return typename Codim<1>::Entity(FoamGridEntity<1, dimgrid, GridImp>(this->target_->vertex_[i]));
         }
+#else
+        /** \brief Provide access to sub entity i of given codimension. Entities
+        *  are numbered 0 ... count<cc>()-1
+        */
+        template<int codim>
+        typename GridImp::template Codim<codim>::EntityPointer subEntity (int i) const{
+            if (codim==0) {
+                // The cast is correct when this if clause is executed
+                return FoamGridEntityPointer<codim,GridImp>( (FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld>*)this->target_);
+            } else if (codim==1) {
+                // The cast is correct when this if clause is executed
+                return FoamGridEntityPointer<codim,GridImp>( (FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld>*)this->target_->vertex_[i]);
+            }
+        }
+#endif
 
         //! First level intersection
         FoamGridLevelIntersectionIterator<GridImp> ilevelbegin () const{
