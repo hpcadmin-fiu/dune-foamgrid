@@ -403,11 +403,20 @@ class FoamGridEntity<0, 2, GridImp> :
         {
             return target_->mightVanish();
         }
+
+#if DUNE_VERSION_NEWER(DUNE_COMMON,2,4)
         //! Inter-level access to father element on coarser grid.
         //! Assumes that meshes are nested.
         Entity father () const {
             return Entity(FoamGridEntity<0, dimgrid, GridImp>(target_->father_));
         }
+#else
+        //! Inter-level access to father element on coarser grid.
+        //! Assumes that meshes are nested.
+        FoamGridEntityPointer<0, GridImp> father () const {
+            return FoamGridEntityPointer<0, GridImp>(target_->father_);
+        }
+#endif
 
 
         /** \brief Location of this element relative to the reference element element of the father.
@@ -731,12 +740,19 @@ class FoamGridEntity<0, 1, GridImp> :
             return target_->mightVanish();
         }
 
+#if DUNE_VERSION_NEWER(DUNE_COMMON,2,4)
         //! Inter-level access to father element on coarser grid.
         //! Assumes that meshes are nested.
         Entity father () const {
             return Entity(FoamGridEntity<0, dimgrid, GridImp>(target_->father_));
         }
-
+#else
+        //! Inter-level access to father element on coarser grid.
+        //! Assumes that meshes are nested.
+        FoamGridEntityPointer<0, GridImp> father () const {
+            return FoamGridEntityPointer<0, GridImp>(target_->father_);
+        }
+#endif
 
         /** \brief Location of this element relative to the reference element element of the father.
         * This is sufficient to interpolate all dofs in conforming case.
