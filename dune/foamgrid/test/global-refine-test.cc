@@ -25,8 +25,13 @@ int main (int argc, char *argv[]) try
     const std::string dune_foamgrid_path = std::string(DUNE_FOAMGRID_EXAMPLE_GRIDS_PATH) + "gmsh/";
 
     std::cout << "Checking FoamGrid<2, 2> (2d in 2d grid)" << std::endl;
+#if DUNE_VERSION_NEWER(DUNE_GRID, 2, 4)
     Dune::FieldVector<double,2> lower = {0,0};
     Dune::FieldVector<double,2> upper = {1,1};
+#else
+    Dune::FieldVector<double,2> lower(0);
+    Dune::FieldVector<double,2> upper(1);
+#endif
     std::array<unsigned int,2> elements = {1,1};
     std::shared_ptr<FoamGrid<2, 2> > grid2d = StructuredGridFactory<FoamGrid<2,2> >::createSimplexGrid(lower,upper,elements);
 
