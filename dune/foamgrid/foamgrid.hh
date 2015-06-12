@@ -348,6 +348,7 @@ class FoamGrid :
         */
         void globalRefine (int refCount = 1);
 
+#if DUNE_VERSION_NEWER(DUNE_COMMON,2,4)
         /** \brief Mark entity for refinement
         *
         * This only works for entities of codim 0.
@@ -387,6 +388,47 @@ class FoamGrid :
 
             return 0;
         }
+#else
+        /** \brief Mark entity for refinement
+        *
+        * This only works for entities of codim 0.
+        * The parameter is currently ignored
+        *
+        * \return <ul>
+        * <li> true, if marking was successful </li>
+        * <li> false, if marking was not possible </li>
+        * </ul>
+        */
+        bool mark(int refCount, const typename Traits::template Codim<0>::EntityPointer & e)
+        {
+            if (not e->isLeaf())
+                return false;
+
+            /** \todo Why do I need those const_casts here? */
+            if (refCount>=1)
+                const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(*e).target_)->markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::REFINE;
+            else if (refCount<0)
+                const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(*e).target_)->markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::COARSEN;
+            else
+                const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(*e).target_)->markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::DO_NOTHING;
+
+            return true;
+        }
+
+        /** \brief Return refinement mark for entity
+        *
+        * \return refinement mark (1,0,-1)
+        */
+        int getMark(const typename Traits::template Codim<0>::EntityPointer & e) const
+        {
+            if (this->getRealImplementation(*e).target_->markState_ == FoamGridEntityImp<dimgrid, dimgrid, dimworld>::REFINE)
+                return 1;
+            if (this->getRealImplementation(*e).target_->markState_ == FoamGridEntityImp<dimgrid, dimgrid, dimworld>::COARSEN)
+                return -1;
+
+            return 0;
+        }
+#endif
 
         //! \brief Book-keeping routine to be called before adaptation
         bool preAdapt();
