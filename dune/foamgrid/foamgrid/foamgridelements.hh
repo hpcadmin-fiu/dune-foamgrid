@@ -74,7 +74,8 @@ namespace Dune {
 
         /** \todo Implement this method! */
         bool isLeaf() const {
-            return sons_[0]==nullptr;
+            return sons_[0]==nullptr &&
+                   sons_[1]==nullptr;
         }
 
         /** \todo Implement me! */
@@ -84,7 +85,7 @@ namespace Dune {
 
         bool mightVanish() const
         {
-            return markState_==COARSEN;
+            return markState_==COARSEN || markState_==VANISH;
         }
 
         bool isNew() const
@@ -220,12 +221,14 @@ namespace Dune {
 
         bool mightVanish() const
         {
-            return markState_==COARSEN;
+            return markState_==COARSEN || markState_==VANISH;
         }
 
         bool isLeaf() const {
-            // The sons are either all nullptr or all != nullptr
-            return sons_[0] == nullptr;
+            return sons_[0] == nullptr &&
+                   sons_[1] == nullptr &&
+                   sons_[2] == nullptr &&
+                   sons_[3] == nullptr;
         }
 
         bool isNew() const
