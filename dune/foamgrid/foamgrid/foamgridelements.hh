@@ -35,7 +35,8 @@ namespace Dune {
                           FoamGridEntityImp<0, dimgrid, dimworld>* v1,
                           int level, unsigned int id)
             : FoamGridEntityBase(level,id), nSons_(0), father_(nullptr),
-              refinementIndex_(-1), markState_(DO_NOTHING), isNew_(false)
+              refinementIndex_(-1), markState_(DO_NOTHING), isNew_(false),
+              growthFacetIndex_(-1), neighborFacetForMerging_(nullptr), coarseningBlocked_(false)
         {
             vertex_[0] = v0;
             vertex_[1] = v1;
@@ -51,7 +52,8 @@ namespace Dune {
                           FoamGridEntityImp* father)
 
             : FoamGridEntityBase(level,id), nSons_(0), father_(father),
-              refinementIndex_(-1), markState_(DO_NOTHING), isNew_(false)
+              refinementIndex_(-1), markState_(DO_NOTHING), isNew_(false),
+              growthFacetIndex_(-1), neighborFacetForMerging_(nullptr), coarseningBlocked_(false)
         {
             vertex_[0] = v0;
             vertex_[1] = v1;
@@ -63,7 +65,8 @@ namespace Dune {
         FoamGridEntityImp(int level, unsigned int id)
             : FoamGridEntityBase(level, id),
               nSons_(0), refinementIndex_(-1),
-              markState_(DO_NOTHING), isNew_(false)
+              markState_(DO_NOTHING), isNew_(false),
+              growthFacetIndex_(-1), neighborFacetForMerging_(nullptr), coarseningBlocked_(false)
         {
           sons_[0] = sons_[1] = nullptr;
           father_ = nullptr;
@@ -156,6 +159,19 @@ namespace Dune {
 
         /** \brief The element parametrization */
         std::shared_ptr<VirtualFunction<FieldVector<double, dimgrid>, FieldVector<double, dimworld> > > elementParametrization_;
+
+        /** \brief Stores the coordinates of the new point in case of growth */
+        std::shared_ptr<Dune::FieldVector<double, dimworld> > growthPoint_;
+
+        /** \brief Local index of the facet exhibiting growth */
+        int growthFacetIndex_;
+
+        /** \brief Stores a pointer to the facet this element will be connected with in a merge */
+        FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>* neighborFacetForMerging_;
+
+        /** \brief This flag is set by postGrow() if the element looses its right to coarsen
+        *         because it contains a bifurcation facet without father */
+        bool coarseningBlocked_;
     };
 
     /** \brief Element specialization of FoamGridEntityImp for 2d grids. Element is a grid entity of topological codimension 0 and dimension dimgrid.*/
@@ -175,7 +191,8 @@ namespace Dune {
             : FoamGridEntityBase(level,id),
               refinementIndex_(-1),
               nSons_(0),
-              markState_(DO_NOTHING), isNew_(false)
+              markState_(DO_NOTHING), isNew_(false),
+              growthFacetIndex_(-1), neighborFacetForMerging_(nullptr), coarseningBlocked_(false)
         {
           sons_[0]= sons_[1] = sons_[2] = sons_[3] = nullptr;
           father_ = nullptr;
@@ -325,6 +342,19 @@ namespace Dune {
 
         /** \brief The element parametrization */
         std::shared_ptr<VirtualFunction<FieldVector<double, dimgrid>, FieldVector<double, dimworld> > > elementParametrization_;
+
+        /** \brief Stores the coordinates of the new point in case of growth */
+        std::shared_ptr<Dune::FieldVector<double, dimworld> > growthPoint_;
+
+        /** \brief Local index of the facet exhibiting growth */
+        int growthFacetIndex_;
+
+        /** \brief Stores a pointer to the facet this element will be connected with in a merge */
+        FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>* neighborFacetForMerging_;
+
+        /** \brief This flag is set by postGrow() if the element looses its right to coarsen
+        *         because it contains a bifurcation facet without father */
+        bool coarseningBlocked_;
     };
 }
 
