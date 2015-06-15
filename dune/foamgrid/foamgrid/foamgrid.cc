@@ -166,6 +166,11 @@ bool Dune::FoamGrid<dimgrid, dimworld>::preAdapt()
 
     if (mark<0)
     {
+      // If the element is marked for coarsening but it is not allowed because of growth
+      // i.e. it contains a junction facet with has no father, we reset to DO_NOTHING
+      if(this->getRealImplementation(*elem).target_->coarseningBlocked_)
+        const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(*elem).target_)->markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::DO_NOTHING;
+
       // If this element is marked for coarsening, but another child
       // of this element's father is marked for refinement or has children, then we
       // need to reset the marker to doNothing
@@ -958,4 +963,312 @@ void Dune::FoamGrid<dimgrid, dimworld>::setIndices()
 
   // Update the leaf indices
   leafIndexSet_.update();
+}
+
+//f Book-keeping routine to be called before adaptation
+// Returns true if an element will vanish
+template <int dimgrid, int dimworld>
+bool Dune::FoamGrid<dimgrid, dimworld>::preGrow()
+{
+  // Loop over all leaf entities and check whether they might spawn
+  // If there is one return true.
+  typedef typename Traits::template Codim<0>::LeafIterator Iterator;
+  bool entitiesWillVanish = false;
+
+  for (Iterator elem=this->leafbegin<0>(), end = this->leafend<0>(); elem != end; ++elem)
+  {
+    FoamGridEntityImp<dimgrid, dimgrid, dimworld>& element =
+        *const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(*elem).target_);
+    int mark=getGrowthMark(*elem);
+    /* Every element can be deleted
+     * Every element can grow if dimgrid < dimworld. The user has to make sure
+     * the growth algorithm does not degenerate the grid. For dimgrid == dimworld
+     * only boundary elements can grow (on boundary facets).
+     * Every element facet can be joined with another element facet. The user has
+     * to make sure this does not degenerate the grid.
+     */
+    switch(mark)
+    {
+      case 0:
+      case 2:
+      {
+        break;
+      }
+      case -1:
+      {
+        entitiesWillVanish = true;
+      }
+      case 1:
+      {
+        bool isAllowedToGrow = true;
+        if(dimgrid == dimworld)
+          if(element.facet_[element.growthFacetIndex_]->elements_.size() > 1) //if this facet is not a boundary facet
+              isAllowedToGrow = false;
+        if(!isAllowedToGrow)
+          element.markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::DO_NOTHING;
+      }
+    }
+  }
+  return entitiesWillVanish;
+}
+
+
+// Triggers the grid growth
+// Returns true if new elements were created
+template <int dimgrid, int dimworld>
+bool Dune::FoamGrid<dimgrid, dimworld>::grow()
+{
+  bool leafChanged = false;
+  bool newEntities = false;
+  bool removedEntities = false;
+  // Loop over all leaf elements and grow/prune according to the mark
+  typedef typename Traits::template Codim<0>::LeafIterator Iterator;
+  for (Iterator elem=this->leafbegin<0>(), end = this->leafend<0>();
+       elem != end; ++elem)
+  {
+    int mark = getGrowthMark(*elem);
+    switch (mark)
+    {
+      case 0:
+      {
+        break;
+      }
+      case 1:
+      {
+        // grow simplices
+        if (elem->type().isTriangle() || elem->type().isLine())
+          leafChanged = newEntities = growSimplexElement(*const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>
+                                                         (this->getRealImplementation(*elem).target_)) || leafChanged || newEntities;
+        else
+          DUNE_THROW(NotImplemented, "Growth only supported for simplices!");
+        break;
+      }
+      case -1:
+      {
+        // remove the element
+        removedEntities = removeSimplexElement(*const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>
+                             (this->getRealImplementation(*elem).target_)) || removedEntities;
+        leafChanged = true;
+        break;
+      }
+      case 2:
+      {
+        // merge simplices
+        if (elem->type().isTriangle() || elem->type().isLine())
+          leafChanged = newEntities = mergeSimplexElement(*const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>
+                                                          (this->getRealImplementation(*elem).target_)) || leafChanged || newEntities;
+        else
+          DUNE_THROW(NotImplemented, "Merging only supported for simplices!");
+        break;
+      }
+    }
+  }
+
+  if(removedEntities)
+  {
+    eraseVanishedEntities(std::get<0>(entityImps_[maxLevel()]));
+    eraseVanishedEntities(std::get<dimgrid>(entityImps_[maxLevel()]));
+  }
+
+  if (leafChanged)
+    leafIndexSet_.update();
+
+  return newEntities;
+}
+
+
+
+// Clean up refinement markers
+template <int dimgrid, int dimworld>
+void Dune::FoamGrid<dimgrid, dimworld>::postGrow()
+{
+  // Loop over all leaf entities and remove the isNew Marker
+  // and set the coarseing blocker in case we created a T-junction
+  for (auto elem=this->leafbegin<0>(), end = this->leafend<0>(); elem != end; ++elem)
+  {
+    FoamGridEntityImp<dimgrid, dimgrid, dimworld>& element=*const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(*elem).target_);
+    element.isNew_=false;
+
+    //Block elements that do now have a facet being a junction and not having a father for coarsening
+    for(auto&& facet : element.facet_)
+      if(facet->elements_.size() > 2 && !(facet->hasFather()))
+        element.coarseningBlocked_ = true;
+
+    // Also block all children of the father as one child marked for coarsening is enough to coarsen all
+    if(element.coarseningBlocked_ && element.hasFather())
+    {
+      FoamGridEntityImp<dimgrid, dimgrid, dimworld>& father=*(element.father_);
+      for (auto&& child : father.sons_)
+        child->coarseningBlocked_ = true;
+    }
+  }
+}
+
+// Add an element by connecting an element facet to a new vertex
+template <int dimgrid, int dimworld>
+bool Dune::FoamGrid<dimgrid, dimworld>::growSimplexElement(FoamGridEntityImp<dimgrid, dimgrid, dimworld>& element)
+{
+  if (dimgrid!=1)
+  {
+    // TODO currently only works for 1d grids
+    DUNE_THROW(NotImplemented, "Growth is currently only supported for 1d grids");
+  }
+
+  // get the facet pointer to the facet that will grow
+  FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>* facet = element.facet_[element.growthFacetIndex_];
+
+  if(facet->grew_)
+    return false;
+
+  bool onBoundary = false;
+  if(facet->elements_.size() == 1)
+    onBoundary = true;
+
+  // everything happens on the same level
+  unsigned int thisLevel = element.level();
+
+  // Create the new point
+  std::get<0>(entityImps_[thisLevel]).push_back(FoamGridEntityImp<0, dimgrid, dimworld>(thisLevel,
+                                                                                         *(element.growthPoint_),
+                                                                                         freeIdCounter_[0]++));
+  FoamGridEntityImp<0, dimgrid, dimworld>& newVertex = std::get<0>(entityImps_[thisLevel]).back();
+
+  if(onBoundary)
+  {
+    // if the spawn facet was on the boundary inherit the boudaryId
+    newVertex.boundaryId_= facet->boundaryId_;
+    newVertex.boundarySegmentIndex_= facet->boundarySegmentIndex_;
+  }
+  else
+  {
+    // if not we have to give it a new boundaryId
+    newVertex.boundaryId_= numBoundarySegments_;
+    newVertex.boundarySegmentIndex_= numBoundarySegments_;
+    ++numBoundarySegments_;
+  }
+  // Create the new element with the new vertex and the chosen facet
+  std::get<dimgrid>(entityImps_[thisLevel])
+          .push_back(FoamGridEntityImp<dimgrid, dimgrid, dimworld>(facet,
+                                                                   &newVertex,
+                                                                   thisLevel,
+                                                                   freeIdCounter_[dimgrid]++));
+  FoamGridEntityImp<dimgrid, dimgrid, dimworld>* newElement = &(std::get<dimgrid>(entityImps_[thisLevel]).back());
+  // set the new flag, everything else is handled by the 1d constructor
+  newElement->isNew_ = true;
+
+  // Now we have to update the elements vector of the joined facets
+  facet->elements_.push_back(newElement);
+  // and to the new one
+  newVertex.elements_.push_back(newElement);
+
+  // Mark the facet as each facet is only allowed to grow once per growth step
+  facet->grew_ = true;
+
+  return true;
+}
+
+// Add an element by connecting an element facet to a new vertex
+template <int dimgrid, int dimworld>
+bool Dune::FoamGrid<dimgrid, dimworld>::removeSimplexElement(FoamGridEntityImp<dimgrid, dimgrid, dimworld>& element)
+{
+  if (dimgrid!=1)
+  {
+    // TODO currently only works for 1d grids
+    DUNE_THROW(NotImplemented, "Growth is currently only supported for 1d grids");
+  }
+  element.willVanish_ = true;
+  // check which sub entities of the element only belong to this element and have to be removed too
+  for(auto&& facet : element.facet_)
+  {
+    if(facet->elements_.size() < 2)
+    {
+      facet->willVanish_ = true;
+      if(facet->hasFather())
+      {
+        facet->father_->nSons_ = 0;
+        facet->father_->sons_[0] = nullptr;
+      }
+    }
+    else
+    {
+      // this facet will become a boundary through the removal if it only has two associated elements
+      if(facet->elements_.size() == 2)
+      {
+        facet->boundaryId_= numBoundarySegments_;
+        facet->boundarySegmentIndex_= numBoundarySegments_;
+        ++numBoundarySegments_;
+      }
+      // remove the entity pointers of the remaining subentities and the father
+      for(auto e = facet->elements_.begin(); e != facet->elements_.end();)
+      {
+        if((*e)->willVanish_)
+          e = facet->elements_.erase(e);
+        else
+          ++e;
+      }
+    }
+  }
+  if(element.hasFather())
+  {
+    --(element.father_->nSons_);
+    int eIdx = 0;
+    for(auto e = element.father_->sons_.begin(); e != element.father_->sons_.end(); ++e, ++eIdx)
+    {
+      if((*e)->willVanish_)
+        element.father_->sons_[eIdx] = nullptr;
+    }
+  }
+  return true;
+}
+
+// Add an element by connecting an element facet to a new vertex
+template <int dimgrid, int dimworld>
+bool Dune::FoamGrid<dimgrid, dimworld>::mergeSimplexElement(FoamGridEntityImp<dimgrid, dimgrid, dimworld>& element)
+{
+  if (dimgrid!=1)
+  {
+    // TODO currently only works for 1d grids
+    DUNE_THROW(NotImplemented, "Growth is currently only supported for 1d grids");
+  }
+
+  // get the facet pointer to the facet that will grow
+  FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>* facet = element.facet_[element.growthFacetIndex_];
+  // get the facet pointer to the facet that it will grow to
+  FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>* neighborFacet = element.neighborFacetForMerging_;
+  if(facet->grew_)
+    return false;
+
+  // check if those facets already share an element
+  for (auto&& e : facet->elements_)
+    for (auto&& ne : neighborFacet->elements_)
+      if (e==ne)
+        return false;
+
+  // everything happens on the same level
+  unsigned int thisLevel = element.level();
+
+  // Create the new element with the new vertex and the chosen facets
+  std::get<dimgrid>(entityImps_[thisLevel])
+          .push_back(FoamGridEntityImp<dimgrid, dimgrid, dimworld>(facet,
+                                                                   neighborFacet,
+                                                                   thisLevel,
+                                                                   freeIdCounter_[dimgrid]++));
+  FoamGridEntityImp<dimgrid, dimgrid, dimworld>* newElement = &(std::get<dimgrid>(entityImps_[thisLevel]).back());
+  // set the new flag, everything else is handled by the 1d constructor
+  newElement->isNew_ = true;
+
+  // Now we have to update the elements vector of the joined facets
+  facet->elements_.push_back(newElement);
+  neighborFacet->elements_.push_back(newElement);
+
+  // If those elements were boundary facets before we have to reduce the number of boundary segments
+  if(facet->elements_.size() == 2)
+    --numBoundarySegments_;
+  if(neighborFacet->elements_.size() == 2)
+    --numBoundarySegments_;
+
+  // Mark the facet as each facet is only allowed to grow once per growth step
+  facet->grew_ = true;
+
+  return true;
 }
