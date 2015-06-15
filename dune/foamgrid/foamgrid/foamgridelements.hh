@@ -96,6 +96,11 @@ namespace Dune {
             return GeometryType(GeometryType::simplex, 1);
         }
 
+        bool hasFather() const
+        {
+            return father_!=nullptr;
+        }
+
         /** \brief Number of corners (==2) */
         unsigned int corners() const {
             return 2;

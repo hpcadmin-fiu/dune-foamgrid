@@ -67,6 +67,11 @@ namespace Dune {
             return GeometryType(0);
         }
 
+        bool hasFather() const
+        {
+            return father_!=nullptr;
+        }
+
         //! This has no function yet in Foamgrid
         unsigned int boundarySegmentIndex() const {
             return boundarySegmentIndex_;
