@@ -42,6 +42,52 @@ public:
 };
 
 /**
+ * \brief Mapping class mapping from a triangle with points on the unit sphere onto the sphere
+  *       with theta in [0, pi] and phi in [0, 2*pi)
+ */
+template<typename ctype, int dimgrid, int dimworld>
+class UnitSphereMapping :
+  public Dune::VirtualFunction<Dune::FieldVector<ctype, dimgrid>, Dune::FieldVector<ctype, dimworld> >
+{
+  const std::array<Dune::FieldVector<double, 3>, 3> vertices_;
+
+public:
+  UnitSphereMapping(std::array<Dune::FieldVector<double, 3>, 3> vertices) : vertices_(vertices) {}
+
+  ~UnitSphereMapping() {}
+  /**
+   * \brief Function evaluation.
+   *
+   * \param x Argument for function evaluation.
+   * \param y Result of function evaluation.
+   */
+  void evaluate(const Dune::FieldVector<ctype,dimgrid>& x, Dune::FieldVector<ctype,dimworld>& y) const
+  {
+    // calculate global coordinate
+    Dune::FieldVector<double, 3> shapeFunctions = evaluateShapeFunctions(x);
+    y = {0,0,0};
+    for(size_t i = 0; i < y.size(); i++)
+      for(size_t j = 0; j < 3; j++)
+        y[j] += vertices_[i][j]*shapeFunctions[i];
+    // project it on the unit sphere
+    y /= y.two_norm();
+  }
+
+  inline Dune::FieldVector<double, 3> evaluateShapeFunctions(const Dune::FieldVector<ctype,dimgrid>& x) const
+  {
+    Dune::FieldVector<double, 3> out;
+    out[0] = 1.0;
+    for (size_t i=0; i<2; i++)
+    {
+      out[0]  -= x[i];
+      out[i+1] = x[i];
+    }
+    return out;
+  }
+
+};
+
+/**
  * \brief Method to calculate the vector update for a single time step advance
  */
 template<class GridView, class Mapper>
