@@ -253,7 +253,7 @@ class FoamGridEntity<0, 2, GridImp> :
             for (std::size_t i=0; i<target_->corners(); i++)
                 coordinates[i] = target_->vertex_[i]->pos_;
 
-            return Geometry(FoamGridGeometry<dimgrid, dimworld, GridImp>(target_->type(), coordinates));
+            return Geometry(FoamGridGeometry<dimgrid, dimworld, const GridImp>(target_->type(), coordinates));
         }
 
         //! Create EntitySeed
@@ -605,7 +605,7 @@ class FoamGridEntity<0, 1, GridImp> :
             for (std::size_t i=0; i<target_->corners(); i++)
                 coordinates[i] = target_->corner(i);
 
-            return Geometry(FoamGridGeometry<dimgrid, dimworld, GridImp>(target_->type(), coordinates));
+            return Geometry(FoamGridGeometry<dimgrid, dimworld, const GridImp>(target_->type(), coordinates));
         }
 
         //! Create EntitySeed
