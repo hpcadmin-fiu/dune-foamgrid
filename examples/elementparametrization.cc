@@ -75,15 +75,18 @@ void evolve (const GridView& gridView,
       eCenter -= isCenter; nCenter -= isCenter;
       double dist = eCenter.two_norm() + nCenter.two_norm();
 
+      //approximate h as the distance to the neihgbour center
+      h = std::min(h, dist);
+
       // approximate gradient
       double gradTn = (temperature[nIdx] - temperature[eIdx])/dist;
 
       // add to update
       update[eIdx] += lambda*gradTn;
     }
-    h = std::min(h, element.geometry().volume());
   }
 
+  // CFL criterion
   dt = std::min(dt, h*h/2.0/lambda);
 
   // scale dt with safety factor
