@@ -23,7 +23,7 @@ namespace Dune {
         FoamGridEntityImp(const FoamGridEntityImp<0, dimgrid, dimworld>* v0,
                           const FoamGridEntityImp<0, dimgrid, dimworld>* v1,
                           int level, unsigned int id)
-            : FoamGridEntityBase(level,id), elements_(), nSons_(0), father_(nullptr)
+            : FoamGridEntityBase(level,id), elements_(), nSons_(0), father_(nullptr), grew_(false)
         {
             vertex_[0] = v0;
             vertex_[1] = v1;
@@ -35,7 +35,7 @@ namespace Dune {
                           const FoamGridEntityImp<0, dimgrid, dimworld>* v1,
                           int level, unsigned int id,
                           FoamGridEntityImp* father)
-            : FoamGridEntityBase(level,id), elements_(), nSons_(0), father_(father)
+            : FoamGridEntityBase(level,id), elements_(), nSons_(0), father_(father), grew_(false)
         {
             vertex_[0] = v0;
             vertex_[1] = v1;
@@ -59,6 +59,11 @@ namespace Dune {
 
         GeometryType type() const {
             return GeometryType(1);
+        }
+
+        bool hasFather() const
+        {
+            return father_!=nullptr;
         }
 
         /** \brief Number of corners (==2) */
@@ -116,6 +121,9 @@ namespace Dune {
 
         /** \brief Pointer to father edge */
         FoamGridEntityImp<1, dimgrid, dimworld>* father_;
+
+        //! Flag if the facet has already caused a new element to grow
+        bool grew_;
 
     };
 
