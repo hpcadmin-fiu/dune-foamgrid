@@ -70,7 +70,8 @@ class FoamGridLeafIntersectionIterator
                    GridImp::getRealImplementation(intersection_).center_==**leafNeighborIterator_)
             {
                 ++leafNeighborIterator_;
-                GridImp::getRealImplementation(intersection_).neighbor_ = *leafNeighborIterator_;
+                if(leafNeighborIterator_ != leafNeighbors_->end())
+                  GridImp::getRealImplementation(intersection_).neighbor_=*leafNeighborIterator_;
             }
             if(leafNeighborIterator_==leafNeighbors_->end())
             {
@@ -159,7 +160,8 @@ public:
         {
             // Move to the next intersection of this facet
             ++leafNeighborIterator_;
-            GridImp::getRealImplementation(intersection_).neighbor_=*leafNeighborIterator_;
+            if(leafNeighborIterator_ != leafNeighbors_->end())
+              GridImp::getRealImplementation(intersection_).neighbor_=*leafNeighborIterator_;
         }
 
         // Search for the first intersection with a neighbor
@@ -177,7 +179,8 @@ public:
             {
                 // Wrong level or neighbor points to center. In both cases this intersection is invalid.
                 ++leafNeighborIterator_;
-                GridImp::getRealImplementation(intersection_).neighbor_=*leafNeighborIterator_;
+                if(leafNeighborIterator_ != leafNeighbors_->end())
+                  GridImp::getRealImplementation(intersection_).neighbor_=*leafNeighborIterator_;
             }
             if(leafNeighborIterator_==leafNeighbors_->end())
             {
