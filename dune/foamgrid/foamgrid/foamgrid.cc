@@ -567,6 +567,21 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<2
         midPoint[dim]=((*facet)->vertex_[0]->pos_[dim]
         + (*facet)->vertex_[1]->pos_[dim]) /2.0;
 
+      // if the element is parametrized we obtain the new point by the parametrization
+      if(element.elementParametrization_)
+      {
+        // we know the local coordinates of the midpoint
+        FoamGridEntity<0, dimgrid, Dune::FoamGrid<dimgrid, dimworld> > e(&element);
+        FieldVector<double, dimgrid> localMidPoint(e.geometry().local(midPoint));
+        while(e.hasFather())
+        {
+          localMidPoint = e.geometryInFather().global(localMidPoint);
+          e.target_ = e.target_->father_;
+        }
+        // overwrite the midpoint with the coordinates mapped by the parametrization
+        element.elementParametrization_->evaluate(localMidPoint, midPoint);
+      }
+
       //create midpoint
       std::get<0>(entityImps_[nextLevel])
         .push_back(FoamGridEntityImp<0, dimgrid, dimworld>(nextLevel, midPoint,
@@ -686,6 +701,10 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<2
   nextLevelElements[0]=newElement;
   element.sons_[0]=newElement;
 
+  // if the father is parametrized the son will be parametrized too
+  if(element.elementParametrization_)
+    newElement->elementParametrization_ = element.elementParametrization_;
+
   // Next the one that contains vertex 1 of the father.
   std::get<2>(entityImps_[nextLevel])
     .push_back(FoamGridEntityImp<dimgrid, dimgrid, dimworld>(nextLevel, freeIdCounter_[2]++));
@@ -701,6 +720,10 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<2
   newElement->refinementIndex_=1;
   nextLevelElements[1]=newElement;
   element.sons_[1]=newElement;
+
+  // if the father is parametrized the son will be parametrized too
+  if(element.elementParametrization_)
+    newElement->elementParametrization_ = element.elementParametrization_;
 
   // Last the one that contains vertex 2 of the father.
   std::get<dimgrid>(entityImps_[nextLevel])
@@ -718,6 +741,10 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<2
   nextLevelElements[2]=newElement;
   element.sons_[2]=newElement;
 
+  // if the father is parametrized the son will be parametrized too
+  if(element.elementParametrization_)
+    newElement->elementParametrization_ = element.elementParametrization_;
+
   // create the triangle in the center
   std::get<dimgrid>(entityImps_[nextLevel])
     .push_back(FoamGridEntityImp<dimgrid, dimgrid, dimworld>(nextLevel, freeIdCounter_[2]++));
@@ -733,6 +760,10 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<2
   newElement->refinementIndex_=3;
   nextLevelElements[3]=newElement;
   element.sons_[3]=newElement;
+
+  // if the father is parametrized the son will be parametrized too
+  if(element.elementParametrization_)
+    newElement->elementParametrization_ = element.elementParametrization_;
 
   // Now that all the triangle are created, we can update the elements attached
   // to the facets.
