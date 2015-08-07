@@ -7,6 +7,9 @@
 
 #include <dune/common/exceptions.hh>
 #include <dune/common/function.hh>
+#include <dune/common/parametertree.hh>
+#include <dune/common/parametertreeparser.hh>
+
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
 #include <dune/grid/common/mcmgmapper.hh> // mapper class
 #include <dune/grid/io/file/vtk.hh>
@@ -156,12 +159,8 @@ struct RestrictedValue
 };
 
 template<class Grid, class Mapper>
-bool finitevolumeadapt (Grid& grid, Mapper& mapper, std::vector<double>& temperature, int lmin, int lmax)
+bool finitevolumeadapt (Grid& grid, Mapper& mapper, std::vector<double>& temperature, int lmin, int lmax, int refinetol, int coarsentol)
 {
-  // tol value for refinement strategy
-  const double refinetol  = 0.05;
-  const double coarsentol = 0.001;
-
   // grid view types
   typedef typename Grid::LeafGridView LeafGridView;
 
@@ -392,13 +391,16 @@ void oneDimensionalTest ()
   vtkWriter.addCellData(temperature, "celldata");
   vtkWriter.write(t);
 
+  const double refinetol  = 0.5;
+  const double coarsentol = 0.02;
+
   // do the time integration
   while(t <= tEnd)
   {
     // do adaptation
     int lmax = 6;
     for(int i = 0; i < lmax; i++)
-      finitevolumeadapt(*grid, mapper, temperature, 1, lmax);
+      finitevolumeadapt(*grid, mapper, temperature, 1, lmax, refinetol, coarsentol);
 
 
     // apply finite volume scheme
@@ -462,13 +464,12 @@ void twoDimensionalTest ()
   // create the grid
   auto grid = factory.createGrid();
 
-  // output VTK
-  Dune::VTKWriter<Grid::LeafGridView > writer(grid->leafGridView(), Dune::VTK::nonconforming);
-  writer.write("sphere_0");
+  // construct a parameter tree
+  Dune::ParameterTree params;
+  Dune::ParameterTreeParser::readINITree("heat.ini", params);
 
   // refine the grid
-  grid->globalRefine(1);
-  writer.write("sphere_1");
+  grid->globalRefine(params.get<int>("grid.refinement", 0));
 
   // Solve the heat equation on the refined grid
   // dT/dt + div(lambda*grad(T)) = 0
@@ -487,27 +488,33 @@ void twoDimensionalTest ()
   // the time
   double t = 0.0;
   double dt;
-  double tEnd = 1.0;
+  double tEnd = params.get<double>("time.tend", 1.0);
   int timestep = 0;
 
   // write output only every nth timestep
-  int episode = 10;
+  int episode = params.get<int>("time.episode", 10);
 
   // the heat conductivity
-  double lambda = 1.0;
+  double lambda = params.get<double>("spatialParams.lambda", 1.0);
 
   // Write pvd header
-  Dune::VTKSequenceWriter<Grid::LeafGridView> vtkWriter(grid->leafGridView(), "temperature_2d", ".", "");
+  Dune::VTKSequenceWriter<Grid::LeafGridView> vtkWriter(grid->leafGridView(), "temperature_sphere", ".", "");
   vtkWriter.addCellData(temperature, "celldata");
   vtkWriter.write(t);
+
+  // minimum and maximum grid levels
+  const int lmax = params.get<int>("grid.levelMax", 0);
+  const int lmin = params.get<int>("grid.levelMin", 0);
+  // tolerance values for refinement strategy
+  const double refinetol  = params.get<double>("grid.refineTolerance", 0.0);
+  const double coarsentol = params.get<double>("grid.coarsenTolerance", 0.0);
 
   // do the time integration
   while(t <= tEnd)
   {
     // do adaptation
-    int lmax = 4;
     for(int i = 0; i < lmax; i++)
-      finitevolumeadapt(*grid, mapper, temperature, 1, lmax);
+      finitevolumeadapt(*grid, mapper, temperature, lmin, lmax, refinetol, coarsentol);
 
     // apply finite volume scheme
     evolve(grid->leafGridView(), mapper, temperature, lambda, dt);
