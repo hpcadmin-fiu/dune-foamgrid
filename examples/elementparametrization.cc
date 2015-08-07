@@ -92,15 +92,50 @@ public:
 };
 
 /**
+ * \brief Method to calculate the source term for an element
+ */
+template <class Element>
+double heatSource(const Element& element, const Dune::ParameterTree& params)
+{
+  auto globalPos = element.geometry().center();
+  const int dimworld = globalPos.size();
+
+  const std::vector<double> lowerLeft = params.get<std::vector<double> >("source.lowerLeft");
+  const std::vector<double> upperRight = params.get<std::vector<double> >("source.upperRight");
+  const double sourceValue = params.get<double>("source.value", 0.0);
+
+  bool hasSource = true;
+  for (int dimIdx = 0; dimIdx < dimworld; dimIdx++)
+  {
+    if (globalPos[dimIdx] < lowerLeft[dimIdx] || globalPos[dimIdx] > upperRight[dimIdx])
+    {
+      hasSource = false;
+      break;
+    }
+  }
+  if(hasSource)
+    return sourceValue;
+  else
+    return 0.0;
+}
+
+
+/**
  * \brief Method to calculate the vector update for a single time step advance
  */
 template<class GridView, class Mapper>
 void evolve (const GridView& gridView,
            const Mapper& mapper,
            std::vector<double>& temperature,
-           const double lambda,
+           const Dune::ParameterTree& params,
            double& dt)
 {
+  // the heat conductivity, specific heat capacity, density
+  double lambda = params.get<double>("spatialParams.lambda", 1.0);
+  double cp = params.get<double>("spatialParams.cp", 1.0);
+  double rho = params.get<double>("spatialParams.rho", 1.0);
+  double alpha = lambda/rho/cp;
+
   // allocate a temporary vector for the update
   std::vector<double> update(temperature.size());
   std::fill(update.begin(), update.end(), 0.0);
@@ -112,6 +147,7 @@ void evolve (const GridView& gridView,
   for (auto&& element : elements(gridView))
   {
     int eIdx = mapper.index(element);
+
     // iterator over all intersections
     for (auto&& is : intersections(gridView, element))
     {
@@ -128,19 +164,22 @@ void evolve (const GridView& gridView,
       //approximate h as the distance to the neihgbour center
       h = std::min(h, dist);
 
-      // approximate gradient
-      double gradTn = (temperature[nIdx] - temperature[eIdx])/dist;
+      // approximate flux (assume that the normal vector points in the same direction as the gradient)
+      double flux = (temperature[nIdx] - temperature[eIdx])/dist*is.geometry().volume();
 
       // add to update
-      update[eIdx] += lambda*gradTn;
+      update[eIdx] += alpha*flux/element.geometry().volume();
     }
+    // calculate the source term
+    double source = heatSource(element, params);
+    update[eIdx] += source/rho/cp;
   }
 
   // CFL criterion
-  dt = std::min(dt, h*h/2.0/lambda);
+  dt = std::min(dt, h*h/2.0/alpha);
 
   // scale dt with safety factor
-  dt *= 0.99;
+  dt *= params.get<double>("time.dtscale", 0.99);
 
   // update the concentration vector
   for (unsigned int i=0; i<temperature.size(); ++i)
@@ -158,6 +197,9 @@ struct RestrictedValue
   }
 };
 
+/**
+ * \brief Method to adapt the grid
+ */
 template<class Grid, class Mapper>
 bool finitevolumeadapt (Grid& grid, Mapper& mapper, std::vector<double>& temperature, int lmin, int lmax, int refinetol, int coarsentol)
 {
@@ -305,6 +347,9 @@ bool finitevolumeadapt (Grid& grid, Mapper& mapper, std::vector<double>& tempera
   return refined;
 }
 
+/**
+ * \brief Method to create a circle shaped FoamGrid
+ */
 std::shared_ptr<Dune::FoamGrid<1, 2> > createCircleFoamGrid ()
 {
   typedef Dune::FoamGrid<1, 2> Grid;
@@ -344,6 +389,9 @@ std::shared_ptr<Dune::FoamGrid<1, 2> > createCircleFoamGrid ()
   return std::shared_ptr<Dune::FoamGrid<1, 2> >(factory.createGrid());
 }
 
+/**
+ * \brief Method to create a sphere shaped FoamGrid
+ */
 std::shared_ptr<Dune::FoamGrid<2, 3> > createSphereFoamGrid ()
 {
   typedef Dune::FoamGrid<2, 3> Grid;
@@ -389,6 +437,9 @@ std::shared_ptr<Dune::FoamGrid<2, 3> > createSphereFoamGrid ()
   return std::shared_ptr<Dune::FoamGrid<2, 3> >(factory.createGrid());
 }
 
+/**
+ * \brief Method to run the time integration
+ */
 template <class Grid>
 void run (std::shared_ptr<Grid> grid, std::string name)
 {
@@ -407,11 +458,8 @@ void run (std::shared_ptr<Grid> grid, std::string name)
   Dune::LeafMultipleCodimMultipleGeomTypeMapper<Grid,Dune::MCMGElementLayout>
   mapper(*grid);
 
-  // the primary variable vector
-  std::vector<double> temperature(mapper.size());
-
-  // initial conditions
-  temperature[0] = 1.0;
+  // initialize the primary variable vector
+  std::vector<double> temperature(mapper.size(), 0.0);
 
   // the time
   double t = 0.0;
@@ -422,12 +470,9 @@ void run (std::shared_ptr<Grid> grid, std::string name)
   // write output only every nth timestep
   int episode = params.get<int>("time.episode", 10);
 
-  // the heat conductivity
-  double lambda = params.get<double>("spatialParams.lambda", 1.0);
-
   // Write pvd header
   Dune::VTKSequenceWriter<typename Grid::LeafGridView> vtkWriter(grid->leafGridView(), name, ".", "");
-  vtkWriter.addCellData(temperature, "celldata");
+  vtkWriter.addCellData(temperature, "T");
   vtkWriter.write(t);
 
   // minimum and maximum grid levels
@@ -445,7 +490,7 @@ void run (std::shared_ptr<Grid> grid, std::string name)
       finitevolumeadapt(*grid, mapper, temperature, lmin, lmax, refinetol, coarsentol);
 
     // apply finite volume scheme
-    evolve(grid->leafGridView(), mapper, temperature, lambda, dt);
+    evolve(grid->leafGridView(), mapper, temperature, params, dt);
 
     //one time step forward
     t += dt;
