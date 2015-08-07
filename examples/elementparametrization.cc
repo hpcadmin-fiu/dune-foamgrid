@@ -305,7 +305,7 @@ bool finitevolumeadapt (Grid& grid, Mapper& mapper, std::vector<double>& tempera
   return refined;
 }
 
-void oneDimensionalTest ()
+std::shared_ptr<Dune::FoamGrid<1, 2> > createCircleFoamGrid ()
 {
   typedef Dune::FoamGrid<1, 2> Grid;
   typedef Grid::ctype ctype;
@@ -341,86 +341,10 @@ void oneDimensionalTest ()
   }
 
   // create the grid
-  auto grid = factory.createGrid();
-
-  // output VTK
-  Dune::VTKWriter<Grid::LeafGridView > writer(grid->leafGridView(), Dune::VTK::nonconforming);
-  writer.write("initial");
-
-  // refine the grid
-  grid->globalRefine(1);
-
-  // output VTK
-  writer.write("refine-1");
-
-  // coarden and then refine four times
-  grid->globalRefine(-1);
-  grid->globalRefine(4);
-
-  // output VT
-  writer.write("refine-4");
-
-  // Solve the heat equation on the refined grid
-  // dT/dt + div(lambda*grad(T)) = 0
-  // using a finite volume method with an explicit Euler time discretization
-
-  // make a mapper for codim 0 entities in the leaf grid
-  Dune::LeafMultipleCodimMultipleGeomTypeMapper<Grid,Dune::MCMGElementLayout>
-  mapper(*grid);
-
-  // the primary variable vector
-  std::vector<double> temperature(mapper.size());
-
-  // initial conditions
-  temperature[0] = 1.0;
-
-  // the time
-  double t = 0.0;
-  double dt;
-  double tEnd = 1.0;
-  int timestep = 0;
-
-  // write output only every nth timestep
-  int episode = 10;
-
-  // the heat conductivity
-  double lambda = 1.0;
-
-  // Write pvd header
-  Dune::VTKSequenceWriter<Grid::LeafGridView> vtkWriter(grid->leafGridView(), "temperature_1d", ".", "");
-  vtkWriter.addCellData(temperature, "celldata");
-  vtkWriter.write(t);
-
-  const double refinetol  = 0.5;
-  const double coarsentol = 0.02;
-
-  // do the time integration
-  while(t <= tEnd)
-  {
-    // do adaptation
-    int lmax = 6;
-    for(int i = 0; i < lmax; i++)
-      finitevolumeadapt(*grid, mapper, temperature, 1, lmax, refinetol, coarsentol);
-
-
-    // apply finite volume scheme
-    evolve(grid->leafGridView(), mapper, temperature, lambda, dt);
-
-    //one time step forward
-    t += dt;
-
-    //write a vtk
-    if(!(timestep%episode))
-      vtkWriter.write(t);
-
-    // Output some infos
-    std::cout << "Time step " << timestep << " done, t = " << t << ", dt = " << dt << std::endl;
-    // Increment time step counter
-    ++timestep;
-  }
+  return std::shared_ptr<Dune::FoamGrid<1, 2> >(factory.createGrid());
 }
 
-void twoDimensionalTest ()
+std::shared_ptr<Dune::FoamGrid<2, 3> > createSphereFoamGrid ()
 {
   typedef Dune::FoamGrid<2, 3> Grid;
   typedef Grid::ctype ctype;
@@ -462,8 +386,12 @@ void twoDimensionalTest ()
   }
 
   // create the grid
-  auto grid = factory.createGrid();
+  return std::shared_ptr<Dune::FoamGrid<2, 3> >(factory.createGrid());
+}
 
+template <class Grid>
+void run (std::shared_ptr<Grid> grid, std::string name)
+{
   // construct a parameter tree
   Dune::ParameterTree params;
   Dune::ParameterTreeParser::readINITree("heat.ini", params);
@@ -498,7 +426,7 @@ void twoDimensionalTest ()
   double lambda = params.get<double>("spatialParams.lambda", 1.0);
 
   // Write pvd header
-  Dune::VTKSequenceWriter<Grid::LeafGridView> vtkWriter(grid->leafGridView(), "temperature_sphere", ".", "");
+  Dune::VTKSequenceWriter<typename Grid::LeafGridView> vtkWriter(grid->leafGridView(), name, ".", "");
   vtkWriter.addCellData(temperature, "celldata");
   vtkWriter.write(t);
 
@@ -536,10 +464,29 @@ void twoDimensionalTest ()
 
 int main (int argc, char *argv[]) try
 {
-  std::cout << std::endl << "Running example for FoamGrid<1, 2>" << std::endl;
-  oneDimensionalTest();
-  std::cout << std::endl << "Running example for FoamGrid<2, 3>" << std::endl;
-  twoDimensionalTest();
+  if (argc < 2)
+  {
+    std::cerr << "Aborting. No grid geometry provided!" << std::endl
+              << "Usage: ./elementparametrization GEOMETRY" << std::endl
+              << "Existing geometries: sphere, circle." << std::endl;
+    return 1;
+  }
+
+  if (std::string(argv[1]) == "circle")
+  {
+    std::cout << std::endl << "Running example for FoamGrid<1, 2>" << std::endl;
+    run(createCircleFoamGrid(), "circle");
+  }
+  else if (std::string(argv[1]) == "sphere")
+  {
+    std::cout << std::endl << "Running example for FoamGrid<2, 3>" << std::endl;
+    run(createSphereFoamGrid(), "sphere");
+  }
+  else
+  {
+    std::cerr << "Existing geometries: sphere, circle." << std::endl;
+    return 1;
+  }
 }
 // //////////////////////////////////
 //   Error handler
