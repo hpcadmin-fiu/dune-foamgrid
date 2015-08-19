@@ -8,7 +8,7 @@
 #include <vector>
 
 #include <dune/common/version.hh>
-#include <dune/geometry/multilineargeometry.hh>
+#include <dune/geometry/affinegeometry.hh>
 
 
 namespace Dune {
@@ -28,7 +28,7 @@ namespace FacadeOptions
 
 template<int mydim, int coorddim, class GridImp>
 class FoamGridGeometry :
-        public CachedMultiLinearGeometry<typename GridImp::ctype, mydim, coorddim>
+        public AffineGeometry<typename GridImp::ctype, mydim, coorddim>
 {
     public:
 
@@ -41,7 +41,7 @@ class FoamGridGeometry :
      * \brief Construct geometry from coordinate vector
      */
     FoamGridGeometry(const GeometryType& type, const std::vector<FieldVector<typename GridImp::ctype,coorddim> >& coordinates) :
-        CachedMultiLinearGeometry<typename GridImp::ctype, mydim, coorddim>(type, coordinates)
+        AffineGeometry<typename GridImp::ctype, mydim, coorddim>(type, coordinates)
     {}
 
 };
