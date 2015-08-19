@@ -10,10 +10,8 @@
 #include <cmath>
 #include <memory>
 
-#include <dune/common/exceptions.hh>
 #include <dune/common/function.hh>
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
-#include <dune/grid/io/file/vtk.hh>
 
 #include <dune/foamgrid/foamgrid.hh>
 
@@ -72,47 +70,20 @@ int main (int argc, char *argv[]) try
   Dune::GridFactory<Grid> factory;
 
   // The list of grid vertex positions
-  FieldVector<double,2> p0 = {-1,-1};
-  FieldVector<double,2> p1 = { 0,-1};
-  FieldVector<double,2> p2 = { 1,-1};
-  FieldVector<double,2> p3 = {-1, 0};
-  FieldVector<double,2> p4 = { 0, 0};
-  FieldVector<double,2> p5 = { 1, 0};
-  FieldVector<double,2> p6 = {-1, 1};
-  FieldVector<double,2> p7 = { 0, 1};
-  FieldVector<double,2> p8 = { 1, 1};
+  std::vector<FieldVector<double,2> > vertices = {{-1,-1}, {1,-1}, {-1, 1}, {1, 1}};
 
-  factory.insertVertex(parametrization(p0));
-  factory.insertVertex(parametrization(p1));
-  factory.insertVertex(parametrization(p2));
-  factory.insertVertex(parametrization(p3));
-  factory.insertVertex(parametrization(p4));
-  factory.insertVertex(parametrization(p5));
-  factory.insertVertex(parametrization(p6));
-  factory.insertVertex(parametrization(p7));
-  factory.insertVertex(parametrization(p8));
+  for (const auto& p : vertices)
+    factory.insertVertex(parametrization(p));
 
   // Create the element geometries
   Dune::GeometryType triangle;
   triangle.makeTriangle();
 
-  std::array<FieldVector<double,2>, 3> corners0 = {p0, p1, p4};
-  std::array<FieldVector<double,2>, 3> corners1 = {p0, p4, p3};
-  std::array<FieldVector<double,2>, 3> corners2 = {p1, p2, p5};
-  std::array<FieldVector<double,2>, 3> corners3 = {p1, p5, p4};
-  std::array<FieldVector<double,2>, 3> corners4 = {p3, p4, p7};
-  std::array<FieldVector<double,2>, 3> corners5 = {p3, p7, p6};
-  std::array<FieldVector<double,2>, 3> corners6 = {p4, p5, p8};
-  std::array<FieldVector<double,2>, 3> corners7 = {p4, p8, p7};
+  std::array<FieldVector<double,2>, 3> corners0 = {vertices[0], vertices[1], vertices[2]};
+  std::array<FieldVector<double,2>, 3> corners1 = {vertices[1], vertices[3], vertices[2]};
 
-  factory.insertElement(triangle, {0,1,4}, std::make_shared<GraphMapping<dim, dimworld> >(corners0, parametrization));
-  factory.insertElement(triangle, {0,4,3}, std::make_shared<GraphMapping<dim, dimworld> >(corners1, parametrization));
-  factory.insertElement(triangle, {1,2,5}, std::make_shared<GraphMapping<dim, dimworld> >(corners2, parametrization));
-  factory.insertElement(triangle, {1,5,4}, std::make_shared<GraphMapping<dim, dimworld> >(corners3, parametrization));
-  factory.insertElement(triangle, {3,4,7}, std::make_shared<GraphMapping<dim, dimworld> >(corners4, parametrization));
-  factory.insertElement(triangle, {3,7,6}, std::make_shared<GraphMapping<dim, dimworld> >(corners5, parametrization));
-  factory.insertElement(triangle, {4,5,8}, std::make_shared<GraphMapping<dim, dimworld> >(corners6, parametrization));
-  factory.insertElement(triangle, {4,8,7}, std::make_shared<GraphMapping<dim, dimworld> >(corners7, parametrization));
+  factory.insertElement(triangle, {0,1,2}, std::make_shared<GraphMapping<dim, dimworld> >(corners0, parametrization));
+  factory.insertElement(triangle, {1,3,2}, std::make_shared<GraphMapping<dim, dimworld> >(corners1, parametrization));
 
   // create the grid
   auto grid = factory.createGrid();
@@ -120,7 +91,7 @@ int main (int argc, char *argv[]) try
   // output VTK
   Dune::VTKWriter<Grid::LeafGridView > writer(grid->leafGridView());
 
-  for (int i=0; i<5; i++)
+  for (int i=0; i<6; i++)
   {
     writer.write("refine-" + std::to_string(i));
     grid->globalRefine(1);
