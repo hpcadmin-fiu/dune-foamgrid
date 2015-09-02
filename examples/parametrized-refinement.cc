@@ -61,7 +61,7 @@ int main (int argc, char *argv[]) try
 
   // Global parametrization function
   auto parametrization = [](const FieldVector<double,2>& x) -> FieldVector<double,3>
-                           {return {x[0], x[1], 0.2*exp(-fabs(x.two_norm()))*cos(4.5*M_PI*x.two_norm())};};
+                           {return {x[0], x[1], 0.2*exp(-x.two_norm())*cos(4.5*M_PI*x.two_norm())};};
 
 
   // Create the grid
