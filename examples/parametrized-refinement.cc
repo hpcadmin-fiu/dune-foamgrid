@@ -57,6 +57,7 @@ int main (int argc, char *argv[]) try
 {
   const int dim      = 2;
   const int dimworld = 3;
+  bool adaptive      = false;
 
   // Global parametrization function
   auto parametrization = [](const FieldVector<double,2>& x) -> FieldVector<double,3>
@@ -94,7 +95,16 @@ int main (int argc, char *argv[]) try
   for (int i=0; i<6; i++)
   {
     writer.write("refine-" + std::to_string(i));
-    grid->globalRefine(1);
+    for (const auto& element : elements(grid->leafGridView()))
+    {
+      auto center = element.geometry().center();
+      if (adaptive == false or i==0 or std::fabs(center[1]) < std::pow(0.5,i-1) or center[1]>0)
+        grid->mark(1,element);
+    }
+
+    grid->preAdapt();
+    grid->adapt();
+    grid->postAdapt();
   }
 }
 // //////////////////////////////////
