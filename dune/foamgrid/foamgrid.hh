@@ -650,10 +650,9 @@ class FoamGrid :
           if(!growing_) initializeGrowth_();
 
           // the final level of the vertex will be the minimum common vertex level of the new element
-          verticesToInsert_.push_back(FoamGridEntityImp<0,dimgrid,dimworld> (0,   // initialize level
-                                                                             pos,  // position
-                                                                             freeIdCounter_[0]++));
-          verticesToInsert_.back().isNew_ = true;
+          verticesToInsert_.push_back(FoamGridEntityImp<0, dimgrid, dimworld>(0, pos, freeIdCounter_[0]++));
+          FoamGridEntityImp<0, dimgrid, dimworld>& newVertex = verticesToInsert_.back();
+          newVertex.isNew_ = true;
           // new vertices are numbered consecutively starting from
           // the highest available index in the leaf index set +1
           return leafGridView_.size(dimgrid) - 1 + verticesToInsert_.size();
@@ -668,16 +667,21 @@ class FoamGrid :
         {
           // foamgrid only supports simplices until now
           assert(type.isTriangle() || type.isLine());
+          assert(vertices.size() == dimgrid + 1);
 
           // the final level of the element will be the minimum common vertex level
-          FoamGridEntityImp<dimgrid, dimgrid, dimworld> newElement(0, freeIdCounter_[dimgrid]++);
+          elementsToInsert_.push_back(FoamGridEntityImp<dimgrid, dimgrid, dimworld>(0, freeIdCounter_[dimgrid]++));
+          FoamGridEntityImp<dimgrid, dimgrid, dimworld>& newElement = elementsToInsert_.back();
+          assert(vertices.size() == newElement.vertex_.size());
 
           for(std::size_t i = 0; i < vertices.size(); i++)
           {
             if(vertices[i] >= leafGridView_.size(dimgrid))
             {
               // initialize with pointer to vertex in verticesToInsert_ vector, later overwrite with actual pointer
-              newElement.vertex_[i] = &verticesToInsert_[vertices[i] - leafGridView_.size(dimgrid)];
+              auto vIt = verticesToInsert_.begin();
+              std::advance(vIt, vertices[i] - leafGridView_.size(dimgrid));
+              newElement.vertex_[i] = &*vIt;
             }
             else
             {
@@ -689,7 +693,6 @@ class FoamGrid :
             }
           }
           newElement.isNew_ = true;
-          elementsToInsert_.push_back(newElement);
         }
 
         /** \brief Add a new element to be added to the grid
@@ -918,10 +921,10 @@ class FoamGrid :
     std::vector<FoamGridEntityImp<0, dimgrid, dimworld>* > indexToVertexMap_;
 
     /** \brief The (temporary) vector of runtime inserted vertices. Gets cleaned when calling grow(). */
-    std::vector<FoamGridEntityImp<0, dimgrid, dimworld> > verticesToInsert_;
+    std::list<FoamGridEntityImp<0, dimgrid, dimworld> > verticesToInsert_;
 
     /** \brief The (temporary) vector of runtime inserted elements. Gets cleaned when calling grow(). */
-    std::vector<FoamGridEntityImp<dimgrid, dimgrid, dimworld> > elementsToInsert_;
+    std::list<FoamGridEntityImp<dimgrid, dimgrid, dimworld> > elementsToInsert_;
 
     /** \brief If the grid is in a growing process (beginGrowth has been called). */
     bool growing_;
