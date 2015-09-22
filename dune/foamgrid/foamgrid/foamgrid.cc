@@ -1219,7 +1219,7 @@ bool Dune::FoamGrid<dimgrid, dimworld>::grow()
             flippedVertexArray[1-vIdx] = eIt->vertex_[refElement.subEntity(fIdx, dimgrid-1, vIdx, dimgrid)];
           }
           if(dimgrid == 1)
-            vertexArray[vIdx] = eIt->facet_[fIdx];
+            vertexArray[vIdx] = eIt->vertex_[fIdx];
         }
 
         FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>* existingFacet = nullptr;
