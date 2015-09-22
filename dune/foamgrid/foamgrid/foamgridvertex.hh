@@ -121,6 +121,9 @@ namespace Dune {
         //! Elements the vertex is related to
         std::vector<const FoamGridEntityImp<dimgrid, dimgrid ,dimworld>*> elements_;
 
+        //! A vertex array for compatibility reasons with edges. Calling results in undefined behaviour.
+        std::array<const FoamGridEntityImp<0, dimgrid ,dimworld>*, 1> vertex_;
+
         //! Boundary index if vertex is on boundary
         //  only used if the vertex is a boundary vertex
         unsigned int boundarySegmentIndex_;
