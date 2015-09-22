@@ -138,7 +138,8 @@ class FoamGrid :
         : leafIndexSet_(*this),
           leafGridView_(*this),
           globalRefined(0),
-          numBoundarySegments_(0)
+          numBoundarySegments_(0),
+          growing_(false)
     {
         //static_assert(dimgrid == 2, "FoamGrid currently only works for 2D in nD");
         std::fill(freeIdCounter_.begin(), freeIdCounter_.end(), 0);
@@ -637,6 +638,74 @@ class FoamGrid :
         /** \brief Clean up refinement markers */
         void postAdapt();
 
+        /** @name Grid Growth Methods */
+        /*@{*/
+
+        /** \brief Add new vertex to be added the grid
+        * \param pos The position vector of the vertex
+        * \return The index of the newly inserted vertex (to be able to insert elements with it)
+        */
+        std::size_t insertVertex(const FieldVector<ctype,dimworld>& pos)
+        {
+          if(!growing_) initializeGrowth_();
+
+          // the final level of the vertex will be the minimum common vertex level of the new element
+          verticesToInsert_.push_back(FoamGridEntityImp<0,dimgrid,dimworld> (0,   // initialize level
+                                                                             pos,  // position
+                                                                             freeIdCounter_[0]++));
+          verticesToInsert_.back().isNew_ = true;
+          // new vertices are numbered consecutively starting from
+          // the highest available index in the leaf index set +1
+          return leafGridView_.size(dimgrid) - 1 + verticesToInsert_.size();
+        }
+
+        /** \brief Add a new element to be added to the grid
+        \param type The GeometryType of the new element
+        \param vertices The vertices of the new element, using the DUNE numbering
+        */
+        void insertElement(const GeometryType& type,
+                           const std::vector<std::size_t>& vertices)
+        {
+          // foamgrid only supports simplices until now
+          assert(type.isTriangle() || type.isLine());
+
+          // the final level of the element will be the minimum common vertex level
+          FoamGridEntityImp<dimgrid, dimgrid, dimworld> newElement(0, freeIdCounter_[dimgrid]++);
+
+          for(std::size_t i = 0; i < vertices.size(); i++)
+          {
+            if(vertices[i] >= leafGridView_.size(dimgrid))
+            {
+              // initialize with pointer to vertex in verticesToInsert_ vector, later overwrite with actual pointer
+              newElement.vertex_[i] = &verticesToInsert_[vertices[i] - leafGridView_.size(dimgrid)];
+            }
+            else
+            {
+              // make sure the index to vertex map has been initialized
+              if(!growing_) initializeGrowth_();
+              // the vertex already exists in the grid, initialize with leaf vertex, later overwrite with lowest level father
+              assert(indexToVertexMap_[vertices[i]]->isLeaf());
+              newElement.vertex_[i] = indexToVertexMap_[vertices[i]];
+            }
+          }
+          newElement.isNew_ = true;
+          elementsToInsert_.push_back(newElement);
+        }
+
+        /** \brief Add a new element to be added to the grid
+        \param type The GeometryType of the new element
+        \param vertices The vertices of the new element, using the DUNE numbering
+        \param elementParametrization A function prescribing the shape of this element
+        */
+        void insertElement(const GeometryType& type,
+                           const std::vector<std::size_t>& vertices,
+                           const std::shared_ptr<VirtualFunction<FieldVector<ctype,dimgrid>,FieldVector<ctype,dimworld> > >& elementParametrization)
+        {
+          insertElement(type, vertices);
+          // save the pointer to the element parametrization
+          elementsToInsert_.back().elementParametrization_ = elementParametrization;
+        }
+
         //! \brief Book-keeping routine to be called before growth
         bool preGrow();
 
@@ -725,6 +794,21 @@ class FoamGrid :
         // **********************************************************
 
     private:
+
+    //! \brief Prepares the grid for growth
+    bool initializeGrowth_()
+    {
+      // update the index to vertex map
+      indexToVertexMap_.reserve(leafGridView_.size(dimgrid));
+      typedef typename Traits::template Codim<dimgrid>::LeafIterator VertexIterator;
+      for (VertexIterator vIt = this->leafbegin<dimgrid>(), vItEnd = this->leafend<dimgrid>(); vIt != vItEnd; ++vIt)
+      {
+        indexToVertexMap_.push_back(&*vIt);
+      }
+
+      // tell the grid it's ready for growth
+      growing_ = true;
+    }
 
     //! \brief erases pointers in father elements to vanished entities of the element
     void erasePointersToEntities(std::list<FoamGridEntityImp<dimgrid, dimgrid ,dimworld> >& elements);
@@ -829,6 +913,19 @@ class FoamGrid :
 
     // True if the last call to preadapt returned true
     bool willCoarsen;
+
+    /** \brief A map from indices to leaf vertices. Gets updated when calling beginGrowth(). */
+    std::vector<FoamGridEntityImp<0, dimgrid, dimworld>* > indexToVertexMap_;
+
+    /** \brief The (temporary) vector of runtime inserted vertices. Gets cleaned when calling grow(). */
+    std::vector<FoamGridEntityImp<0, dimgrid, dimworld> > verticesToInsert_;
+
+    /** \brief The (temporary) vector of runtime inserted elements. Gets cleaned when calling grow(). */
+    std::vector<FoamGridEntityImp<dimgrid, dimgrid, dimworld> > elementsToInsert_;
+
+    /** \brief If the grid is in a growing process (beginGrowth has been called). */
+    bool growing_;
+
 }; // end Class FoamGrid
 
 #include <dune/foamgrid/foamgrid/foamgrid.cc>
