@@ -1136,7 +1136,7 @@ bool Dune::FoamGrid<dimgrid, dimworld>::grow()
     eIt->level_ = level;
 
     // set the vertex levels
-    std::map<FoamGridEntityImp<0, dimgrid, dimworld>*, bool> insertedMap;
+    std::map<FoamGridEntityImp<0, dimgrid, dimworld>*, FoamGridEntityImp<0, dimgrid, dimworld>* > insertedMap;
     for(auto vIt = eIt->vertex_.begin(); vIt != eIt->vertex_.end(); ++vIt)
     {
       if((*vIt)->isNew_)
@@ -1146,9 +1146,14 @@ bool Dune::FoamGrid<dimgrid, dimworld>::grow()
         if(!insertedMap.count(*vIt))
         {
           std::get<0>(entityImps_[level]).push_back(*(*vIt));
-          insertedMap[*vIt] = true;
           // publish actual vertex pointer in element
           (*vIt) = &*std::get<0>(entityImps_[level]).rbegin();
+          insertedMap[*vIt] = &*std::get<0>(entityImps_[level]).rbegin();
+        }
+        else
+        {
+          // the vertex was already inserted, publish actual vertex pointer in element
+          (*vIt) = insertedMap[*vIt];
         }
       }
       else
