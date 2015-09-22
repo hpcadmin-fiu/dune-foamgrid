@@ -107,7 +107,7 @@ namespace Dune {
 
         std::vector<const FoamGridEntityImp<dimgrid, dimgrid, dimworld>*> elements_;
 
-        const FoamGridEntityImp<0, dimgrid, dimworld>* vertex_[2];
+        std::array<const FoamGridEntityImp<0, dimgrid, dimworld>*, 2> vertex_;
 
         /** \brief The boundary id.  Only used if this edge is a boundary edge */
         unsigned int boundarySegmentIndex_;
