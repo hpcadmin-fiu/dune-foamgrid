@@ -803,7 +803,7 @@ class FoamGrid :
       typedef typename Traits::template Codim<dimgrid>::LeafIterator VertexIterator;
       for (VertexIterator vIt = this->leafbegin<dimgrid>(), vItEnd = this->leafend<dimgrid>(); vIt != vItEnd; ++vIt)
       {
-        indexToVertexMap_.push_back(&*vIt);
+        indexToVertexMap_.push_back(const_cast<FoamGridEntityImp<0, dimgrid ,dimworld>*>(this->getRealImplementation(*vIt).target_));
       }
 
       // tell the grid it's ready for growth
