@@ -1052,6 +1052,232 @@ bool Dune::FoamGrid<dimgrid, dimworld>::grow()
   bool leafChanged = false;
   bool newEntities = false;
   bool removedEntities = false;
+
+  // find a possible level for new elements and vertices, if there is more than one
+  // possibility to insert the element/vertex we choose the one with the lowest level
+  // first, find the min and max level for each element
+  std::map<FoamGridEntityImp<0, dimgrid, dimworld>*, int> minVertexLevel;
+  std::map<FoamGridEntityImp<0, dimgrid, dimworld>*, int> maxVertexLevel;
+  std::map<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*, int> minElementLevel;
+  std::map<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*, int> maxElementLevel;
+  auto eIt = elementsToInsert_.begin();
+  while (eIt != elementsToInsert_.end())
+  {
+    minElementLevel[&(*eIt)] = std::numeric_limits<int>::min();
+    maxElementLevel[&(*eIt)] = std::numeric_limits<int>::max();
+    for(auto vIt = eIt->vertex_.begin(); vIt != eIt->vertex_.end(); ++vIt)
+    {
+      int level = (*vIt)->level();
+      FoamGridEntityImp<0, dimgrid, dimworld>* vertex = *vIt;
+      maxVertexLevel[*vIt] = (*vIt)->isNew_ ? std::numeric_limits<int>::max() : level;
+      while(vertex->hasFather())
+      {
+        --level;
+        vertex = vertex->father_;
+      }
+      minVertexLevel[*vIt] = (*vIt)->isNew_ ? std::numeric_limits<int>::min() : level;
+      minElementLevel[&(*eIt)] = std::max(minElementLevel[&(*eIt)], minVertexLevel[*vIt]);
+      maxElementLevel[&(*eIt)] = std::min(maxElementLevel[&(*eIt)], maxVertexLevel[*vIt]);
+    }
+    // if the element is not possible erase it
+    if(minElementLevel[&(*eIt)] > maxElementLevel[&(*eIt)])
+    {
+      elementsToInsert_.erase(eIt++);
+    }
+    else
+    {
+      ++eIt;
+    }
+  }
+
+  // Now check if new vertices are shared (otherwise element level is minElementLevel)
+  auto vIt = verticesToInsert_.begin();
+  while(vIt != verticesToInsert_.end())
+  {
+    for (auto eIt = elementsToInsert_.begin(); eIt != elementsToInsert_.end(); ++eIt)
+      for(auto otherVIt = eIt->vertex_.begin(); otherVIt != eIt->vertex_.end(); ++otherVIt)
+        if(vIt->id_ == (*otherVIt)->id_ && vIt->level_ == (*otherVIt)->level_)
+        {
+          assert((*otherVIt)->isNew_);
+          minVertexLevel[&(*vIt)] = std::max(minElementLevel[&(*eIt)], minVertexLevel[&(*vIt)]);
+          maxVertexLevel[&(*vIt)] = std::min(maxElementLevel[&(*eIt)], maxVertexLevel[&(*vIt)]);
+        }
+
+    // if the vertex is not possible the connecting elements are not possible
+    if(minVertexLevel[&(*vIt)] > maxVertexLevel[&(*vIt)])
+    {
+      // erase the vertex
+      verticesToInsert_.erase(vIt++);
+      // and elements with pointers to it
+      auto eIt = elementsToInsert_.begin();
+      while (eIt != elementsToInsert_.end())
+      {
+        for(auto otherVIt = eIt->vertex_.begin(); otherVIt != eIt->vertex_.end(); ++otherVIt)
+        {
+          if(vIt->id_ == (*otherVIt)->id_ && vIt->level_ == (*otherVIt)->level_)
+          {
+            assert((*otherVIt)->isNew_);
+            elementsToInsert_.erase(eIt++);
+            break;
+          }
+          else
+          {
+            ++eIt;
+          }
+        }
+      }
+    }
+    else
+    {
+      ++vIt;
+    }
+  }
+
+  // All elements that are left can be validly inserted in the maximum of minElementLevel and
+  // minVertexLevel of its new vertices
+  for (auto eIt = elementsToInsert_.begin(); eIt != elementsToInsert_.end(); ++eIt)
+  {
+    // find the element level
+    for(auto vIt = eIt->vertex_.begin(); vIt != eIt->vertex_.end(); ++vIt)
+      if((*vIt)->isNew_)
+        minElementLevel[&(*eIt)] = std::max(minElementLevel[&(*eIt)], minVertexLevel[*vIt]);
+
+    // set the element level
+    int level = minElementLevel[&(*eIt)];
+    eIt->level_ = level;
+
+    // set the vertex levels
+    std::map<FoamGridEntityImp<0, dimgrid, dimworld>*, bool> insertedMap;
+    for(auto vIt = eIt->vertex_.begin(); vIt != eIt->vertex_.end(); ++vIt)
+    {
+      if((*vIt)->isNew_)
+      {
+        (*vIt)->level_ = level;
+        // Insert the new vertex into the grid
+        if(!insertedMap.count(*vIt))
+        {
+          std::get<0>(entityImps_[level]).push_back(*(*vIt));
+          insertedMap[*vIt] = true;
+          // publish actual vertex pointer in element
+          (*vIt) = &*std::get<0>(entityImps_[level]).rbegin();
+        }
+      }
+      else
+      {
+        while((*vIt)->level_ != level)
+          (*vIt) = (*vIt)->father_;
+      }
+    }
+
+    // We are ready to insert the element into the grid
+    std::get<dimgrid>(entityImps_[level]).push_back(*eIt);
+    newEntities = true;
+  }
+
+  // Now we deal with the facets
+  // Existing facets have to get knowledge of the new element, non-existing ones have to be added
+  // Construct a map from vertex arrays to facets
+  std::vector<std::map<std::array<FoamGridEntityImp<0, dimgrid, dimworld>*,dimgrid>,
+                               FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>* > > facetMap;
+  for(int level = 0; level <= maxLevel(); level++)
+  {
+    std::map<std::array<FoamGridEntityImp<0, dimgrid, dimworld>*,dimgrid>, FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>* > tmp;
+    facetMap.push_back(tmp);
+    for(auto fIt = std::get<dimgrid-1>(entityImps_[level]).begin(); fIt != std::get<dimgrid-1>(entityImps_[level]).end(); ++fIt)
+    {
+      std::array<FoamGridEntityImp<0, dimgrid, dimworld>*,dimgrid> vertexArray;
+      if(dimgrid == 2)
+        for (std::size_t vIdx = 0; vIdx < dimgrid; ++vIdx)
+          vertexArray[vIdx] = const_cast<FoamGridEntityImp<0, dimgrid, dimworld>*>(fIt->vertex_[vIdx]);
+      if(dimgrid == 1)
+        vertexArray[0] = &*fIt; // vertex and facet are identical in 1d
+      // add map entry
+      facetMap[level][vertexArray] = &*fIt;
+    }
+  }
+
+  std::vector<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>* > newFacets;
+  // facet map for each level, we could only do the levels that new elements get inserted on...
+  for(int level = 0; level <= maxLevel(); level++)
+  {
+    // loop over all elements on this level
+    for(auto eIt = std::get<dimgrid>(entityImps_[level]).begin(); eIt != std::get<dimgrid>(entityImps_[level]).end(); ++eIt)
+    {
+      const Dune::ReferenceElement<double,dimgrid>& refElement
+                = Dune::ReferenceElements<double,dimgrid>::general(eIt->type());
+      // loop over all facets of this element
+      for (std::size_t fIdx = 0; fIdx < eIt->facet_.size(); ++fIdx)
+      {
+        // get the vertices of the facet
+        std::array<FoamGridEntityImp<0, dimgrid, dimworld>*,dimgrid> vertexArray;
+        std::array<FoamGridEntityImp<0, dimgrid, dimworld>*,dimgrid> flippedVertexArray;
+        for (std::size_t vIdx = 0; vIdx < dimgrid; ++vIdx)
+        {
+          if(dimgrid == 2)
+          {
+            vertexArray[vIdx] = eIt->vertex_[refElement.subEntity(fIdx, dimgrid-1, vIdx, dimgrid)];
+            flippedVertexArray[1-vIdx] = eIt->vertex_[refElement.subEntity(fIdx, dimgrid-1, vIdx, dimgrid)];
+          }
+          if(dimgrid == 1)
+            vertexArray[vIdx] = eIt->facet_[fIdx];
+        }
+
+        FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>* existingFacet = nullptr;
+        auto f = facetMap[level].find(vertexArray);
+
+        if(f != facetMap[level].end())
+        {
+          // facet is already in map
+          existingFacet = f->second;
+        }
+        else
+        {
+          // in 2d also check the permutation of the array
+          if(dimgrid == 2)
+          {
+            f = facetMap[level].find(flippedVertexArray);
+            if(f != facetMap[level].end()) existingFacet = f->second;
+          }
+        }
+        if(existingFacet == nullptr)
+        {
+          // The current facet does not exist yet. For 2d insert it now. For 1d there are no edges, i.e. facet and vertex are equal.
+          if(dimgrid == 2)
+          {
+            std::get<1>(entityImps_[level]).push_back(FoamGridEntityImp<1, dimgrid, dimworld>(vertexArray[0], vertexArray[1], level, freeIdCounter_[1]++));
+            existingFacet = &*std::get<dimgrid-1>(entityImps_[level]).rbegin();
+          }
+          if(dimgrid == 1)
+            existingFacet = vertexArray[0];
+
+          // put the facet in the map
+          facetMap[level][vertexArray] = existingFacet;
+        }
+
+        // make element know about the facet
+        eIt->facet_[fIdx] = existingFacet;
+
+        // make facet know about the element if it's new
+        if(eIt->isNew())
+          existingFacet->elements_.push_back(&*eIt);
+      }
+    }
+  }
+
+  // set boundary indices (it is a completely new set -> need for boundary IDs?? (see FS#1369) to transfer boundary data?)
+  unsigned int boundaryFacetCounter = 0;
+  for(int level = 0; level <= maxLevel(); level++)
+    for (facet : std::get<dimgrid-1>(entityImps_[level]))
+      if(facet.elements_.size()==1) //if boundary facet
+        facet.boundarySegmentIndex_ = boundaryFacetCounter++;
+  numBoundarySegments_ = boundaryFacetCounter;
+
+  // cleanup
+  growing_ = false;
+  verticesToInsert_.clear();
+  elementsToInsert_.clear();
+  indexToVertexMap_.clear();
+
   // Loop over all leaf elements and grow/prune according to the mark
   typedef typename Traits::template Codim<0>::LeafIterator Iterator;
   for (Iterator elem=this->leafbegin<0>(), end = this->leafend<0>();
@@ -1097,12 +1323,14 @@ bool Dune::FoamGrid<dimgrid, dimworld>::grow()
 
   if(removedEntities)
   {
-    eraseVanishedEntities(std::get<0>(entityImps_[maxLevel()]));
-    eraseVanishedEntities(std::get<dimgrid>(entityImps_[maxLevel()]));
+    for(int level = 0; level <= maxLevel(); level++)
+    {
+      eraseVanishedEntities(std::get<0>(entityImps_[level]));
+      eraseVanishedEntities(std::get<dimgrid>(entityImps_[level]));
+    }
   }
 
-  if (leafChanged)
-    leafIndexSet_.update();
+  leafIndexSet_.update();
 
   return newEntities;
 }
@@ -1119,6 +1347,9 @@ void Dune::FoamGrid<dimgrid, dimworld>::postGrow()
   {
     FoamGridEntityImp<dimgrid, dimgrid, dimworld>& element=*const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(*elem).target_);
     element.isNew_=false;
+
+    for(auto&& vertex : element.vertex_)
+      vertex->isNew_ = false;
 
     //Block elements that do now have a facet being a junction and not having a father for coarsening
     for(auto&& facet : element.facet_)
