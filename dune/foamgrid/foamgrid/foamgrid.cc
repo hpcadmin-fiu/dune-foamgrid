@@ -1168,6 +1168,12 @@ bool Dune::FoamGrid<dimgrid, dimworld>::grow()
     newEntities = true;
   }
 
+  // cleanup
+  growing_ = false;
+  verticesToInsert_.clear();
+  elementsToInsert_.clear();
+  indexToVertexMap_.clear();
+
   // Now we deal with the facets
   // Existing facets have to get knowledge of the new element, non-existing ones have to be added
   // Construct a map from vertex arrays to facets
@@ -1265,12 +1271,6 @@ bool Dune::FoamGrid<dimgrid, dimworld>::grow()
       if(facet.elements_.size()==1) //if boundary facet
         facet.boundarySegmentIndex_ = boundaryFacetCounter++;
   numBoundarySegments_ = boundaryFacetCounter;
-
-  // cleanup
-  growing_ = false;
-  verticesToInsert_.clear();
-  elementsToInsert_.clear();
-  indexToVertexMap_.clear();
 
   // Loop over all leaf elements and grow/prune according to the mark
   typedef typename Traits::template Codim<0>::LeafIterator Iterator;
