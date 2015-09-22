@@ -1060,14 +1060,14 @@ bool Dune::FoamGrid<dimgrid, dimworld>::grow()
   std::map<FoamGridEntityImp<0, dimgrid, dimworld>*, int> maxVertexLevel;
   std::map<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*, int> minElementLevel;
   std::map<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*, int> maxElementLevel;
-  auto eIt = elementsToInsert_.begin();
-  while (eIt != elementsToInsert_.end())
+  for (auto eIt = elementsToInsert_.begin(); eIt != elementsToInsert_.end(); ++eIt)
   {
     minElementLevel[&(*eIt)] = std::numeric_limits<int>::min();
     maxElementLevel[&(*eIt)] = std::numeric_limits<int>::max();
     for(auto vIt = eIt->vertex_.begin(); vIt != eIt->vertex_.end(); ++vIt)
     {
-      int level = (*vIt)->level();
+
+      int level = (*vIt)->level_;
       FoamGridEntityImp<0, dimgrid, dimworld>* vertex = *vIt;
       maxVertexLevel[*vIt] = (*vIt)->isNew_ ? std::numeric_limits<int>::max() : level;
       while(vertex->hasFather())
@@ -1079,20 +1079,16 @@ bool Dune::FoamGrid<dimgrid, dimworld>::grow()
       minElementLevel[&(*eIt)] = std::max(minElementLevel[&(*eIt)], minVertexLevel[*vIt]);
       maxElementLevel[&(*eIt)] = std::min(maxElementLevel[&(*eIt)], maxVertexLevel[*vIt]);
     }
-    // if the element is not possible erase it
+    // if the element is not possible we want to erase it
+    // in order to avoid erasing it now we use the isNew_ marker
     if(minElementLevel[&(*eIt)] > maxElementLevel[&(*eIt)])
     {
-      elementsToInsert_.erase(eIt++);
-    }
-    else
-    {
-      ++eIt;
+      eIt->isNew_ = false;
     }
   }
 
   // Now check if new vertices are shared (otherwise element level is minElementLevel)
-  auto vIt = verticesToInsert_.begin();
-  while(vIt != verticesToInsert_.end())
+  for(auto vIt = verticesToInsert_.begin(); vIt != verticesToInsert_.end(); ++vIt)
   {
     for (auto eIt = elementsToInsert_.begin(); eIt != elementsToInsert_.end(); ++eIt)
       for(auto otherVIt = eIt->vertex_.begin(); otherVIt != eIt->vertex_.end(); ++otherVIt)
@@ -1106,30 +1102,19 @@ bool Dune::FoamGrid<dimgrid, dimworld>::grow()
     // if the vertex is not possible the connecting elements are not possible
     if(minVertexLevel[&(*vIt)] > maxVertexLevel[&(*vIt)])
     {
-      // erase the vertex
-      verticesToInsert_.erase(vIt++);
-      // and elements with pointers to it
-      auto eIt = elementsToInsert_.begin();
-      while (eIt != elementsToInsert_.end())
+      // erase elements with pointers to the vertex
+      for (auto eIt = elementsToInsert_.begin(); eIt != elementsToInsert_.end(); ++eIt)
       {
         for(auto otherVIt = eIt->vertex_.begin(); otherVIt != eIt->vertex_.end(); ++otherVIt)
         {
           if(vIt->id_ == (*otherVIt)->id_ && vIt->level_ == (*otherVIt)->level_)
           {
             assert((*otherVIt)->isNew_);
-            elementsToInsert_.erase(eIt++);
+            eIt->isNew_ = false;
             break;
-          }
-          else
-          {
-            ++eIt;
           }
         }
       }
-    }
-    else
-    {
-      ++vIt;
     }
   }
 
@@ -1137,6 +1122,10 @@ bool Dune::FoamGrid<dimgrid, dimworld>::grow()
   // minVertexLevel of its new vertices
   for (auto eIt = elementsToInsert_.begin(); eIt != elementsToInsert_.end(); ++eIt)
   {
+    // skip impossible elements determined above
+    if(!eIt->isNew_)
+      continue;
+
     // find the element level
     for(auto vIt = eIt->vertex_.begin(); vIt != eIt->vertex_.end(); ++vIt)
       if((*vIt)->isNew_)
