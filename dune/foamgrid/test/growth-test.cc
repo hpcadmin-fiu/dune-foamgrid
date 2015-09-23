@@ -381,6 +381,37 @@ int main (int argc, char *argv[])
     // do a grid check on a refined grid
     grid1d->globalRefine(4);
     gridcheck(*grid1d);
+
+    std::cout << "Creating a FoamGrid<1, 3> (1d in 3d grid)" << std::endl;
+    std::shared_ptr<FoamGrid<1, 3> > grid1d3d( GmshReader<FoamGrid<1, 3> >::read(dune_foamgrid_path + "line1d2d.msh", /*verbose*/ true, false ) );
+
+    Dune::VTKWriter<typename FoamGrid<1, 3>::LeafGridView > writer2(grid1d3d->leafGridView(), VTK::nonconforming);
+    writer2.write("before_growth");
+
+    // check simple grid growth
+    Dune::gridinfo(*grid1d3d);
+    checkGridElementGrowth(*grid1d3d);
+    writer2.write("after_growth");
+    Dune::gridinfo(*grid1d3d);
+
+    // check a merger, i.e. inserting an element only with existing vertices
+    checkGridElementMerge(*grid1d3d);
+    writer2.write("after_merge");
+    Dune::gridinfo(*grid1d3d);
+
+    // check removal of a grid element
+    checkGridElementRemoval(*grid1d3d);
+    writer2.write("after_removal");
+    Dune::gridinfo(*grid1d3d);
+
+    // check growth when vertices are on different levels
+    checkGridElementGrowthLevel(*grid1d3d);
+    writer2.write("after_second_growth");
+    Dune::gridinfo(*grid1d3d);
+
+    // do a grid check on a refined grid
+    grid1d3d->globalRefine(4);
+    gridcheck(*grid1d3d);
   }
   // //////////////////////////////////
   //   Error handler
