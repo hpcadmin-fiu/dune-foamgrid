@@ -1224,19 +1224,13 @@ bool Dune::FoamGrid<dimgrid, dimworld>::grow()
           eIt->facet_[fIdx] = existingFacet;
 
           // make facet know about the element if it's new
-          if(eIt->isNew())
-            existingFacet->elements_.push_back(&*eIt);
+          // if the facet is not a leaf facet we have to make sure all sons of it
+          // until the leaf level have the new element in their element vector
+          if(eIt->isNew_)
+            addElementForFacet(&*eIt, existingFacet);
         }
       }
     }
-
-    // set boundary indices (it is a completely new set -> need for boundary IDs?? (see FS#1369) to transfer boundary data?)
-    unsigned int boundaryFacetCounter = 0;
-    for(int level = 0; level <= maxLevel(); level++)
-      for (facet : std::get<dimgrid-1>(entityImps_[level]))
-        if(facet.elements_.size()==1) //if boundary facet
-          facet.boundarySegmentIndex_ = boundaryFacetCounter++;
-    numBoundarySegments_ = boundaryFacetCounter;
   }
 
   // Remove elements to be removed
@@ -1273,6 +1267,18 @@ bool Dune::FoamGrid<dimgrid, dimworld>::grow()
   return newEntities;
 }
 
+// helper function to add an element to the element vectors of a facet's sons
+template <int dimgrid, int dimworld>
+void Dune::FoamGrid<dimgrid, dimworld>::addElementForFacet(const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* element,
+                                                           FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>* facet)
+{
+  // publish element in the facet
+  facet->elements_.push_back(element);
+  // and it's sons (recursively) if it's not on the leaf
+  if(!facet->isLeaf())
+    for(auto&& son : facet->sons_)
+      addElementForFacet(element, son);
+}
 
 
 // Clean up refinement markers

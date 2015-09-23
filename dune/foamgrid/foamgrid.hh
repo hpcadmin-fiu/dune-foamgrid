@@ -674,6 +674,15 @@ class FoamGrid :
                                       const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* son,
                                       const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* father);
 
+    /**
+     * \brief An an element to a facet (and all it's sons if it's not on the leaf)
+     *
+     * \param element The element to add to the facet's element vector
+     * \param facet The facet that needs to add the element
+     */
+    void addElementForFacet(const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* element,
+                            FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>* facet);
+
     //! compute the grid indices and ids
     void setIndices();
 
