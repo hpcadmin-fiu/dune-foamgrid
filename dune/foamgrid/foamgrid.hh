@@ -663,16 +663,8 @@ class FoamGrid :
     void refineSimplexElement(FoamGridEntityImp<1, dimgrid, dimworld>& element,
                        int refCount);
 
-    //! \brief grow a new element from this element resulting in grid growth
-    //! \return returns true if the creation was successful
-    bool growSimplexElement(FoamGridEntityImp<dimgrid, dimgrid, dimworld>& element);
-
     //! \brief remove this element resulting in grid shrinkage
     bool removeSimplexElement(FoamGridEntityImp<dimgrid, dimgrid, dimworld>& element);
-
-    //! \brief merge this element with another element by connecting their facets
-    //! \return returns true if the merge was successful
-    bool mergeSimplexElement(FoamGridEntityImp<dimgrid, dimgrid, dimworld>& element);
 
     /**
      * \brief Overwrites the neighbours of this and descendant edges

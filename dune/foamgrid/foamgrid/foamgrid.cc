@@ -1288,70 +1288,7 @@ void Dune::FoamGrid<dimgrid, dimworld>::postGrow()
   }
 }
 
-// Add an element by connecting an element facet to a new vertex
-template <int dimgrid, int dimworld>
-bool Dune::FoamGrid<dimgrid, dimworld>::growSimplexElement(FoamGridEntityImp<dimgrid, dimgrid, dimworld>& element)
-{
-  if (dimgrid!=1)
-  {
-    // TODO currently only works for 1d grids
-    DUNE_THROW(NotImplemented, "Growth is currently only supported for 1d grids");
-  }
-
-  // get the facet pointer to the facet that will grow
-  FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>* facet = element.facet_[element.growthFacetIndex_];
-
-  if(facet->grew_)
-    return false;
-
-  bool onBoundary = false;
-  if(facet->elements_.size() == 1)
-    onBoundary = true;
-
-  // everything happens on the same level
-  unsigned int thisLevel = element.level();
-
-  // Create the new point
-  std::get<0>(entityImps_[thisLevel]).push_back(FoamGridEntityImp<0, dimgrid, dimworld>(thisLevel,
-                                                                                         *(element.growthPoint_),
-                                                                                         freeIdCounter_[0]++));
-  FoamGridEntityImp<0, dimgrid, dimworld>& newVertex = std::get<0>(entityImps_[thisLevel]).back();
-
-  if(onBoundary)
-  {
-    // if the spawn facet was on the boundary inherit the boudaryId
-    newVertex.boundaryId_= facet->boundaryId_;
-    newVertex.boundarySegmentIndex_= facet->boundarySegmentIndex_;
-  }
-  else
-  {
-    // if not we have to give it a new boundaryId
-    newVertex.boundaryId_= numBoundarySegments_;
-    newVertex.boundarySegmentIndex_= numBoundarySegments_;
-    ++numBoundarySegments_;
-  }
-  // Create the new element with the new vertex and the chosen facet
-  std::get<dimgrid>(entityImps_[thisLevel])
-          .push_back(FoamGridEntityImp<dimgrid, dimgrid, dimworld>(facet,
-                                                                   &newVertex,
-                                                                   thisLevel,
-                                                                   freeIdCounter_[dimgrid]++));
-  FoamGridEntityImp<dimgrid, dimgrid, dimworld>* newElement = &(std::get<dimgrid>(entityImps_[thisLevel]).back());
-  // set the new flag, everything else is handled by the 1d constructor
-  newElement->isNew_ = true;
-
-  // Now we have to update the elements vector of the joined facets
-  facet->elements_.push_back(newElement);
-  // and to the new one
-  newVertex.elements_.push_back(newElement);
-
-  // Mark the facet as each facet is only allowed to grow once per growth step
-  facet->grew_ = true;
-
-  return true;
-}
-
-// Add an element by connecting an element facet to a new vertex
+// Remove an element from the grid at runtime
 template <int dimgrid, int dimworld>
 bool Dune::FoamGrid<dimgrid, dimworld>::removeSimplexElement(FoamGridEntityImp<dimgrid, dimgrid, dimworld>& element)
 {
@@ -1402,57 +1339,5 @@ bool Dune::FoamGrid<dimgrid, dimworld>::removeSimplexElement(FoamGridEntityImp<d
         element.father_->sons_[eIdx] = nullptr;
     }
   }
-  return true;
-}
-
-// Add an element by connecting an element facet to a new vertex
-template <int dimgrid, int dimworld>
-bool Dune::FoamGrid<dimgrid, dimworld>::mergeSimplexElement(FoamGridEntityImp<dimgrid, dimgrid, dimworld>& element)
-{
-  if (dimgrid!=1)
-  {
-    // TODO currently only works for 1d grids
-    DUNE_THROW(NotImplemented, "Growth is currently only supported for 1d grids");
-  }
-
-  // get the facet pointer to the facet that will grow
-  FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>* facet = element.facet_[element.growthFacetIndex_];
-  // get the facet pointer to the facet that it will grow to
-  FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>* neighborFacet = element.neighborFacetForMerging_;
-  if(facet->grew_)
-    return false;
-
-  // check if those facets already share an element
-  for (auto&& e : facet->elements_)
-    for (auto&& ne : neighborFacet->elements_)
-      if (e==ne)
-        return false;
-
-  // everything happens on the same level
-  unsigned int thisLevel = element.level();
-
-  // Create the new element with the new vertex and the chosen facets
-  std::get<dimgrid>(entityImps_[thisLevel])
-          .push_back(FoamGridEntityImp<dimgrid, dimgrid, dimworld>(facet,
-                                                                   neighborFacet,
-                                                                   thisLevel,
-                                                                   freeIdCounter_[dimgrid]++));
-  FoamGridEntityImp<dimgrid, dimgrid, dimworld>* newElement = &(std::get<dimgrid>(entityImps_[thisLevel]).back());
-  // set the new flag, everything else is handled by the 1d constructor
-  newElement->isNew_ = true;
-
-  // Now we have to update the elements vector of the joined facets
-  facet->elements_.push_back(newElement);
-  neighborFacet->elements_.push_back(newElement);
-
-  // If those elements were boundary facets before we have to reduce the number of boundary segments
-  if(facet->elements_.size() == 2)
-    --numBoundarySegments_;
-  if(neighborFacet->elements_.size() == 2)
-    --numBoundarySegments_;
-
-  // Mark the facet as each facet is only allowed to grow once per growth step
-  facet->grew_ = true;
-
   return true;
 }
