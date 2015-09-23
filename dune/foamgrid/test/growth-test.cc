@@ -7,6 +7,7 @@
 #include <dune/foamgrid/foamgrid.hh>
 #include <dune/grid/common/gridinfo.hh>
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
+#include <dune/grid/common/mcmgmapper.hh>
 
 #if DUNE_VERSION_NEWER(DUNE_GRID, 2, 4)
 #include <dune/grid/test/gridcheck.hh>
@@ -29,19 +30,29 @@ void checkGridElementGrowth(Grid& grid)
     if(geo.center()[1] >= 0.0 && geo.center()[0] < -1.0)
     {
       Dune::FieldVector<double, dimworld> growPoint = geo.center();
-      Dune::FieldVector<double, dimworld> u(0.0);
-      for (int dimIdx = 0; dimIdx < dimworld; ++dimIdx)
-        u[dimIdx] += 2.0;
-      growPoint += u;
-      grid.markForGrowth(element, 0, growPoint);
+      growPoint += Dune::FieldVector<double, dimworld>(2.0);
+
+      // compile all vertex indices of the new element
+      std::vector<std::size_t> vertices;
+
+      // insert a new vertex
+      std::size_t vIdx = grid.insertVertex(growPoint);
+      vertices.push_back(vIdx);
+
+      // find the second index
+      Dune::LeafMultipleCodimMultipleGeomTypeMapper<Grid,Dune::MCMGVertexLayout> mapper(grid);
+      vertices.push_back(mapper.index(element.template subEntity<dim>(0)));
+
+      // insert the new element
+      grid.insertElement(Dune::GeometryType(1), vertices);
     }
-	}
+  }
 
   std::size_t numBoundarySegments = grid.numBoundarySegments();
   std::cout << std::endl<< "numBoundarySegments before growth: " << numBoundarySegments << std::endl;
   std::cout << "-------------------------------------------" << std::endl;
 
-	bool elementsWillVanish = grid.preGrow();
+  bool elementsWillVanish = grid.preGrow();
   if(elementsWillVanish)
     DUNE_THROW(InvalidStateException,"grid.preGrow() does not return correct information");
 
@@ -49,7 +60,7 @@ void checkGridElementGrowth(Grid& grid)
   for (const auto& element : elements(grid.levelGridView(0)))
     checkHierarchy(element);
 
-	bool newElementGenerated = grid.grow();
+  bool newElementGenerated = grid.grow();
   if(!newElementGenerated)
     DUNE_THROW(InvalidStateException,"grid.preGrow() does not return correct information");
 
@@ -85,46 +96,49 @@ void checkGridElementGrowth(Grid& grid)
 template <class Grid>
 void checkGridElementMerge(Grid& grid)
 {
-  enum { dimworld = Grid::dimensionworld };
   enum { dim = Grid::dimension };
 
-  // connect all facets with their closest neighbor facet (if there is no connection already which gets checked by the grid)
+  // vertex mapper
+  Dune::LeafMultipleCodimMultipleGeomTypeMapper<Grid,Dune::MCMGVertexLayout> mapper(grid);
+
+  // insert an element between the two closest boundary facets
+  std::vector<std::size_t> vertices(dim+1);
+  double dist = std::numeric_limits<double>::max();
   for (const auto& element : elements(grid.leafGridView()))
   {
-    auto otherElement = element;
     for (const auto& intersection : intersections(grid.leafGridView(), element))
     {
-      Dune::FieldVector<double, dimworld> center = intersection.geometry().center();
-      double dist = std::numeric_limits<double>::max();
-      int facetIndex = intersection.indexInInside();
-      int facetIndex2 = 0;
+      auto center = intersection.geometry().center();
+      if(!intersection.boundary())
+        continue;
       for (const auto& element2 : elements(grid.leafGridView()))
       {
         if(element2 == element)
           continue;
-        // find the closest of all facets
+
         for (const auto& intersection2 : intersections(grid.leafGridView(), element2))
         {
-          Dune::FieldVector<double, dimworld> center2 = intersection2.geometry().center();
-          Dune::FieldVector<double, dimworld> diff = center;
+          if(!intersection2.boundary())
+            continue;
+          auto center2 = intersection2.geometry().center();
+          auto diff = center;
           diff -= center2;
           if(diff.two_norm() < dist)
           {
             dist = diff.two_norm();
-            facetIndex2 = intersection2.indexInInside();
-            otherElement = element2;
+            vertices[0] = mapper.index(element.template subEntity<dim>(intersection.indexInInside()));
+            vertices[1] = mapper.index(element2.template subEntity<dim>(intersection2.indexInInside()));
           }
         }
       }
-      grid.markForMerging(element, facetIndex, otherElement, facetIndex2);
     }
   }
+  grid.insertElement(Dune::GeometryType(1), vertices);
 
   std::size_t numBoundarySegments = grid.numBoundarySegments();
   std::cout << std::endl<< "numBoundarySegments before merge: " << numBoundarySegments << std::endl;
   std::cout << "-------------------------------------------" << std::endl;
 
-  grid.preGrow();
   grid.grow();
   grid.postGrow();
 
@@ -155,15 +169,9 @@ void checkGridElementRemoval(Grid& grid)
   enum { dimworld = Grid::dimensionworld };
   enum { dim = Grid::dimension };
 
-  int counter = 0;
-  // connect all facets with their closest neighbor facet (if there is no connection already which gets checked by the grid)
-  const auto eEndIt = grid.leafGridView().template end<0>();
-  for (auto eIt = grid.leafGridView().template begin<0>(); eIt != eEndIt; ++eIt, ++counter)
-  {
-    // delete the 9th and the 10th element
-    if(counter == 9 || counter == 10)
-      grid.markForRemoval(*eIt);
-  }
+  // remove the first inserted element
+  auto eIt = grid.leafGridView().template begin<0>();
+  grid.markForRemoval(*eIt);
 
   bool elementsWillVanish = grid.preGrow();
   if(!elementsWillVanish)
