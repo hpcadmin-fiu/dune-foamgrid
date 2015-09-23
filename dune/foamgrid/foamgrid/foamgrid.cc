@@ -996,52 +996,11 @@ void Dune::FoamGrid<dimgrid, dimworld>::setIndices()
   leafIndexSet_.update();
 }
 
-//f Book-keeping routine to be called before adaptation
-// Returns true if an element will vanish
+//f Book-keeping routine to be called before growth
+// Returns true if an element will be removed
 template <int dimgrid, int dimworld>
 bool Dune::FoamGrid<dimgrid, dimworld>::preGrow()
-{
-  // Loop over all leaf entities and check whether they might spawn
-  // If there is one return true.
-  typedef typename Traits::template Codim<0>::LeafIterator Iterator;
-  bool entitiesWillVanish = false;
-
-  for (Iterator elem=this->leafbegin<0>(), end = this->leafend<0>(); elem != end; ++elem)
-  {
-    FoamGridEntityImp<dimgrid, dimgrid, dimworld>& element =
-        *const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(*elem).target_);
-    int mark=getGrowthMark(*elem);
-    /* Every element can be deleted
-     * Every element can grow if dimgrid < dimworld. The user has to make sure
-     * the growth algorithm does not degenerate the grid. For dimgrid == dimworld
-     * only boundary elements can grow (on boundary facets).
-     * Every element facet can be joined with another element facet. The user has
-     * to make sure this does not degenerate the grid.
-     */
-    switch(mark)
-    {
-      case 0:
-      case 2:
-      {
-        break;
-      }
-      case -1:
-      {
-        entitiesWillVanish = true;
-      }
-      case 1:
-      {
-        bool isAllowedToGrow = true;
-        if(dimgrid == dimworld)
-          if(element.facet_[element.growthFacetIndex_]->elements_.size() > 1) //if this facet is not a boundary facet
-              isAllowedToGrow = false;
-        if(!isAllowedToGrow)
-          element.markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::DO_NOTHING;
-      }
-    }
-  }
-  return entitiesWillVanish;
-}
+{ return !elementsToRemove_.empty(); }
 
 
 // Triggers the grid growth
@@ -1275,48 +1234,12 @@ bool Dune::FoamGrid<dimgrid, dimworld>::grow()
     numBoundarySegments_ = boundaryFacetCounter;
   }
 
-  // Loop over all leaf elements and grow/prune according to the mark
-  typedef typename Traits::template Codim<0>::LeafIterator Iterator;
-  for (Iterator elem=this->leafbegin<0>(), end = this->leafend<0>();
-       elem != end; ++elem)
-  {
-    int mark = getGrowthMark(*elem);
-    switch (mark)
-    {
-      case 0:
-      {
-        break;
-      }
-      case 1:
-      {
-        // grow simplices
-        if (elem->type().isTriangle() || elem->type().isLine())
-          leafChanged = newEntities = growSimplexElement(*const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>
-                                                         (this->getRealImplementation(*elem).target_)) || leafChanged || newEntities;
-        else
-          DUNE_THROW(NotImplemented, "Growth only supported for simplices!");
-        break;
-      }
-      case -1:
-      {
-        // remove the element
-        removedEntities = removeSimplexElement(*const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>
-                             (this->getRealImplementation(*elem).target_)) || removedEntities;
-        leafChanged = true;
-        break;
-      }
-      case 2:
-      {
-        // merge simplices
-        if (elem->type().isTriangle() || elem->type().isLine())
-          leafChanged = newEntities = mergeSimplexElement(*const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>
-                                                          (this->getRealImplementation(*elem).target_)) || leafChanged || newEntities;
-        else
-          DUNE_THROW(NotImplemented, "Merging only supported for simplices!");
-        break;
-      }
-    }
-  }
+  // Remove elements to be removed
+  for(auto&& ep : elementsToRemove_)
+    removedEntities = removeSimplexElement(*ep) || removedEntities;
+
+  // cleanup
+  elementsToRemove_.clear();
 
   if(removedEntities)
   {
