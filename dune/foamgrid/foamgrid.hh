@@ -709,6 +709,15 @@ class FoamGrid :
           elementsToInsert_.back().elementParametrization_ = elementParametrization;
         }
 
+        /** \brief Mark an element for removal from the grid
+        \param e The codim 0 entity to be removed from the grid
+        */
+        void removeElement(const typename Traits::template Codim<0>::Entity & e)
+        {
+          // save entity for later, actual removal happens in grow()
+          elementsToRemove_.push_back(const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*> (this->getRealImplementation(e).target_));
+        }
+
         //! \brief Book-keeping routine to be called before growth
         bool preGrow();
 
@@ -919,6 +928,9 @@ class FoamGrid :
 
     /** \brief A map from indices to leaf vertices. Gets updated when calling beginGrowth(). */
     std::vector<FoamGridEntityImp<0, dimgrid, dimworld>* > indexToVertexMap_;
+
+    /** \brief The (temporary) vector of element(pointer)s to be deleted at runtime. Gets cleaned when calling grow(). */
+    std::vector<FoamGridEntityImp<dimgrid, dimgrid, dimworld>* > elementsToRemove_;
 
     /** \brief The (temporary) vector of runtime inserted vertices. Gets cleaned when calling grow(). */
     std::list<FoamGridEntityImp<0, dimgrid, dimworld> > verticesToInsert_;
