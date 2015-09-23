@@ -385,9 +385,6 @@ class FoamGrid :
             switch(this->getRealImplementation(e).target_->markState_)
             {
               case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::DO_NOTHING:
-              case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::ADD_NEIGHBOR:
-              case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::VANISH:
-              case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::MERGE_WITH_NEIGHBOR:
               case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::IS_COARSENED:
                 return 0;
               case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::REFINE:
@@ -433,9 +430,6 @@ class FoamGrid :
             switch(this->getRealImplementation(*e).target_->markState_)
             {
               case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::DO_NOTHING:
-              case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::ADD_NEIGHBOR:
-              case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::VANISH:
-              case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::MERGE_WITH_NEIGHBOR:
               case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::IS_COARSENED:
                 return 0;
               case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::REFINE:
