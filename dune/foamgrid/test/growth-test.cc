@@ -212,6 +212,7 @@ template <class Grid>
 void checkGridElementGrowthLevel(Grid& grid)
 {
   enum { dim = Grid::dimension };
+  enum { dimworld = Grid::dimensionworld };
 
   // first we partially refine the grid at the xMax boundary
   double xMax = std::numeric_limits<double>::min();
@@ -297,6 +298,50 @@ void checkGridElementGrowthLevel(Grid& grid)
   numBoundarySegments = grid.numBoundarySegments();
   std::cout << "-------------------------------------------" << std::endl;
   std::cout << "numBoundarySegments after complex merge: " << numBoundarySegments << std::endl << std::endl;
+
+  Dune::FieldVector<double, dimworld> growPoint(6.0);
+  growPoint[0] = 0.0;
+  std::size_t vIdx = grid.insertVertex(growPoint);
+  std::vector<std::size_t> element2Vertices(dim+1);
+  element2Vertices[0] = vIdx;
+  element2Vertices[1] = elementVertices[0];
+  grid.insertElement(Dune::GeometryType(1), element2Vertices);
+  element2Vertices[0] = vIdx;
+  element2Vertices[1] = elementVertices[1];
+  grid.insertElement(Dune::GeometryType(1), element2Vertices);
+
+  elementsWillVanish = grid.preGrow();
+  if(elementsWillVanish)
+    DUNE_THROW(Dune::InvalidStateException,"grid.preGrow() does not return correct information");
+
+  numBoundarySegments = grid.numBoundarySegments();
+  std::cout << std::endl << "numBoundarySegments before complex merge: " << numBoundarySegments << std::endl;
+  std::cout << "-------------------------------------------" << std::endl;
+
+  newElementInserted = grid.grow();
+  if(!newElementInserted)
+    DUNE_THROW(Dune::InvalidStateException,"grid.grow() does not return correct information");
+
+  for (const auto& element : elements(grid.leafGridView()))
+    if(element.isNew())
+      assert(element.level() == 0);
+
+  grid.postGrow();
+
+  std::cout << "Boundary intersections after complex merge: " << std::endl;
+
+  isCounter = 0;
+  for (const auto& element : elements(grid.leafGridView()))
+  {
+    for (const auto& intersection : intersections(grid.leafGridView(), element))
+    {
+      if(intersection.boundary())
+      {
+        std::cout << "Boundary Intersection no"<<isCounter<<" has segment index: " << intersection.boundarySegmentIndex() << std::endl;
+        ++isCounter;
+      }
+    }
+  }
 }
 
 using namespace Dune;
