@@ -1255,6 +1255,17 @@ bool Dune::FoamGrid<dimgrid, dimworld>::grow()
     }
   }
 
+  if(removedEntities || newEntities)
+  {
+    // set boundary indices (it is a completely new set -> need for boundary IDs?? (see FS#1369) to transfer boundary data?)
+    unsigned int boundaryFacetCounter = 0;
+    for(int level = 0; level <= maxLevel(); level++)
+      for (auto&& facet : std::get<dimgrid-1>(entityImps_[level]))
+        if(facet.isLeaf() && facet.elements_.size()==1) //if boundary facet
+          facet.boundarySegmentIndex_ = boundaryFacetCounter++;
+    numBoundarySegments_ = boundaryFacetCounter;
+  }
+
   // update the leaf index if something happened
   if(removedEntities || newEntities)
     leafIndexSet_.update();
