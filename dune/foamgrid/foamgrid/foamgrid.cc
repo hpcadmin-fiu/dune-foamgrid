@@ -1250,7 +1250,9 @@ bool Dune::FoamGrid<dimgrid, dimworld>::grow()
     }
   }
 
-  leafIndexSet_.update();
+  // update the leaf index if something happened
+  if(removedEntities || newEntities)
+    leafIndexSet_.update();
 
   return newEntities;
 }
