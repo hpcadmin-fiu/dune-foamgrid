@@ -537,6 +537,7 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<2
       FoamGridEntityImp<0, dimgrid, dimworld>& newVertex =
       std::get<0>(entityImps_[nextLevel]).back();
       element.vertex_[c]->sons_[0]=&newVertex;
+      newVertex.father_ = element.vertex_[c];
     }
     nextLevelVertices[vertexIndex++]=element.vertex_[c]->sons_[0];
   }
@@ -829,9 +830,14 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<1
       FoamGridEntityImp<0, dimgrid, dimworld>& newVertex =
         std::get<0>(entityImps_[nextLevel]).back();
 
+      // publish vertex in the father
       element.vertex_[c]->sons_[0] = &newVertex;
       element.vertex_[c]->nSons_++;
       assert(element.vertex_[c]->nSons_==1); // Vertex can't have more than one son
+      // publish father in the new vertex
+      newVertex.father_ = element.vertex_[c];
+      assert(newVertex.hasFather());
+
       // Inherit the boundaryId_ and the boundarySegmentIndex
       element.vertex_[c]->sons_[0]->boundaryId_= element.vertex_[c]->boundaryId_;
       element.vertex_[c]->sons_[0]->boundarySegmentIndex_= element.vertex_[c]->boundarySegmentIndex_;
