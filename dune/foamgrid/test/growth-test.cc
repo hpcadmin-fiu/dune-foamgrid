@@ -171,7 +171,7 @@ void checkGridElementRemoval(Grid& grid)
 
   // remove the first inserted element
   auto eIt = grid.leafGridView().template begin<0>();
-  grid.markForRemoval(*eIt);
+  grid.removeElement(*eIt);
 
   bool elementsWillVanish = grid.preGrow();
   if(!elementsWillVanish)
