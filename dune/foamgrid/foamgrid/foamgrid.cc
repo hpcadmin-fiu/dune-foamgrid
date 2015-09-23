@@ -1008,7 +1008,6 @@ bool Dune::FoamGrid<dimgrid, dimworld>::preGrow()
 template <int dimgrid, int dimworld>
 bool Dune::FoamGrid<dimgrid, dimworld>::grow()
 {
-  bool leafChanged = false;
   bool newEntities = false;
   bool removedEntities = false;
 
