@@ -139,7 +139,9 @@ void checkGridElementMerge(Grid& grid)
   std::cout << std::endl<< "numBoundarySegments before merge: " << numBoundarySegments << std::endl;
   std::cout << "-------------------------------------------" << std::endl;
 
-  grid.grow();
+  bool newElementInserted = grid.grow();
+  if(!newElementInserted)
+    DUNE_THROW(Dune::InvalidStateException,"grid.grow() does not return correct information");
   grid.postGrow();
 
   std::cout << "Boundary intersections after merge: " << std::endl;
@@ -181,7 +183,9 @@ void checkGridElementRemoval(Grid& grid)
   std::cout << std::endl << "numBoundarySegments before removal: " << numBoundarySegments << std::endl;
   std::cout << "-------------------------------------------" << std::endl;
 
-  grid.grow();
+  bool newElementInserted = grid.grow();
+  if(newElementInserted)
+    DUNE_THROW(Dune::InvalidStateException,"grid.grow() does not return correct information");
   grid.postGrow();
 
   std::cout << "Boundary intersections after removal: " << std::endl;
@@ -204,6 +208,97 @@ void checkGridElementRemoval(Grid& grid)
   std::cout << "numBoundarySegments after removal: " << numBoundarySegments << std::endl << std::endl;
 }
 
+template <class Grid>
+void checkGridElementGrowthLevel(Grid& grid)
+{
+  enum { dim = Grid::dimension };
+
+  // first we partially refine the grid at the xMax boundary
+  double xMax = std::numeric_limits<double>::min();
+  double xMin = std::numeric_limits<double>::max();
+  for (const auto& vertex : vertices(grid.leafGridView()))
+  {
+    xMax = std::max(xMax, vertex.geometry().center()[0]);
+    xMin = std::min(xMin, vertex.geometry().center()[0]);
+  }
+
+  for (const auto& element : elements(grid.leafGridView()))
+    for (const auto& intersection : intersections(grid.leafGridView(), element))
+      if(intersection.boundary())
+        if(intersection.geometry().center()[0] == xMax)
+          grid.mark(1, element);
+
+  grid.preAdapt();
+  grid.adapt();
+  grid.postAdapt();
+
+  std::cout << std::endl << "-------------------------------------------" << std::endl;
+  std::cout << "gridinfo after adaptation: " << std::endl;
+  Dune::gridinfo(grid);
+  std::cout << "-------------------------------------------" << std::endl;
+
+  // vertex mapper
+  Dune::LeafMultipleCodimMultipleGeomTypeMapper<Grid,Dune::MCMGVertexLayout> mapper(grid);
+  // Then we do a merge with a level 1 and a level 0 vertex
+  std::vector<std::size_t> elementVertices(dim+1);
+  for (const auto& element : elements(grid.leafGridView()))
+    for (const auto& intersection : intersections(grid.leafGridView(), element))
+      if(intersection.boundary())
+      {
+        if(intersection.geometry().center()[0] == xMax)
+        {
+          auto vertex = element.template subEntity<dim>(intersection.indexInInside());
+          assert(vertex.level() == 1);
+          elementVertices[0] = mapper.index(vertex);
+        }
+        else if(intersection.geometry().center()[0] == xMin)
+        {
+          auto vertex = element.template subEntity<dim>(intersection.indexInInside());
+          assert(vertex.level() == 0);
+          elementVertices[1] = mapper.index(vertex);
+        }
+      }
+
+  grid.insertElement(Dune::GeometryType(1), elementVertices);
+
+  bool elementsWillVanish = grid.preGrow();
+  if(elementsWillVanish)
+    DUNE_THROW(Dune::InvalidStateException,"grid.preGrow() does not return correct information");
+
+  std::size_t numBoundarySegments = grid.numBoundarySegments();
+  std::cout << std::endl << "numBoundarySegments before complex merge: " << numBoundarySegments << std::endl;
+  std::cout << "-------------------------------------------" << std::endl;
+
+  bool newElementInserted = grid.grow();
+  if(!newElementInserted)
+    DUNE_THROW(Dune::InvalidStateException,"grid.grow() does not return correct information");
+
+  for (const auto& element : elements(grid.leafGridView()))
+    if(element.isNew())
+      assert(element.level() == 0);
+
+  grid.postGrow();
+
+  std::cout << "Boundary intersections after complex merge: " << std::endl;
+
+  int isCounter = 0;
+  for (const auto& element : elements(grid.leafGridView()))
+  {
+    for (const auto& intersection : intersections(grid.leafGridView(), element))
+    {
+      if(intersection.boundary())
+      {
+        std::cout << "Boundary Intersection no"<<isCounter<<" has segment index: " << intersection.boundarySegmentIndex() << std::endl;
+        ++isCounter;
+      }
+    }
+  }
+
+  numBoundarySegments = grid.numBoundarySegments();
+  std::cout << "-------------------------------------------" << std::endl;
+  std::cout << "numBoundarySegments after complex merge: " << numBoundarySegments << std::endl << std::endl;
+}
+
 using namespace Dune;
 
 int main (int argc, char *argv[])
@@ -211,32 +306,36 @@ int main (int argc, char *argv[])
   try
   {
     const std::string dune_foamgrid_path = std::string(DUNE_FOAMGRID_EXAMPLE_GRIDS_PATH) + "gmsh/";
-	std::cout << "Creating a FoamGrid<1, 2> (1d in 2d grid)" << std::endl;
-	std::shared_ptr<FoamGrid<1, 2> > grid1d( GmshReader<FoamGrid<1, 2> >::read(dune_foamgrid_path + "line1d2d.msh", /*verbose*/ true, false ) );
-	{
-        Dune::VTKWriter<typename FoamGrid<1, 2>::LeafGridView > writer(grid1d->leafGridView(), VTK::nonconforming);
-        writer.write("before_growth");
-    }
-    //gridcheck(*grid1d);
+    std::cout << "Creating a FoamGrid<1, 2> (1d in 2d grid)" << std::endl;
+    std::shared_ptr<FoamGrid<1, 2> > grid1d( GmshReader<FoamGrid<1, 2> >::read(dune_foamgrid_path + "line1d2d.msh", /*verbose*/ true, false ) );
+
+    Dune::VTKWriter<typename FoamGrid<1, 2>::LeafGridView > writer(grid1d->leafGridView(), VTK::nonconforming);
+    writer.write("before_growth");
+
+    // check simple grid growth
     Dune::gridinfo(*grid1d);
     checkGridElementGrowth(*grid1d);
-    {
-        Dune::VTKWriter<typename FoamGrid<1, 2>::LeafGridView > writer(grid1d->leafGridView(), VTK::nonconforming);
-        writer.write("after_growth");
-    }
+    writer.write("after_growth");
     Dune::gridinfo(*grid1d);
+
+    // check a merger, i.e. inserting an element only with existing vertices
     checkGridElementMerge(*grid1d);
-    {
-        Dune::VTKWriter<typename FoamGrid<1, 2>::LeafGridView > writer(grid1d->leafGridView(), VTK::nonconforming);
-        writer.write("after_merge");
-    }
+    writer.write("after_merge");
     Dune::gridinfo(*grid1d);
+
+    // check removal of a grid element
     checkGridElementRemoval(*grid1d);
-    {
-        Dune::VTKWriter<typename FoamGrid<1, 2>::LeafGridView > writer(grid1d->leafGridView(), VTK::nonconforming);
-        writer.write("after_removal");
-    }
+    writer.write("after_removal");
     Dune::gridinfo(*grid1d);
+
+    // check growth when vertices are on different levels
+    checkGridElementGrowthLevel(*grid1d);
+    writer.write("after_second_growth");
+    Dune::gridinfo(*grid1d);
+
+    // do a grid check on a refined grid
+    grid1d->globalRefine(4);
+    gridcheck(*grid1d);
   }
   // //////////////////////////////////
   //   Error handler
