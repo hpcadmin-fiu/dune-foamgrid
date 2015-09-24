@@ -1221,15 +1221,8 @@ bool Dune::FoamGrid<dimgrid, dimworld>::grow()
           }
           if(existingFacet == nullptr)
           {
-            // The current facet does not exist yet. For 2d insert it now. For 1d there are no edges, i.e. facet and vertex are equal.
-            if(dimgrid == 2)
-            {
-              std::get<1>(entityImps_[level]).push_back(FoamGridEntityImp<1, dimgrid, dimworld>(vertexArray[0], vertexArray[1], level, freeIdCounter_[1]++));
-              existingFacet = &*std::get<dimgrid-1>(entityImps_[level]).rbegin();
-            }
-            if(dimgrid == 1)
-              existingFacet = vertexArray[0];
-
+            // I'm too dumb to find a general algorithm working in 1d and 2d so we use function overloads here
+            addNewFacet(existingFacet, vertexArray, level);
             // put the facet in the map
             facetMap[level][vertexArray] = existingFacet;
           }
@@ -1294,6 +1287,22 @@ void Dune::FoamGrid<dimgrid, dimworld>::addElementForFacet(const FoamGridEntityI
       addElementForFacet(element, son);
 }
 
+// helper function to add new facets in 1d (they already exist as vertices)
+template <int dimgrid, int dimworld>
+void Dune::FoamGrid<dimgrid, dimworld>::addNewFacet(FoamGridEntityImp<0, dimgrid, dimworld>* &facet,
+                                                    std::array<FoamGridEntityImp<0, dimgrid, dimworld>*,dimgrid> vertexArray,
+                                                    int level)
+{ facet = vertexArray[0]; }
+
+// helper function to add new facets in 2d
+template <int dimgrid, int dimworld>
+void Dune::FoamGrid<dimgrid, dimworld>::addNewFacet(FoamGridEntityImp<1, dimgrid, dimworld>* &facet,
+                                                    std::array<FoamGridEntityImp<0, dimgrid, dimworld>*,dimgrid> vertexArray,
+                                                    int level)
+{
+  std::get<1>(entityImps_[level]).push_back(FoamGridEntityImp<1, 2, dimworld>(vertexArray[0], vertexArray[1], level, freeIdCounter_[1]++));
+  facet = &*std::get<1>(entityImps_[level]).rbegin();
+}
 
 // Clean up refinement markers
 template <int dimgrid, int dimworld>

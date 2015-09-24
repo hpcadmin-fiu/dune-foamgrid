@@ -683,6 +683,16 @@ class FoamGrid :
     void addElementForFacet(const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* element,
                             FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>* facet);
 
+    //! Add a new facet for 1d grids (the facet already exists as vertex)
+    void addNewFacet(FoamGridEntityImp<0, dimgrid, dimworld>* &facet,
+                     std::array<FoamGridEntityImp<0, dimgrid, dimworld>*,dimgrid> vertexArray,
+                     int level);
+
+    //! Add a new facet for 2d grids
+    void addNewFacet(FoamGridEntityImp<1, dimgrid, dimworld>* &facet,
+                     std::array<FoamGridEntityImp<0, dimgrid, dimworld>*,dimgrid> vertexArray,
+                     int level);
+
     //! compute the grid indices and ids
     void setIndices();
 
