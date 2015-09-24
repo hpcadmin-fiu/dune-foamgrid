@@ -1240,7 +1240,12 @@ bool Dune::FoamGrid<dimgrid, dimworld>::grow()
     }
   }
 
-  // Remove elements to be removed
+  // Set the element's (to be removed) flag to willVanish_ = true
+  // Remark: Vertices to delete can only be deleted efficiently with codim 2-0 connectivity information (touching point grid problem)
+  // This is why we calculate the connectivity first
+  if(dimgrid == 2 && (!elementsToRemove_.empty()))
+    computeTwoZeroConnectivity();
+
   for(auto&& ep : elementsToRemove_)
     removedEntities = removeSimplexElement(*ep) || removedEntities;
 
@@ -1249,9 +1254,14 @@ bool Dune::FoamGrid<dimgrid, dimworld>::grow()
 
   if(removedEntities)
   {
+    // actually remove the entities
     for(int level = 0; level <= maxLevel(); level++)
     {
       eraseVanishedEntities(std::get<0>(entityImps_[level]));
+      if(dimgrid == 2)
+      {
+        eraseVanishedEntities(std::get<dimgrid-1>(entityImps_[level]));
+      }
       eraseVanishedEntities(std::get<dimgrid>(entityImps_[level]));
     }
   }
@@ -1337,13 +1347,8 @@ void Dune::FoamGrid<dimgrid, dimworld>::postGrow()
 template <int dimgrid, int dimworld>
 bool Dune::FoamGrid<dimgrid, dimworld>::removeSimplexElement(FoamGridEntityImp<dimgrid, dimgrid, dimworld>& element)
 {
-  if (dimgrid!=1)
-  {
-    // TODO currently only works for 1d grids
-    DUNE_THROW(NotImplemented, "Growth is currently only supported for 1d grids");
-  }
   element.willVanish_ = true;
-  // check which sub entities of the element only belong to this element and have to be removed too
+  // check which facets of the element only belong to this element and have to be removed too
   for(auto&& facet : element.facet_)
   {
     if(facet->elements_.size() < 2)
@@ -1351,8 +1356,10 @@ bool Dune::FoamGrid<dimgrid, dimworld>::removeSimplexElement(FoamGridEntityImp<d
       facet->willVanish_ = true;
       if(facet->hasFather())
       {
-        facet->father_->nSons_ = 0;
-        facet->father_->sons_[0] = nullptr;
+        --(facet->father_->nSons_);
+        for(auto&& son : facet->father_->sons_)
+          if(son->willVanish_)
+            son = nullptr;
       }
     }
     else
@@ -1377,12 +1384,27 @@ bool Dune::FoamGrid<dimgrid, dimworld>::removeSimplexElement(FoamGridEntityImp<d
   if(element.hasFather())
   {
     --(element.father_->nSons_);
-    int eIdx = 0;
-    for(auto e = element.father_->sons_.begin(); e != element.father_->sons_.end(); ++e, ++eIdx)
+    for(auto&& son : element.father_->sons_)
+      if(son->willVanish_)
+        son = nullptr;
+  }
+  // in 2d check for vertices to be deleted
+  // vertices to delete can only be deleted efficiently with codim 2-0 connectivity information (touching point grid problem)
+  if(dimgrid == 2)
+  {
+    for(auto&& vertex : element.vertex_)
     {
-      if((*e)->willVanish_)
-        element.father_->sons_[eIdx] = nullptr;
+      if(vertex->elements_.size() < 2)
+      {
+        vertex->willVanish_ = true;
+        if(vertex->hasFather())
+        {
+          vertex->father_->nSons_ = 0;
+          vertex->father_->sons_[0] = nullptr;
+        }
+      }
     }
   }
+
   return true;
 }
