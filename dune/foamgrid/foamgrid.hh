@@ -686,6 +686,22 @@ class FoamGrid :
     //! compute the grid indices and ids
     void setIndices();
 
+    //! Compute the codim 2-0 connectivity useful for removal of elements
+    void computeTwoZeroConnectivity()
+    {
+      // the elements vector for vertices is already available as they are facets in 1d grids
+      for(int level = 0; level <= maxLevel(); ++level)
+      {
+        // do it everytime freshly so that we don't have to take care of 2-0 connectivity in adaptivity
+        for(auto&& vertex : std::get<0>(entityImps_[level]))
+          vertex.elements_.clear();
+
+        for(auto eIt = std::get<dimgrid>(entityImps_[level]).begin(); eIt != std::get<dimgrid>(entityImps_[level]).end(); ++eIt)
+          for(auto&& vertex : eIt->vertex_)
+            vertex->elements_.push_back(&*eIt);
+      }
+    }
+
     //! Collective communication interface
     typename Traits::CollectiveCommunication ccobj_;
 
