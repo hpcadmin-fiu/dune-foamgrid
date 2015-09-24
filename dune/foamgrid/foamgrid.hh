@@ -620,7 +620,7 @@ class FoamGrid :
     private:
 
     //! \brief Prepares the grid for growth
-    bool initializeGrowth_()
+    void initializeGrowth_()
     {
       // update the index to vertex map
       indexToVertexMap_.resize(leafGridView_.size(dimgrid));
