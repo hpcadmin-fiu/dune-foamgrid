@@ -1151,18 +1151,32 @@ bool Dune::FoamGrid<dimgrid, dimworld>::grow()
       facetMap.push_back(tmp);
       for(auto fIt = std::get<dimgrid-1>(entityImps_[level]).begin(); fIt != std::get<dimgrid-1>(entityImps_[level]).end(); ++fIt)
       {
-        std::array<FoamGridEntityImp<0, dimgrid, dimworld>*,dimgrid> vertexArray;
-        if(dimgrid == 2)
+        // directly using the facet's vertex information is not possible because it doesn't exist in 1d
+        // we have to get the vertex pointers from a neighbouring element
+        // every old vertex has at least one element
+        if(fIt->elements_.size() > 0)
+        {
+          auto element = fIt->elements_[0];
+          const Dune::ReferenceElement<double,dimgrid>& refElement
+                      = Dune::ReferenceElements<double,dimgrid>::general(element->type());
+
+          // obtain the local index of this facet
+          std::size_t localFacetIndex = 0;
+          for (std::size_t fIdx = 0; fIdx < element->facet_.size(); ++fIdx)
+            if(&*fIt == element->facet_[fIdx])
+              localFacetIndex = fIdx;
+
+          // construct the vertex array of the facet
+          std::array<FoamGridEntityImp<0, dimgrid, dimworld>*,dimgrid> vertexArray;
           for (std::size_t vIdx = 0; vIdx < dimgrid; ++vIdx)
-            vertexArray[vIdx] = const_cast<FoamGridEntityImp<0, dimgrid, dimworld>*>(fIt->vertex_[vIdx]);
-        if(dimgrid == 1)
-          vertexArray[0] = &*fIt; // vertex and facet are identical in 1d
-        // add map entry
-        facetMap[level][vertexArray] = &*fIt;
+            vertexArray[vIdx] = const_cast<FoamGridEntityImp<0, dimgrid, dimworld>*>
+                                  (element->vertex_[refElement.subEntity(localFacetIndex, 1, vIdx, dimgrid)]);
+          // add map entry
+          facetMap[level][vertexArray] = &*fIt;
+        }
       }
     }
 
-    std::vector<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>* > newFacets;
     // facet map for each level, we could only do the levels that new elements get inserted on...
     for(int level = 0; level <= maxLevel(); level++)
     {
