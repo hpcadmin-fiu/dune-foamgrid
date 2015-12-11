@@ -13,6 +13,7 @@
 #if DUNE_VERSION_NEWER(DUNE_GRID, 2, 4)
 #include <dune/grid/test/gridcheck.hh>
 #include <dune/grid/test/checkadaptation.hh>
+#include <dune/grid/test/checkindexset.hh>
 #else
 #include <dune/grid/test/gridcheck.cc>
 #include <dune/grid/test/checkadaptation.cc>
@@ -170,6 +171,9 @@ int main (int argc, char *argv[])
     checkGridElementRemoval(*grid);
     writer.write("after_removal");
     Dune::gridinfo(*grid);
+    checkIndexSet(*grid, grid->leafGridView(), std::cout);
+    for (std::size_t i = 0; i < grid->maxLevel(); ++i)
+        checkIndexSet(*grid, grid->levelGridView(i), std::cout);
 
     // do a grid check on a refined grid
     grid->globalRefine(4);

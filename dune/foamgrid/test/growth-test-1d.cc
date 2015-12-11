@@ -12,6 +12,7 @@
 #if DUNE_VERSION_NEWER(DUNE_GRID, 2, 4)
 #include <dune/grid/test/gridcheck.hh>
 #include <dune/grid/test/checkadaptation.hh>
+#include <dune/grid/test/checkindexset.hh>
 #else
 #include <dune/grid/test/gridcheck.cc>
 #include <dune/grid/test/checkadaptation.cc>
@@ -358,30 +359,39 @@ int main (int argc, char *argv[])
     writer.write("before_growth");
 
     // check simple grid growth
+    std::cout << std::endl << "Check simple grid growth (add element)" << std::endl;
     Dune::gridinfo(*grid1d);
     checkGridElementGrowth(*grid1d);
     writer.write("after_growth");
     Dune::gridinfo(*grid1d);
 
     // check a merger, i.e. inserting an element only with existing vertices
+    std::cout << std::endl << "Check merger (connect two element facets)" << std::endl;
     checkGridElementMerge(*grid1d);
     writer.write("after_merge");
     Dune::gridinfo(*grid1d);
 
     // check removal of a grid element
+    std::cout << std::endl << "Check removal (remove element)" << std::endl;
     checkGridElementRemoval(*grid1d);
     writer.write("after_removal");
     Dune::gridinfo(*grid1d);
 
     // check growth when vertices are on different levels
+    std::cout << std::endl << "Check growth with vertices on different levels" << std::endl;
     checkGridElementGrowthLevel(*grid1d);
     writer.write("after_second_growth");
     Dune::gridinfo(*grid1d);
+    checkIndexSet(*grid1d, grid1d->leafGridView(), std::cout);
+    for (std::size_t i = 0; i < grid1d->maxLevel(); ++i)
+        checkIndexSet(*grid1d, grid1d->levelGridView(i), std::cout);
 
     // do a grid check on a refined grid
+    std::cout << std::endl << "Check globalRefine on grown grid" << std::endl;
     grid1d->globalRefine(4);
     gridcheck(*grid1d);
 
+    std::cout << std::endl << std::endl << std::endl << std::endl;
     std::cout << "Creating a FoamGrid<1, 3> (1d in 3d grid)" << std::endl;
     std::shared_ptr<FoamGrid<1, 3> > grid1d3d( GmshReader<FoamGrid<1, 3> >::read(dune_foamgrid_path + "line1d2d.msh", /*verbose*/ true, false ) );
 
@@ -389,29 +399,39 @@ int main (int argc, char *argv[])
     writer2.write("before_growth");
 
     // check simple grid growth
+    std::cout << std::endl << "Check simple grid growth (add element)" << std::endl;
     Dune::gridinfo(*grid1d3d);
     checkGridElementGrowth(*grid1d3d);
     writer2.write("after_growth");
     Dune::gridinfo(*grid1d3d);
+    checkIndexSet(*grid1d3d, grid1d3d->leafGridView(), std::cout);
 
     // check a merger, i.e. inserting an element only with existing vertices
+    std::cout << std::endl << "Check merger (connect two element facets)" << std::endl;
     checkGridElementMerge(*grid1d3d);
     writer2.write("after_merge");
     Dune::gridinfo(*grid1d3d);
 
     // check removal of a grid element
+    std::cout << std::endl << "Check removal (remove element)" << std::endl;
     checkGridElementRemoval(*grid1d3d);
     writer2.write("after_removal");
     Dune::gridinfo(*grid1d3d);
 
     // check growth when vertices are on different levels
+    std::cout << std::endl << "Check growth with vertices on different levels" << std::endl;
     checkGridElementGrowthLevel(*grid1d3d);
     writer2.write("after_second_growth");
     Dune::gridinfo(*grid1d3d);
+    checkIndexSet(*grid1d3d, grid1d3d->leafGridView(), std::cout);
+    for (std::size_t i = 0; i < grid1d3d->maxLevel(); ++i)
+        checkIndexSet(*grid1d3d, grid1d3d->levelGridView(i), std::cout);
 
     // do a grid check on a refined grid
+    std::cout << std::endl << "Check globalRefine on grown grid" << std::endl;
     grid1d3d->globalRefine(4);
     gridcheck(*grid1d3d);
+
   }
   // //////////////////////////////////
   //   Error handler
