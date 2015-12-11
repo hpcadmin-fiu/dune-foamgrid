@@ -9,6 +9,7 @@
 
 #include <list>
 #include <set>
+#include <map>
 
 #include <dune/common/parallel/collectivecommunication.hh>
 #include <dune/common/tuples.hh>
