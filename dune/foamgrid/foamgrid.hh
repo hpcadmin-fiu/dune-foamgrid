@@ -463,7 +463,7 @@ class FoamGrid :
           if(!growing_) initializeGrowth_();
 
           // the final level of the vertex will be the minimum common vertex level of the new element
-          verticesToInsert_.push_back(FoamGridEntityImp<0, dimgrid, dimworld>(0, pos, freeIdCounter_[0]++));
+          verticesToInsert_.push_back(FoamGridEntityImp<0, dimgrid, dimworld>(0, pos, -1)); // initialize with some id
           FoamGridEntityImp<0, dimgrid, dimworld>& newVertex = verticesToInsert_.back();
           newVertex.isNew_ = true;
           // new vertices are numbered consecutively starting from
@@ -483,7 +483,7 @@ class FoamGrid :
           assert(vertices.size() == dimgrid + 1);
 
           // the final level of the element will be the minimum common vertex level
-          elementsToInsert_.push_back(FoamGridEntityImp<dimgrid, dimgrid, dimworld>(0, freeIdCounter_[dimgrid]++));
+          elementsToInsert_.push_back(FoamGridEntityImp<dimgrid, dimgrid, dimworld>(0, -1)); // initialize with some id
           FoamGridEntityImp<dimgrid, dimgrid, dimworld>& newElement = elementsToInsert_.back();
           assert(vertices.size() == newElement.vertex_.size());
 
