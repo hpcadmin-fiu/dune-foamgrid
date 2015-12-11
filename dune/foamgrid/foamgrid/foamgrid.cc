@@ -1020,31 +1020,38 @@ bool Dune::FoamGrid<dimgrid, dimworld>::grow()
   // find a possible level for new elements and vertices, if there is more than one
   // possibility to insert the element/vertex we choose the one with the lowest level
   // first, find the min and max level for each element
-  std::map<FoamGridEntityImp<0, dimgrid, dimworld>*, int> minVertexLevel;
-  std::map<FoamGridEntityImp<0, dimgrid, dimworld>*, int> maxVertexLevel;
-  std::map<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*, int> minElementLevel;
-  std::map<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*, int> maxElementLevel;
+  std::map<FoamGridEntityImp<0, dimgrid, dimworld>*, int> minVertexLevel, maxVertexLevel;
+  std::map<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*, int> minElementLevel, maxElementLevel;
   for (auto eIt = elementsToInsert_.begin(); eIt != elementsToInsert_.end(); ++eIt)
   {
+    // initialize the maps with numerical limits
     minElementLevel[&(*eIt)] = std::numeric_limits<int>::min();
     maxElementLevel[&(*eIt)] = std::numeric_limits<int>::max();
     for(auto vIt = eIt->vertex_.begin(); vIt != eIt->vertex_.end(); ++vIt)
     {
-
-      int level = (*vIt)->level_;
+      // get pointer from the iterator
       FoamGridEntityImp<0, dimgrid, dimworld>* vertex = *vIt;
-      maxVertexLevel[*vIt] = (*vIt)->isNew_ ? std::numeric_limits<int>::max() : level;
+
+      // only leaf vertices can be chosen for growth so this vertex has
+      // the maximum level if it is an already existing vertex
+      int level = vertex->level_;
+      maxVertexLevel[vertex] = vertex->isNew_ ? std::numeric_limits<int>::max() : level;
+
+      // search for the lowest level this vertex exists on
       while(vertex->hasFather())
       {
         --level;
         vertex = vertex->father_;
       }
-      minVertexLevel[*vIt] = (*vIt)->isNew_ ? std::numeric_limits<int>::min() : level;
-      minElementLevel[&(*eIt)] = std::max(minElementLevel[&(*eIt)], minVertexLevel[*vIt]);
-      maxElementLevel[&(*eIt)] = std::min(maxElementLevel[&(*eIt)], maxVertexLevel[*vIt]);
+      minVertexLevel[vertex] = vertex->isNew_ ? std::numeric_limits<int>::min() : level;
+
+      // the min and max element level is the intersection of possible element and vertex levels
+      minElementLevel[&(*eIt)] = std::max(minElementLevel[&(*eIt)], minVertexLevel[vertex]);
+      maxElementLevel[&(*eIt)] = std::min(maxElementLevel[&(*eIt)], maxVertexLevel[vertex]);
     }
-    // if the element is not possible we want to erase it
-    // in order to avoid erasing it now we use the isNew_ marker
+    // if the element is not possible (to insert) we want to erase it (not add it)
+    // in order to avoid erasing it now we just change the isNew_ marker
+    // later only elements with the marker get added, all others discarded
     if(minElementLevel[&(*eIt)] > maxElementLevel[&(*eIt)])
     {
       eIt->isNew_ = false;
@@ -1063,10 +1070,10 @@ bool Dune::FoamGrid<dimgrid, dimworld>::grow()
           maxVertexLevel[&(*vIt)] = std::min(maxElementLevel[&(*eIt)], maxVertexLevel[&(*vIt)]);
         }
 
-    // if the vertex is not possible the connecting elements are not possible
+    // if it's not possible to insert the vertex the connecting elements are also not possible
     if(minVertexLevel[&(*vIt)] > maxVertexLevel[&(*vIt)])
     {
-      // erase elements with pointers to the vertex
+      // erase elements with pointers to the impossible new vertex
       for (auto eIt = elementsToInsert_.begin(); eIt != elementsToInsert_.end(); ++eIt)
       {
         for(auto otherVIt = eIt->vertex_.begin(); otherVIt != eIt->vertex_.end(); ++otherVIt)
@@ -1082,8 +1089,8 @@ bool Dune::FoamGrid<dimgrid, dimworld>::grow()
     }
   }
 
-  // All elements that are left can be validly inserted in the maximum of minElementLevel and
-  // minVertexLevel of its new vertices
+  // All elements that are left now can be validly inserted in the maximum of minElementLevel and
+  // minVertexLevel of their respective new vertices
   for (auto eIt = elementsToInsert_.begin(); eIt != elementsToInsert_.end(); ++eIt)
   {
     // skip impossible elements determined above
@@ -1105,8 +1112,9 @@ bool Dune::FoamGrid<dimgrid, dimworld>::grow()
     {
       if((*vIt)->isNew_)
       {
+        // set the vertex level
         (*vIt)->level_ = level;
-        // Insert the new vertex into the grid
+        // Insert the new vertex into the grid if it wasn't already inserted
         if(!insertedMap.count(*vIt))
         {
           std::get<0>(entityImps_[level]).push_back(*(*vIt));
@@ -1116,10 +1124,11 @@ bool Dune::FoamGrid<dimgrid, dimworld>::grow()
         }
         else
         {
-          // the vertex was already inserted, publish actual vertex pointer in element
+          // the vertex was already inserted, only publish the vertex pointer in element
           (*vIt) = insertedMap[*vIt];
         }
       }
+      // if the vertex was already there, replace it with the vertex on the right level
       else
       {
         while((*vIt)->level_ != level)
