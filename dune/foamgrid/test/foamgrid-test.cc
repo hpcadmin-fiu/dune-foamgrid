@@ -3,19 +3,12 @@
 #include <iostream>
 
 #include <dune/common/version.hh>
-
-#include "make2din3dgrid.hh"
 #include <dune/grid/io/file/gmshreader.hh>
-
-#if DUNE_VERSION_NEWER(DUNE_GRID, 2, 4)
 #include <dune/grid/test/gridcheck.hh>
 #include <dune/grid/test/checkintersectionit.hh>
-#else
-#include <dune/grid/test/gridcheck.cc>
-#include <dune/grid/test/checkintersectionit.cc>
-#endif
-
 #include <dune/foamgrid/foamgrid.hh>
+
+#include "make2din3dgrid.hh"
 
 template<class G>
 void traversal (G& grid)
@@ -209,7 +202,6 @@ int main (int argc, char *argv[]) try
     const std::string dune_grid_path = std::string(DUNE_GRID_EXAMPLE_GRIDS_PATH) + "gmsh/";
     const std::string dune_foamgrid_path = std::string(DUNE_FOAMGRID_EXAMPLE_GRIDS_PATH) + "gmsh/";
 
-#if DUNE_VERSION_NEWER(DUNE_COMMON,2,4)
     {
         std::cout << "Checking FoamGrid<2, 2> (2d in 2d grid)" << std::endl;
 
@@ -225,7 +217,6 @@ int main (int argc, char *argv[]) try
         //std::cout << "  Check if has multiple neighbor functionality" << std::endl;
         //traversal(*grid2d);
     }
-#endif
     {
         std::cout << "Checking FoamGrid<2, 3> (2d in 3d grid)" << std::endl;
 

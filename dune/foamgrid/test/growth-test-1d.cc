@@ -3,20 +3,13 @@
 #include <config.h>
 
 #include <dune/grid/io/file/gmshreader.hh>
-
 #include <dune/foamgrid/foamgrid.hh>
 #include <dune/grid/common/gridinfo.hh>
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
 #include <dune/grid/common/mcmgmapper.hh>
-
-#if DUNE_VERSION_NEWER(DUNE_GRID, 2, 4)
 #include <dune/grid/test/gridcheck.hh>
 #include <dune/grid/test/checkadaptation.hh>
 #include <dune/grid/test/checkindexset.hh>
-#else
-#include <dune/grid/test/gridcheck.cc>
-#include <dune/grid/test/checkadaptation.cc>
-#endif
 
 template <class Grid>
 void checkGridElementGrowth(Grid& grid)
