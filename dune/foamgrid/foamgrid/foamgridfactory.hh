@@ -87,7 +87,7 @@ template <int dimgrid, int dimworld>
             Currently, the BoundarySegment object does not actually have any effect.
         */
         virtual void insertBoundarySegment(const std::vector<unsigned int>& vertices,
-                                           const std::shared_ptr<BoundarySegment<dimgrid, dimworld> > boundarySegment)
+                                           const shared_ptr<BoundarySegment<dimgrid, dimworld> >& boundarySegment)
         {
             insertBoundarySegment(vertices);
         }
