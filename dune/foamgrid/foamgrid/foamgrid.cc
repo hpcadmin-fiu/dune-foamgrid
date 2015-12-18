@@ -1103,7 +1103,7 @@ bool Dune::FoamGrid<dimgrid, dimworld>::grow()
         minElementLevel[&(*eIt)] = std::max(minElementLevel[&(*eIt)], minVertexLevel[*vIt]);
 
     // set the element level
-    int level = minElementLevel[&(*eIt)];
+    const unsigned int level = std::max(minElementLevel[&(*eIt)], 0);
     eIt->level_ = level;
 
     // set the vertex levels

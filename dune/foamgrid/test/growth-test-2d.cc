@@ -175,6 +175,29 @@ int main (int argc, char *argv[])
     for (std::size_t i = 0; i < grid->maxLevel(); ++i)
         checkIndexSet(*grid, grid->levelGridView(i), std::cout);
 
+    // add an element unrelated to the rest of the grid
+    auto idx1 = grid->insertVertex({3.0, 3.0, 3.0});
+    auto idx2 = grid->insertVertex({3.0, 3.5, 3.0});
+    auto idx3 = grid->insertVertex({3.5, 3.0, 3.0});
+    grid->insertElement(Dune::GeometryType(Dune::GeometryType::simplex, dim), {idx1, idx2, idx3});
+    grid->preGrow();
+    grid->grow();
+    grid->postGrow();
+    writer.write("add_unrelated_element");
+    Dune::gridinfo(*grid);
+    checkIndexSet(*grid, grid->leafGridView(), std::cout);
+    for (std::size_t i = 0; i < grid->maxLevel(); ++i)
+      checkIndexSet(*grid, grid->levelGridView(i), std::cout);
+
+    // call growth without adding anything
+    bool removedElements = grid->preGrow();
+    if(removedElements)
+      DUNE_THROW(InvalidStateException,"grid.preGrow() does not return correct information");
+    bool addedElements = grid->grow();
+    if(addedElements)
+      DUNE_THROW(InvalidStateException,"grid.grow() does not return correct information");
+    grid->postGrow();
+
     // do a grid check on a refined grid
     grid->globalRefine(4);
     gridcheck(*grid);
