@@ -590,12 +590,11 @@ class FoamGrid :
     void initializeGrowth_()
     {
       // update the index to vertex map
-      indexToVertexMap_.resize(leafGridView_.size(dimgrid));
-      typedef typename Traits::template Codim<dimgrid>::LeafIterator VertexIterator;
-      for (VertexIterator vIt = this->leafbegin<dimgrid>(), vItEnd = this->leafend<dimgrid>(); vIt != vItEnd; ++vIt)
+      indexToVertexMap_.resize(this->leafGridView().size(dimgrid));
+      for (const auto& vertex : vertices(this->leafGridView()))
       {
-        std::size_t index = leafIndexSet().index(*vIt);
-        indexToVertexMap_[index] = const_cast<FoamGridEntityImp<0, dimgrid ,dimworld>*>(this->getRealImplementation(*vIt).target_);
+        std::size_t index = leafIndexSet().index(vertex);
+        indexToVertexMap_[index] = const_cast<FoamGridEntityImp<0, dimgrid ,dimworld>*>(this->getRealImplementation(vertex).target_);
       }
 
       // tell the grid it's ready for growth
