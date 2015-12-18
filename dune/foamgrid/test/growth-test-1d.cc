@@ -33,19 +33,16 @@ void checkGridElementGrowth(Grid& grid)
       Dune::FieldVector<double, dimworld> growPoint = geo.center();
       growPoint += Dune::FieldVector<double, dimworld>(2.0);
 
-      // compile all vertex indices of the new element
-      std::vector<std::size_t> vertices;
-
       // insert a new vertex
-      std::size_t vIdx = grid.insertVertex(growPoint);
-      vertices.push_back(vIdx);
+      auto vIdx = grid.insertVertex(growPoint);
 
       // find the second index
       Dune::LeafMultipleCodimMultipleGeomTypeMapper<Grid,Dune::MCMGVertexLayout> mapper(grid);
-      vertices.push_back(mapper.index(element.template subEntity<dim>(0)));
 
       // insert the new element
-      grid.insertElement(Dune::GeometryType(1), vertices);
+      grid.insertElement(Dune::GeometryType(1),
+                         {vIdx, mapper.index(element.template subEntity<dim>(0))}
+                         );
     }
   }
 
@@ -103,7 +100,7 @@ void checkGridElementMerge(Grid& grid)
   Dune::LeafMultipleCodimMultipleGeomTypeMapper<Grid,Dune::MCMGVertexLayout> mapper(grid);
 
   // insert an element between the two closest boundary facets
-  std::vector<std::size_t> vertices(dim+1);
+  std::vector<unsigned int> vertices(dim+1);
   double dist = std::numeric_limits<double>::max();
   for (const auto& element : elements(grid.leafGridView()))
   {
@@ -242,7 +239,7 @@ void checkGridElementGrowthLevel(Grid& grid)
   // vertex mapper
   Dune::LeafMultipleCodimMultipleGeomTypeMapper<Grid,Dune::MCMGVertexLayout> mapper(grid);
   // Then we do a merge with a level 1 and a level 0 vertex
-  std::vector<std::size_t> elementVertices(dim+1);
+  std::vector<unsigned int> elementVertices(dim+1);
   for (const auto& element : elements(grid.leafGridView()))
     for (const auto& intersection : intersections(grid.leafGridView(), element))
       if(intersection.boundary())
@@ -302,14 +299,9 @@ void checkGridElementGrowthLevel(Grid& grid)
 
   Dune::FieldVector<double, dimworld> growPoint(6.0);
   growPoint[0] = 0.0;
-  std::size_t vIdx = grid.insertVertex(growPoint);
-  std::vector<std::size_t> element2Vertices(dim+1);
-  element2Vertices[0] = vIdx;
-  element2Vertices[1] = elementVertices[0];
-  grid.insertElement(Dune::GeometryType(1), element2Vertices);
-  element2Vertices[0] = vIdx;
-  element2Vertices[1] = elementVertices[1];
-  grid.insertElement(Dune::GeometryType(1), element2Vertices);
+  auto vIdx = grid.insertVertex(growPoint);
+  grid.insertElement(Dune::GeometryType(1), {vIdx, elementVertices[0]});
+  grid.insertElement(Dune::GeometryType(1), {vIdx, elementVertices[1]});
 
   elementsWillVanish = grid.preGrow();
   if(elementsWillVanish)

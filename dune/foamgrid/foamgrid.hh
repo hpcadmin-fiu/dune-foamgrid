@@ -458,7 +458,7 @@ class FoamGrid :
         * \param pos The position vector of the vertex
         * \return The index of the newly inserted vertex (to be able to insert elements with it)
         */
-        std::size_t insertVertex(const FieldVector<ctype,dimworld>& pos)
+        unsigned int insertVertex(const FieldVector<ctype,dimworld>& pos)
         {
           if(!growing_) initializeGrowth_();
 
@@ -476,7 +476,7 @@ class FoamGrid :
         \param vertices The vertices of the new element, using the DUNE numbering
         */
         void insertElement(const GeometryType& type,
-                           const std::vector<std::size_t>& vertices)
+                           const std::vector<unsigned int>& vertices)
         {
           // foamgrid only supports simplices until now
           assert(type.isTriangle() || type.isLine());
@@ -514,7 +514,7 @@ class FoamGrid :
         \param elementParametrization A function prescribing the shape of this element
         */
         void insertElement(const GeometryType& type,
-                           const std::vector<std::size_t>& vertices,
+                           const std::vector<unsigned int>& vertices,
                            const std::shared_ptr<VirtualFunction<FieldVector<ctype,dimgrid>,FieldVector<ctype,dimworld> > >& elementParametrization)
         {
           insertElement(type, vertices);

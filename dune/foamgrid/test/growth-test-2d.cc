@@ -45,13 +45,10 @@ void checkGridElementGrowth(Grid& grid)
         newVertex[1] += 0.5;
 
         // insert new vertex
-        std::size_t vIdx = grid.insertVertex(newVertex);
-
-        // compile all vertex indices of the new element
-        std::vector<std::size_t> vertices = {mapper.index(v0), mapper.index(v1), vIdx};
+        auto vIdx = grid.insertVertex(newVertex);
 
         // insert the element
-        grid.insertElement(element.type(), vertices);
+        grid.insertElement(element.type(), {mapper.index(v0), mapper.index(v1), vIdx});
       }
 
   std::size_t numBoundarySegments = grid.numBoundarySegments();
