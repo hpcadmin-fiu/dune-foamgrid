@@ -451,6 +451,19 @@ class FoamGrid :
         /** \brief Clean up refinement markers */
         void postAdapt();
 
+        /** \brief Sets a (leaf) vertex to a new position
+         *
+         *  \param e The codim dimgrid entity (vertex) to be moved. Note: The vertex
+         *           must be a leaf vertex. The implementation stores copies of vertices
+         *           for each level they exist on. Changing a vertex' position changes
+         *           its position on all coarser grid levels, too! We could not think of
+         *           an application for moving non-leaf vertices, write us if you need
+         *           that feature.
+         *  \param pos The new global position of the vertex
+         */
+        void setPosition(const typename Traits::template Codim<dimgrid>::Entity & e,
+                         const FieldVector<ctype, dimworld>& pos);
+
         /** @name Grid Growth Methods */
         /*@{*/
 

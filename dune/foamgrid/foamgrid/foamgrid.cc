@@ -1419,3 +1419,24 @@ bool Dune::FoamGrid<dimgrid, dimworld>::removeSimplexElement(FoamGridEntityImp<d
 
   return true;
 }
+
+// change a vertex' position on all levels
+template <int dimgrid, int dimworld>
+void Dune::FoamGrid<dimgrid, dimworld>::setPosition(const typename Traits::template Codim<dimgrid>::Entity & e,
+                                                    const FieldVector<ctype, dimworld>& pos)
+{
+  auto vertex = const_cast<FoamGridEntityImp<0, dimgrid, dimworld>*>(this->getRealImplementation(*e).target_);
+
+  if (!vertex->isLeaf())
+    DUNE_THROW(Dune::NotImplemented, "Moving vertices that are not on the leaf!");
+
+  vertex->pos_ = pos;
+
+  // set position of possible fathers on coarser levels
+  auto father = vertex;
+  while (father->hasFather())
+  {
+    father = father->father_;
+    father->pos_ = pos;
+  }
+}
