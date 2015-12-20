@@ -9,6 +9,7 @@
 
 #include <list>
 #include <set>
+#include <map>
 
 #include <dune/common/parallel/collectivecommunication.hh>
 #include <dune/common/tuples.hh>
@@ -138,7 +139,8 @@ class FoamGrid :
         : leafIndexSet_(*this),
           leafGridView_(*this),
           globalRefined(0),
-          numBoundarySegments_(0)
+          numBoundarySegments_(0),
+          growing_(false)
     {
         //static_assert(dimgrid == 2, "FoamGrid currently only works for 2D in nD");
         std::fill(freeIdCounter_.begin(), freeIdCounter_.end(), 0);
@@ -375,75 +377,7 @@ class FoamGrid :
             return true;
         }
 
-        /** \brief Mark entity for growth (adding a new element with a common facet)
-        *
-        * This only works for entities of codim 0.
-        *
-        * \return <ul>
-        * <li> true, if marking was successful </li>
-        * <li> false, if marking was not possible </li>
-        * </ul>
-        */
-        bool markForGrowth(const typename Traits::template Codim<0>::Entity & e,
-                           int facetIndex,
-                           Dune::FieldVector<ctype, dimworld>& growthPoint)
-        {
-            if (not e.isLeaf())
-              return false;
-
-            FoamGridEntityImp<dimgrid, dimgrid, dimworld>& element =
-                *const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(e).target_);
-            element.markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::ADD_NEIGHBOR;
-            element.growthPoint_ = std::make_shared<Dune::FieldVector<ctype, dimworld> >(growthPoint);
-            element.growthFacetIndex_ = facetIndex;
-            return true;
-        }
-
-        /** \brief Mark entity for removal
-        *
-        * This only works for entities of codim 0.
-        *
-        * \return <ul>
-        * <li> true, if marking was successful </li>
-        * <li> false, if marking was not possible </li>
-        * </ul>
-        */
-        bool markForRemoval(const typename Traits::template Codim<0>::Entity & e)
-        {
-            if (not e.isLeaf())
-              return false;
-
-            const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>
-                (this->getRealImplementation(e).target_)->markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::VANISH;
-            return true;
-        }
-
-        /** \brief Mark entity for merging on of its facet with another element's facet by
-        *          creating new elements inbetween
-        *
-        * This only works for entities of codim 0.
-        *
-        * \return <ul>
-        * <li> true, if marking was successful </li>
-        * <li> false, if marking was not possible </li>
-        * </ul>
-        */
-        bool markForMerging(const typename Traits::template Codim<0>::Entity & e,
-                            int facetIndex,
-                            const typename Traits::template Codim<0>::Entity & e2,
-                            int facetIndex2)
-        {
-            if (not e.isLeaf())
-              return false;
-
-            FoamGridEntityImp<dimgrid, dimgrid, dimworld>& element = *const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(e).target_);
-            element.markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::MERGE_WITH_NEIGHBOR;
-            element.growthFacetIndex_ = facetIndex;
-            element.neighborFacetForMerging_ = this->getRealImplementation(e2).target_->facet_[facetIndex2];
-            return true;
-        }
-
-                /** \brief Return refinement mark for entity
+        /** \brief Return refinement mark for entity
         *
         * \return refinement mark (1,0,-1)
         */
@@ -452,38 +386,12 @@ class FoamGrid :
             switch(this->getRealImplementation(e).target_->markState_)
             {
               case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::DO_NOTHING:
-              case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::ADD_NEIGHBOR:
-              case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::VANISH:
-              case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::MERGE_WITH_NEIGHBOR:
               case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::IS_COARSENED:
                 return 0;
               case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::REFINE:
                 return 1;
               case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::COARSEN:
                 return -1;
-            }
-            return 0;
-        }
-
-        /** \brief Return growth mark for entity
-        *
-        * \return growth mark (2, 1, 0, -1)
-        */
-        int getGrowthMark(const typename Traits::template Codim<0>::Entity & e) const
-        {
-            switch(this->getRealImplementation(e).target_->markState_)
-            {
-              case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::DO_NOTHING:
-              case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::REFINE:
-              case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::COARSEN:
-              case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::IS_COARSENED:
-                return 0;
-              case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::ADD_NEIGHBOR:
-                return 1;
-              case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::VANISH:
-                return -1;
-              case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::MERGE_WITH_NEIGHBOR:
-                return 2;
             }
             return 0;
         }
@@ -514,74 +422,6 @@ class FoamGrid :
             return true;
         }
 
-        /** \brief Mark entity for growth (adding a new element with a common facet)
-        *
-        * This only works for entities of codim 0.
-        *
-        * \return <ul>
-        * <li> true, if marking was successful </li>
-        * <li> false, if marking was not possible </li>
-        * </ul>
-        */
-        bool markForGrowth(const typename Traits::template Codim<0>::EntityPointer & e,
-                           int facetIndex,
-                           Dune::FieldVector<ctype, dimworld>& growthPoint)
-        {
-            if (not e->isLeaf())
-              return false;
-
-            FoamGridEntityImp<dimgrid, dimgrid, dimworld>& element =
-                *const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(*e).target_);
-            element.markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::ADD_NEIGHBOR;
-            element.growthPoint_ = growthPoint;
-            element.growthFacetIndex_ = facetIndex;
-            return true;
-        }
-
-        /** \brief Mark entity for removal
-        *
-        * This only works for entities of codim 0.
-        *
-        * \return <ul>
-        * <li> true, if marking was successful </li>
-        * <li> false, if marking was not possible </li>
-        * </ul>
-        */
-        bool markForRemoval(const typename Traits::template Codim<0>::EntityPointer & e)
-        {
-            if (not e->isLeaf())
-              return false;
-
-            const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>
-                (this->getRealImplementation(*e).target_)->markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::VANISH;
-            return true;
-        }
-
-        /** \brief Mark entity for merging on of its facet with another element's facet by
-        *          creating new elements inbetween
-        *
-        * This only works for entities of codim 0.
-        *
-        * \return <ul>
-        * <li> true, if marking was successful </li>
-        * <li> false, if marking was not possible </li>
-        * </ul>
-        */
-        bool markForMerging(const typename Traits::template Codim<0>::EntityPointer & e,
-                            int facetIndex,
-                            const typename Traits::template Codim<0>::EntityPointer & e2,
-                            int facetIndex2)
-        {
-            if (not e->isLeaf())
-              return false;
-
-            FoamGridEntityImp<dimgrid, dimgrid, dimworld>& element = *const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(*e).target_);
-            element.markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::MERGE_WITH_NEIGHBOR;
-            element.growthFacetIndex_ = facetIndex;
-            element.neighborFacetForMerging_ = this->getRealImplementation(*e2).target_->facet_[facetIndex2];
-            return true;
-        }
-
         /** \brief Return refinement mark for entity
         *
         * \return refinement mark (1,0,-1)
@@ -591,38 +431,12 @@ class FoamGrid :
             switch(this->getRealImplementation(*e).target_->markState_)
             {
               case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::DO_NOTHING:
-              case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::ADD_NEIGHBOR:
-              case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::VANISH:
-              case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::MERGE_WITH_NEIGHBOR:
               case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::IS_COARSENED:
                 return 0;
               case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::REFINE:
                 return 1;
               case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::COARSEN:
                 return -1;
-            }
-            return 0;
-        }
-
-        /** \brief Return growth mark for entity
-        *
-        * \return growth mark (2, 1, 0, -1)
-        */
-        int getGrowthMark(const typename Traits::template Codim<0>::EntityPointer & e) const
-        {
-            switch(this->getRealImplementation(*e).target_->markState_)
-            {
-              case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::DO_NOTHING:
-              case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::REFINE:
-              case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::COARSEN:
-              case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::IS_COARSENED:
-                return 0;
-              case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::ADD_NEIGHBOR:
-                return 1;
-              case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::VANISH:
-                return -1;
-              case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::MERGE_WITH_NEIGHBOR:
-                return 2;
             }
             return 0;
         }
@@ -637,13 +451,93 @@ class FoamGrid :
         /** \brief Clean up refinement markers */
         void postAdapt();
 
+        /** @name Grid Growth Methods */
+        /*@{*/
+
+        /** \brief Add new vertex to be added the grid
+        * \param pos The position vector of the vertex
+        * \return The index of the newly inserted vertex (to be able to insert elements with it)
+        */
+        unsigned int insertVertex(const FieldVector<ctype,dimworld>& pos)
+        {
+          if(!growing_) initializeGrowth_();
+
+          // the final level of the vertex will be the minimum common vertex level of the new element
+          verticesToInsert_.push_back(FoamGridEntityImp<0, dimgrid, dimworld>(0, pos, -verticesToInsert_.size()-1)); // initialize with some invalid id
+          FoamGridEntityImp<0, dimgrid, dimworld>& newVertex = verticesToInsert_.back();
+          newVertex.isNew_ = true;
+          // new vertices are numbered consecutively starting from
+          // the highest available index in the leaf index set +1
+          return leafGridView_.size(dimgrid) - 1 + verticesToInsert_.size();
+        }
+
+        /** \brief Add a new element to be added to the grid
+        \param type The GeometryType of the new element
+        \param vertices The vertices of the new element, using the DUNE numbering
+        */
+        void insertElement(const GeometryType& type,
+                           const std::vector<unsigned int>& vertices)
+        {
+          // foamgrid only supports simplices until now
+          assert(type.isTriangle() || type.isLine());
+          assert(vertices.size() == dimgrid + 1);
+
+          // the final level of the element will be the minimum common vertex level
+          elementsToInsert_.push_back(FoamGridEntityImp<dimgrid, dimgrid, dimworld>(0, -elementsToInsert_.size()-1)); // initialize with some invalid id
+          FoamGridEntityImp<dimgrid, dimgrid, dimworld>& newElement = elementsToInsert_.back();
+          assert(vertices.size() == newElement.vertex_.size());
+
+          for(std::size_t i = 0; i < vertices.size(); i++)
+          {
+            if(vertices[i] >= leafGridView_.size(dimgrid))
+            {
+              // initialize with pointer to vertex in verticesToInsert_ vector, later overwrite with actual pointer
+              auto vIt = verticesToInsert_.begin();
+              std::advance(vIt, vertices[i] - leafGridView_.size(dimgrid));
+              newElement.vertex_[i] = &*vIt;
+            }
+            else
+            {
+              // make sure the index to vertex map has been initialized
+              if(!growing_) initializeGrowth_();
+              // the vertex already exists in the grid, initialize with leaf vertex, later overwrite with lowest level father
+              assert(indexToVertexMap_[vertices[i]]->isLeaf());
+              newElement.vertex_[i] = indexToVertexMap_[vertices[i]];
+            }
+          }
+          newElement.isNew_ = true;
+        }
+
+        /** \brief Add a new element to be added to the grid
+        \param type The GeometryType of the new element
+        \param vertices The vertices of the new element, using the DUNE numbering
+        \param elementParametrization A function prescribing the shape of this element
+        */
+        void insertElement(const GeometryType& type,
+                           const std::vector<unsigned int>& vertices,
+                           const std::shared_ptr<VirtualFunction<FieldVector<ctype,dimgrid>,FieldVector<ctype,dimworld> > >& elementParametrization)
+        {
+          insertElement(type, vertices);
+          // save the pointer to the element parametrization
+          elementsToInsert_.back().elementParametrization_ = elementParametrization;
+        }
+
+        /** \brief Mark an element for removal from the grid
+        \param e The codim 0 entity to be removed from the grid
+        */
+        void removeElement(const typename Traits::template Codim<0>::Entity & e)
+        {
+          // save entity for later, actual removal happens in grow()
+          elementsToRemove_.push_back(const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*> (this->getRealImplementation(e).target_));
+        }
+
         //! \brief Book-keeping routine to be called before growth
         bool preGrow();
 
         //! Triggers the grid growth process
         bool grow();
 
-        /** \brief Clean up refinement markers */
+        /** \brief Clean up isNew markers */
         void postGrow();
 
         /*@}*/
@@ -726,6 +620,22 @@ class FoamGrid :
 
     private:
 
+    //! \brief Prepares the grid for growth
+    void initializeGrowth_()
+    {
+      // update the index to vertex map
+      indexToVertexMap_.resize(leafGridView_.size(dimgrid));
+      typedef typename Traits::template Codim<dimgrid>::LeafIterator VertexIterator;
+      for (VertexIterator vIt = this->leafbegin<dimgrid>(), vItEnd = this->leafend<dimgrid>(); vIt != vItEnd; ++vIt)
+      {
+        std::size_t index = leafIndexSet().index(*vIt);
+        indexToVertexMap_[index] = const_cast<FoamGridEntityImp<0, dimgrid ,dimworld>*>(this->getRealImplementation(*vIt).target_);
+      }
+
+      // tell the grid it's ready for growth
+      growing_ = true;
+    }
+
     //! \brief erases pointers in father elements to vanished entities of the element
     void erasePointersToEntities(std::list<FoamGridEntityImp<dimgrid, dimgrid ,dimworld> >& elements);
 
@@ -749,16 +659,8 @@ class FoamGrid :
     void refineSimplexElement(FoamGridEntityImp<1, dimgrid, dimworld>& element,
                        int refCount);
 
-    //! \brief grow a new element from this element resulting in grid growth
-    //! \return returns true if the creation was successful
-    bool growSimplexElement(FoamGridEntityImp<dimgrid, dimgrid, dimworld>& element);
-
     //! \brief remove this element resulting in grid shrinkage
     bool removeSimplexElement(FoamGridEntityImp<dimgrid, dimgrid, dimworld>& element);
-
-    //! \brief merge this element with another element by connecting their facets
-    //! \return returns true if the merge was successful
-    bool mergeSimplexElement(FoamGridEntityImp<dimgrid, dimgrid, dimworld>& element);
 
     /**
      * \brief Overwrites the neighbours of this and descendant edges
@@ -773,8 +675,43 @@ class FoamGrid :
                                       const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* son,
                                       const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* father);
 
+    /**
+     * \brief An an element to a facet (and all it's sons if it's not on the leaf)
+     *
+     * \param element The element to add to the facet's element vector
+     * \param facet The facet that needs to add the element
+     */
+    void addElementForFacet(const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* element,
+                            FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>* facet);
+
+    //! Add a new facet for 1d grids (the facet already exists as vertex)
+    void addNewFacet(FoamGridEntityImp<0, dimgrid, dimworld>* &facet,
+                     std::array<FoamGridEntityImp<0, dimgrid, dimworld>*,dimgrid> vertexArray,
+                     int level);
+
+    //! Add a new facet for 2d grids
+    void addNewFacet(FoamGridEntityImp<1, dimgrid, dimworld>* &facet,
+                     std::array<FoamGridEntityImp<0, dimgrid, dimworld>*,dimgrid> vertexArray,
+                     int level);
+
     //! compute the grid indices and ids
     void setIndices();
+
+    //! Compute the codim 2-0 connectivity useful for removal of elements
+    void computeTwoZeroConnectivity()
+    {
+      // the elements vector for vertices is already available as they are facets in 1d grids
+      for(int level = 0; level <= maxLevel(); ++level)
+      {
+        // do it everytime freshly so that we don't have to take care of 2-0 connectivity in adaptivity
+        for(auto&& vertex : std::get<0>(entityImps_[level]))
+          vertex.elements_.clear();
+
+        for(auto eIt = std::get<dimgrid>(entityImps_[level]).begin(); eIt != std::get<dimgrid>(entityImps_[level]).end(); ++eIt)
+          for(auto&& vertex : eIt->vertex_)
+            vertex->elements_.push_back(&*eIt);
+      }
+    }
 
     //! Collective communication interface
     typename Traits::CollectiveCommunication ccobj_;
@@ -829,6 +766,22 @@ class FoamGrid :
 
     // True if the last call to preadapt returned true
     bool willCoarsen;
+
+    /** \brief A map from indices to leaf vertices. Gets updated when calling beginGrowth(). */
+    std::vector<FoamGridEntityImp<0, dimgrid, dimworld>* > indexToVertexMap_;
+
+    /** \brief The (temporary) vector of element(pointer)s to be deleted at runtime. Gets cleaned when calling grow(). */
+    std::vector<FoamGridEntityImp<dimgrid, dimgrid, dimworld>* > elementsToRemove_;
+
+    /** \brief The (temporary) vector of runtime inserted vertices. Gets cleaned when calling grow(). */
+    std::list<FoamGridEntityImp<0, dimgrid, dimworld> > verticesToInsert_;
+
+    /** \brief The (temporary) vector of runtime inserted elements. Gets cleaned when calling grow(). */
+    std::list<FoamGridEntityImp<dimgrid, dimgrid, dimworld> > elementsToInsert_;
+
+    /** \brief If the grid is in a growing process (beginGrowth has been called). */
+    bool growing_;
+
 }; // end Class FoamGrid
 
 #include <dune/foamgrid/foamgrid/foamgrid.cc>

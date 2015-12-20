@@ -23,7 +23,7 @@ namespace Dune {
         FoamGridEntityImp(const FoamGridEntityImp<0, dimgrid, dimworld>* v0,
                           const FoamGridEntityImp<0, dimgrid, dimworld>* v1,
                           int level, unsigned int id)
-            : FoamGridEntityBase(level,id), elements_(), nSons_(0), father_(nullptr), grew_(false)
+            : FoamGridEntityBase(level,id), elements_(), nSons_(0), father_(nullptr)
         {
             vertex_[0] = v0;
             vertex_[1] = v1;
@@ -35,7 +35,7 @@ namespace Dune {
                           const FoamGridEntityImp<0, dimgrid, dimworld>* v1,
                           int level, unsigned int id,
                           FoamGridEntityImp* father)
-            : FoamGridEntityBase(level,id), elements_(), nSons_(0), father_(father), grew_(false)
+            : FoamGridEntityBase(level,id), elements_(), nSons_(0), father_(father)
         {
             vertex_[0] = v0;
             vertex_[1] = v1;
@@ -107,7 +107,7 @@ namespace Dune {
 
         std::vector<const FoamGridEntityImp<dimgrid, dimgrid, dimworld>*> elements_;
 
-        const FoamGridEntityImp<0, dimgrid, dimworld>* vertex_[2];
+        std::array<const FoamGridEntityImp<0, dimgrid, dimworld>*, 2> vertex_;
 
         /** \brief The boundary id.  Only used if this edge is a boundary edge */
         unsigned int boundarySegmentIndex_;
@@ -121,9 +121,6 @@ namespace Dune {
 
         /** \brief Pointer to father edge */
         FoamGridEntityImp<1, dimgrid, dimworld>* father_;
-
-        //! Flag if the facet has already caused a new element to grow
-        bool grew_;
 
     };
 
