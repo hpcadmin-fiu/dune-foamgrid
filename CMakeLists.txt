@@ -20,7 +20,6 @@ dune_project()
 dune_enable_all_packages()
 
 add_subdirectory(src)
-add_subdirectory(m4)
 add_subdirectory(dune)
 add_subdirectory(doc)
 add_subdirectory(cmake/modules)
