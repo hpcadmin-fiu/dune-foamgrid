@@ -764,16 +764,6 @@ namespace Capabilities
         static const bool v = true;
     };
 
-
-    /** \brief True if the grid can be run on a distributed machine
-      */
-    template <int dimgrid, int dimworld>
-    struct isParallel< FoamGrid<dimgrid, dimworld> >
-    {
-        static const bool v = false;
-    };
-
-
     //! \todo Please doc me !
     template <int dimgrid, int dimworld>
     struct isLevelwiseConforming< FoamGrid<dimgrid, dimworld> >
