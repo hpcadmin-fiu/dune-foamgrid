@@ -21,7 +21,7 @@ dune_enable_all_packages()
 
 add_subdirectory(src)
 add_subdirectory(m4)
-add_subdirectory(dune EXCLUDE_FROM_ALL)
+add_subdirectory(dune)
 add_subdirectory(doc)
 add_subdirectory(cmake/modules)
 add_subdirectory(examples EXCLUDE_FROM_ALL)
