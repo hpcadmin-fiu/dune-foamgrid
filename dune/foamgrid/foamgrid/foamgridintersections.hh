@@ -8,7 +8,6 @@
 */
 #include <memory>
 #include <dune/grid/common/intersection.hh>
-#include <dune/common/nullptr.hh>
 
 #include <dune/foamgrid/foamgrid/foamgridintersectioniterators.hh>
 #include <dune/foamgrid/foamgrid/foamgridvertex.hh>
