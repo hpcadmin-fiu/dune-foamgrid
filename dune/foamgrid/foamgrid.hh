@@ -32,7 +32,6 @@
 #include "foamgrid/foamgridleafiterator.hh"
 #include "foamgrid/foamgridhierarchiciterator.hh"
 #include "foamgrid/foamgridindexsets.hh"
-#include "foamgrid/foamgridviews.hh"
 
 namespace Dune {
 
@@ -66,8 +65,8 @@ struct FoamGridFamily
         FoamGridIdSet< const FoamGrid<dimgrid, dimworld> >,  // local IdSet
         unsigned int,   // local id type
         CollectiveCommunication<Dune::FoamGrid<dimgrid, dimworld> > ,
-        FoamGridLevelGridViewTraits,
-        FoamGridLeafGridViewTraits,
+        DefaultLevelGridViewTraits,
+        DefaultLeafGridViewTraits,
         FoamGridEntitySeed
             > Traits;
 };
@@ -110,11 +109,6 @@ class FoamGrid :
     template <int codim_, class GridImp_>
     friend class FoamGridEntityPointer;
 
-    template <class GridImp_, PartitionIteratorType PiType_>
-    friend class FoamGridLeafGridView;
-    template <class GridImp_, PartitionIteratorType PiType_>
-    friend class FoamGridLevelGridView;
-
     public:
 
     /** \brief FoamGrid is only implemented for 1 and 2 dimension */
@@ -137,7 +131,6 @@ class FoamGrid :
      */
     FoamGrid()
         : leafIndexSet_(*this),
-          leafGridView_(*this),
           globalRefined(0),
           numBoundarySegments_(0),
           growing_(false)
@@ -301,24 +294,6 @@ class FoamGrid :
             return leafIndexSet_;
         }
 
-
-        //! View for the leaf grid
-        template<PartitionIteratorType pitype>
-        typename Traits::template Partition<pitype>::LeafGridView
-        leafGridView() const {
-          typedef typename Traits::template Partition<pitype>::LeafGridView View;
-          return View(leafGridView_);
-        }
-
-        //! View for the leaf grid for All_Partition
-        typename Traits::template Partition<All_Partition>::LeafGridView
-        leafGridView() const
-        {
-          typedef typename Traits::template Partition<All_Partition>::LeafGridView View;
-          return View(leafGridView_);
-        }
-
-
         /** \brief Create EntityPointer from EnitySeed */
         template < class EntitySeed >
         static typename Traits::template Codim<EntitySeed::codimension>::EntityPointer
@@ -434,7 +409,7 @@ class FoamGrid :
           newVertex.isNew_ = true;
           // new vertices are numbered consecutively starting from
           // the highest available index in the leaf index set +1
-          return leafGridView_.size(dimgrid) - 1 + verticesToInsert_.size();
+          return this->leafGridView().size(dimgrid) - 1 + verticesToInsert_.size();
         }
 
         /** \brief Add a new element to be added to the grid
@@ -455,11 +430,11 @@ class FoamGrid :
 
           for(std::size_t i = 0; i < vertices.size(); i++)
           {
-            if(vertices[i] >= leafGridView_.size(dimgrid))
+            if(vertices[i] >= this->leafGridView().size(dimgrid))
             {
               // initialize with pointer to vertex in verticesToInsert_ vector, later overwrite with actual pointer
               auto vIt = verticesToInsert_.begin();
-              std::advance(vIt, vertices[i] - leafGridView_.size(dimgrid));
+              std::advance(vIt, vertices[i] - this->leafGridView().size(dimgrid));
               newElement.vertex_[i] = &*vIt;
             }
             else
@@ -712,10 +687,6 @@ class FoamGrid :
 
     //! The leaf index set
     FoamGridLeafIndexSet<const FoamGrid > leafIndexSet_;
-
-    // The leaf grid view
-    FoamGridLeafGridView<const FoamGrid, All_Partition> leafGridView_;
-
 
     //! The id set
     FoamGridIdSet<const FoamGrid > idSet_;
