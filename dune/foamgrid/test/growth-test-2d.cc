@@ -139,6 +139,9 @@ int main (int argc, char *argv[])
 {
   try
   {
+    // maybe initialize mpi
+    Dune::MPIHelper::instance(argc, argv);
+
     static const int dimworld = 3;
     static const int dim = 2;
     std::cout << "Creating a FoamGrid<"<<dim<<", "<<dimworld<<"> ("<<dim<<"d in "<<dimworld<<"d grid)" << std::endl;

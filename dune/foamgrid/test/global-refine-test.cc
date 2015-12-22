@@ -15,6 +15,9 @@
 
 int main (int argc, char *argv[]) try
 {
+    // maybe initialize mpi
+    Dune::MPIHelper::instance(argc, argv);
+
     const std::string dune_foamgrid_path = std::string(DUNE_FOAMGRID_EXAMPLE_GRIDS_PATH) + "gmsh/";
 
     std::cout << "Checking FoamGrid<2, 2> (2d in 2d grid)" << std::endl;

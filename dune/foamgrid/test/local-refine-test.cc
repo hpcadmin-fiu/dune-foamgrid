@@ -16,6 +16,9 @@
 
 int main (int argc, char *argv[]) try
 {
+    // maybe initialize mpi
+    Dune::MPIHelper::instance(argc, argv);
+
     const std::string dune_foamgrid_path = std::string(DUNE_FOAMGRID_EXAMPLE_GRIDS_PATH) + "gmsh/";
     Dune::FieldVector<double,2> lower = {0,0};
     Dune::FieldVector<double,2> upper = {1,1};
