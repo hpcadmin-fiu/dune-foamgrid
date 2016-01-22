@@ -6,8 +6,6 @@
  * \brief Implementation of EntitySeed for the FoamGrid grid manager
  */
 
-#include <dune/common/nullptr.hh>
-
 #include "foamgridentity.hh"
 
 namespace Dune {

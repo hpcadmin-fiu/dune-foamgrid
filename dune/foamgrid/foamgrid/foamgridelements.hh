@@ -10,7 +10,6 @@
 
 #include <dune/foamgrid/foamgrid/foamgridvertex.hh>
 #include <dune/foamgrid/foamgrid/foamgridedge.hh>
-#include <dune/common/nullptr.hh>
 
 namespace Dune {
 

@@ -32,7 +32,6 @@
 #include "foamgrid/foamgridleafiterator.hh"
 #include "foamgrid/foamgridhierarchiciterator.hh"
 #include "foamgrid/foamgridindexsets.hh"
-#include "foamgrid/foamgridviews.hh"
 
 namespace Dune {
 
@@ -66,8 +65,8 @@ struct FoamGridFamily
         FoamGridIdSet< const FoamGrid<dimgrid, dimworld> >,  // local IdSet
         unsigned int,   // local id type
         CollectiveCommunication<Dune::FoamGrid<dimgrid, dimworld> > ,
-        FoamGridLevelGridViewTraits,
-        FoamGridLeafGridViewTraits,
+        DefaultLevelGridViewTraits,
+        DefaultLeafGridViewTraits,
         FoamGridEntitySeed
             > Traits;
 };
@@ -110,11 +109,6 @@ class FoamGrid :
     template <int codim_, class GridImp_>
     friend class FoamGridEntityPointer;
 
-    template <class GridImp_, PartitionIteratorType PiType_>
-    friend class FoamGridLeafGridView;
-    template <class GridImp_, PartitionIteratorType PiType_>
-    friend class FoamGridLevelGridView;
-
     public:
 
     /** \brief FoamGrid is only implemented for 1 and 2 dimension */
@@ -137,7 +131,6 @@ class FoamGrid :
      */
     FoamGrid()
         : leafIndexSet_(*this),
-          leafGridView_(*this),
           globalRefined(0),
           numBoundarySegments_(0),
           growing_(false)
@@ -301,24 +294,6 @@ class FoamGrid :
             return leafIndexSet_;
         }
 
-
-        //! View for the leaf grid
-        template<PartitionIteratorType pitype>
-        typename Traits::template Partition<pitype>::LeafGridView
-        leafGridView() const {
-          typedef typename Traits::template Partition<pitype>::LeafGridView View;
-          return View(leafGridView_);
-        }
-
-        //! View for the leaf grid for All_Partition
-        typename Traits::template Partition<All_Partition>::LeafGridView
-        leafGridView() const
-        {
-          typedef typename Traits::template Partition<All_Partition>::LeafGridView View;
-          return View(leafGridView_);
-        }
-
-
         /** \brief Create EntityPointer from EnitySeed */
         template < class EntitySeed >
         static typename Traits::template Codim<EntitySeed::codimension>::EntityPointer
@@ -350,7 +325,6 @@ class FoamGrid :
         */
         void globalRefine (int refCount = 1);
 
-#if DUNE_VERSION_NEWER(DUNE_COMMON,2,4)
         /** \brief Mark entity for refinement
         *
         * This only works for entities of codim 0.
@@ -395,52 +369,6 @@ class FoamGrid :
             }
             return 0;
         }
-#else
-        /** \brief Mark entity for refinement
-        *
-        * This only works for entities of codim 0.
-        * The parameter is currently ignored
-        *
-        * \return <ul>
-        * <li> true, if marking was successful </li>
-        * <li> false, if marking was not possible </li>
-        * </ul>
-        */
-        bool mark(int refCount, const typename Traits::template Codim<0>::EntityPointer & e)
-        {
-            if (not e->isLeaf())
-                return false;
-
-            /** \todo Why do I need those const_casts here? */
-            if (refCount>=1)
-                const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(*e).target_)->markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::REFINE;
-            else if (refCount<0)
-                const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(*e).target_)->markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::COARSEN;
-            else
-                const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(*e).target_)->markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::DO_NOTHING;
-
-            return true;
-        }
-
-        /** \brief Return refinement mark for entity
-        *
-        * \return refinement mark (1,0,-1)
-        */
-        int getMark(const typename Traits::template Codim<0>::EntityPointer & e) const
-        {
-            switch(this->getRealImplementation(*e).target_->markState_)
-            {
-              case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::DO_NOTHING:
-              case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::IS_COARSENED:
-                return 0;
-              case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::REFINE:
-                return 1;
-              case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::COARSEN:
-                return -1;
-            }
-            return 0;
-        }
-#endif
 
         //! \brief Book-keeping routine to be called before adaptation
         bool preAdapt();
@@ -481,7 +409,7 @@ class FoamGrid :
           newVertex.isNew_ = true;
           // new vertices are numbered consecutively starting from
           // the highest available index in the leaf index set +1
-          return leafGridView_.size(dimgrid) - 1 + verticesToInsert_.size();
+          return this->leafGridView().size(dimgrid) - 1 + verticesToInsert_.size();
         }
 
         /** \brief Add a new element to be added to the grid
@@ -502,11 +430,11 @@ class FoamGrid :
 
           for(std::size_t i = 0; i < vertices.size(); i++)
           {
-            if(vertices[i] >= leafGridView_.size(dimgrid))
+            if(vertices[i] >= this->leafGridView().size(dimgrid))
             {
               // initialize with pointer to vertex in verticesToInsert_ vector, later overwrite with actual pointer
               auto vIt = verticesToInsert_.begin();
-              std::advance(vIt, vertices[i] - leafGridView_.size(dimgrid));
+              std::advance(vIt, vertices[i] - this->leafGridView().size(dimgrid));
               newElement.vertex_[i] = &*vIt;
             }
             else
@@ -637,12 +565,11 @@ class FoamGrid :
     void initializeGrowth_()
     {
       // update the index to vertex map
-      indexToVertexMap_.resize(leafGridView_.size(dimgrid));
-      typedef typename Traits::template Codim<dimgrid>::LeafIterator VertexIterator;
-      for (VertexIterator vIt = this->leafbegin<dimgrid>(), vItEnd = this->leafend<dimgrid>(); vIt != vItEnd; ++vIt)
+      indexToVertexMap_.resize(this->leafGridView().size(dimgrid));
+      for (const auto& vertex : vertices(this->leafGridView()))
       {
-        std::size_t index = leafIndexSet().index(*vIt);
-        indexToVertexMap_[index] = const_cast<FoamGridEntityImp<0, dimgrid ,dimworld>*>(this->getRealImplementation(*vIt).target_);
+        std::size_t index = leafIndexSet().index(vertex);
+        indexToVertexMap_[index] = const_cast<FoamGridEntityImp<0, dimgrid ,dimworld>*>(this->getRealImplementation(vertex).target_);
       }
 
       // tell the grid it's ready for growth
@@ -761,10 +688,6 @@ class FoamGrid :
     //! The leaf index set
     FoamGridLeafIndexSet<const FoamGrid > leafIndexSet_;
 
-    // The leaf grid view
-    FoamGridLeafGridView<const FoamGrid, All_Partition> leafGridView_;
-
-
     //! The id set
     FoamGridIdSet<const FoamGrid > idSet_;
 
@@ -811,16 +734,6 @@ namespace Capabilities
     {
         static const bool v = true;
     };
-
-
-    /** \brief True if the grid can be run on a distributed machine
-      */
-    template <int dimgrid, int dimworld>
-    struct isParallel< FoamGrid<dimgrid, dimworld> >
-    {
-        static const bool v = false;
-    };
-
 
     //! \todo Please doc me !
     template <int dimgrid, int dimworld>

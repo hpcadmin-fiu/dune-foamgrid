@@ -5,16 +5,9 @@
 #include "make2din3dgrid.hh"
 #include <dune/grid/io/file/gmshreader.hh>
 
-#if DUNE_VERSION_NEWER(DUNE_GRID, 2, 4)
 #include <dune/grid/test/gridcheck.hh>
 #include <dune/grid/test/checkintersectionit.hh>
 #include <dune/grid/test/checkgeometryinfather.hh>
-#else
-#include <dune/grid/test/gridcheck.cc>
-#include <dune/grid/test/checkintersectionit.cc>
-#include <dune/grid/test/checkgeometryinfather.cc>
-#endif
-
 #include <dune/foamgrid/foamgrid.hh>
 #include <dune/grid/common/gridinfo.hh>
 #include <dune/grid/utility/structuredgridfactory.hh>
@@ -22,17 +15,15 @@
 
 int main (int argc, char *argv[]) try
 {
+    // maybe initialize mpi
+    Dune::MPIHelper::instance(argc, argv);
+
     const std::string dune_foamgrid_path = std::string(DUNE_FOAMGRID_EXAMPLE_GRIDS_PATH) + "gmsh/";
 
     std::cout << "Checking FoamGrid<2, 2> (2d in 2d grid)" << std::endl;
-#if DUNE_VERSION_NEWER(DUNE_GRID, 2, 4)
     Dune::FieldVector<double,2> lower = {0,0};
     Dune::FieldVector<double,2> upper = {1,1};
-#else
-    Dune::FieldVector<double,2> lower(0);
-    Dune::FieldVector<double,2> upper(1);
-#endif
-    std::array<unsigned int,2> elements = {1,1};
+    std::array<unsigned int,2> elements = {{1,1}};
     std::shared_ptr<FoamGrid<2, 2> > grid2d = StructuredGridFactory<FoamGrid<2,2> >::createSimplexGrid(lower,upper,elements);
 
     {

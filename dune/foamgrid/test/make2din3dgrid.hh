@@ -10,11 +10,7 @@ using namespace Dune;
 template <class GridType>
 GridType* make2Din3DHybridTestGrid()
 {
-#if DUNE_VERSION_NEWER(DUNE_COMMON,2,4)
     static_assert(GridType::dimension==2,
-#else
-    dune_static_assert(GridType::dimension==2,
-#endif
                        "Instantiate make2dHybridTestGrid only for 2d grids!");
 
     // Start grid creation

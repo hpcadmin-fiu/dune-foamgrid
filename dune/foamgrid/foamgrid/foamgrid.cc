@@ -47,11 +47,9 @@ void Dune::FoamGrid<dimgrid, dimworld>::globalRefine (int refCount)
       for (int i=refCount; i<0; ++i)
       {
         // Mark each leaf element for coarsening.
-        typedef typename Traits::template Codim<0>::LeafIterator Iterator;
-        for (Iterator elem=this->leafbegin<0>(), end = this->leafend<0>();
-             elem != end; ++elem)
+        for (const auto& element : elements(this->leafGridView()))
         {
-          mark(-1,*elem);
+          mark(-1, element);
         }
 
         // do the adaptation
@@ -155,27 +153,26 @@ bool Dune::FoamGrid<dimgrid, dimworld>::preAdapt()
 {
   // Loop over all leaf entities and check whether they might be
   // coarsened. If there is one return true.
-  typedef typename Traits::template Codim<0>::LeafIterator Iterator;
   int addLevels = 0;
   willCoarsen = false;
 
-  for (Iterator elem=this->leafbegin<0>(), end = this->leafend<0>(); elem != end; ++elem)
+  for (const auto& element : elements(this->leafGridView()))
   {
-    int mark=getMark(*elem);
-    addLevels=std::max(addLevels, elem->level()+mark-maxLevel());
+    int mark=getMark(element);
+    addLevels=std::max(addLevels, element.level()+mark-maxLevel());
 
     if (mark<0)
     {
       // If the element is marked for coarsening but it is not allowed because of growth
       // i.e. it contains a junction facet with has no father, we reset to DO_NOTHING
-      if(this->getRealImplementation(*elem).target_->coarseningBlocked_)
-        const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(*elem).target_)->markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::DO_NOTHING;
+      if(this->getRealImplementation(element).target_->coarseningBlocked_)
+        const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(element).target_)->markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::DO_NOTHING;
 
       // If this element is marked for coarsening, but another child
       // of this element's father is marked for refinement or has children, then we
       // need to reset the marker to doNothing
       bool otherChildRefined=false;
-      FoamGridEntityImp<dimgrid, dimgrid, dimworld>& father = *this->getRealImplementation(*elem).target_->father_;
+      FoamGridEntityImp<dimgrid, dimgrid, dimworld>& father = *this->getRealImplementation(element).target_->father_;
       typedef typename array<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*, 1<<dimgrid >::iterator ChildrenIter;
       for (ChildrenIter child=father.sons_.begin(); child != father.sons_.end(); ++child)
         otherChildRefined = otherChildRefined ||
@@ -211,17 +208,15 @@ bool Dune::FoamGrid<dimgrid, dimworld>::adapt()
   bool haveRefined=false;
 
   // Loop over all leaf elements and refine/coarsen those that marked for it.
-  typedef typename Traits::template Codim<0>::LeafIterator Iterator;
-  for (Iterator elem=this->leafbegin<0>(), end = this->leafend<0>();
-       elem != end; ++elem)
+  for (const auto& element : elements(this->leafGridView()))
   {
-    int mark=getMark(*elem);
+    int mark=getMark(element);
     if (mark>0)
     {
       // Refine simplices
-      if (elem->type().isTriangle() || elem->type().isLine())
+      if (element.type().isTriangle() || element.type().isLine())
       {
-        refineSimplexElement(*const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(*elem).target_), 1);
+        refineSimplexElement(*const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(element).target_), 1);
         haveRefined=true;
       }
       else
@@ -231,10 +226,10 @@ bool Dune::FoamGrid<dimgrid, dimworld>::adapt()
     if (mark<0) // If simplex was already treated by coarsenSimplex mark is 0
     {
       // Coarsen simplices
-      if (elem->type().isTriangle() || elem->type().isLine())
+      if (element.type().isTriangle() || element.type().isLine())
       {
-        assert(elem->level());
-        coarsenSimplexElement(*const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(*elem).target_));
+        assert(element.level());
+        coarsenSimplexElement(*const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(element).target_));
       }
       else
         DUNE_THROW(NotImplemented, "Coarsening only supported for simplices!");
@@ -267,19 +262,18 @@ bool Dune::FoamGrid<dimgrid, dimworld>::adapt()
     for (FacetIter facet=std::get<dimgrid-1>(entityImps_[level]).begin();
          facet != std::get<dimgrid-1>(entityImps_[level]).end();)
     {
-      typedef typename std::vector<const FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>::iterator ElementIter;
-      for (ElementIter elem=facet->elements_.begin(); elem != facet->elements_.end(); ++elem)
+      for (auto&& element : facet->elements_)
       {
-        if((*elem)->willVanish_)
+        if(element->willVanish_)
         {
-          *elem = (*elem)->father_;
+          element = element->father_;
         }
       }
 
       // check if we have same level elements, if so this facet stays
       bool hasSameLevelElements=false;
-      for (ElementIter elem=facet->elements_.begin(); elem != facet->elements_.end(); ++elem)
-        hasSameLevelElements = hasSameLevelElements || (*elem)->level()==level;
+      for (auto&& element : facet->elements_)
+        hasSameLevelElements = hasSameLevelElements || element->level()==level;
 
       assert(facet->willVanish_!=hasSameLevelElements);
 
@@ -325,15 +319,13 @@ void Dune::FoamGrid<dimgrid, dimworld>::postAdapt()
   willCoarsen=false;
 
   // Loop over all leaf entities and remove the isNew Marker.
-  typedef typename Traits::template Codim<0>::LeafIterator Iterator;
-
-  for (Iterator elem=this->leafbegin<0>(), end = this->leafend<0>(); elem != end; ++elem)
+  for (const auto& element : elements(this->leafGridView()))
   {
-    FoamGridEntityImp<dimgrid, dimgrid, dimworld>& element=*const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(*elem).target_);
-    element.isNew_=false;
-    assert(!element.willVanish_);
-    if (element.father_)
-      element.father_->markState_=FoamGridEntityImp<dimgrid, dimgrid, dimworld>::DO_NOTHING;
+    FoamGridEntityImp<dimgrid, dimgrid, dimworld>& e = *const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(element).target_);
+    e.isNew_=false;
+    assert(!e.willVanish_);
+    if (e.father_)
+      e.father_->markState_=FoamGridEntityImp<dimgrid, dimgrid, dimworld>::DO_NOTHING;
   }
 }
 
@@ -342,13 +334,11 @@ void Dune::FoamGrid<dimgrid, dimworld>::postAdapt()
 template <int dimgrid, int dimworld>
 void Dune::FoamGrid<dimgrid, dimworld>::erasePointersToEntities(std::list<FoamGridEntityImp<dimgrid, dimgrid, dimworld> >& elements)
 {
-  typedef typename std::list<FoamGridEntityImp<dimgrid, dimgrid, dimworld> >::iterator EntityIterator;
-  for(EntityIterator element=elements.begin();
-      element != elements.end(); ++element)
+  for(auto&& element : elements)
   {
-    if(element->willVanish_)
+    if(element.willVanish_)
     {
-      FoamGridEntityImp<dimgrid, dimgrid, dimworld>& father=*element->father_;
+      FoamGridEntityImp<dimgrid, dimgrid, dimworld>& father=*element.father_;
       for (unsigned int i=0; i<father.nSons_; i++)
         father.sons_[i]=nullptr;
       // reset the number of sons for the father
@@ -1331,23 +1321,23 @@ void Dune::FoamGrid<dimgrid, dimworld>::postGrow()
 {
   // Loop over all leaf entities and remove the isNew Marker
   // and set the coarseing blocker in case we created a T-junction
-  for (auto elem=this->leafbegin<0>(), end = this->leafend<0>(); elem != end; ++elem)
+  for (auto&& element : elements(this->leafGridView()))
   {
-    FoamGridEntityImp<dimgrid, dimgrid, dimworld>& element=*const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(*elem).target_);
-    element.isNew_=false;
+    FoamGridEntityImp<dimgrid, dimgrid, dimworld>& e = *const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(element).target_);
+    e.isNew_=false;
 
-    for(auto&& vertex : element.vertex_)
+    for(auto&& vertex : e.vertex_)
       vertex->isNew_ = false;
 
     //Block elements that do now have a facet being a junction and not having a father for coarsening
-    for(auto&& facet : element.facet_)
+    for(auto&& facet : e.facet_)
       if(facet->elements_.size() > 2 && !(facet->hasFather()))
-        element.coarseningBlocked_ = true;
+        e.coarseningBlocked_ = true;
 
     // Also block all children of the father as one child marked for coarsening is enough to coarsen all
-    if(element.coarseningBlocked_ && element.hasFather())
+    if(e.coarseningBlocked_ && e.hasFather())
     {
-      FoamGridEntityImp<dimgrid, dimgrid, dimworld>& father=*(element.father_);
+      FoamGridEntityImp<dimgrid, dimgrid, dimworld>& father=*(e.father_);
       for (auto&& child : father.sons_)
         child->coarseningBlocked_ = true;
     }

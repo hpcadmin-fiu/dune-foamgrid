@@ -17,6 +17,9 @@ getPosition(const Dune::FieldVector<double, dimworld>& pos)
 
 int main (int argc, char *argv[]) try
 {
+  // maybe initialize mpi
+  Dune::MPIHelper::instance(argc, argv);
+
   std::cout << "Creating a FoamGrid<2, 3> (2d in 3d grid)" << std::endl;
   static const int dimworld = 3;
   static const int dimgrid = 2;

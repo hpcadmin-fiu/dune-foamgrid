@@ -268,11 +268,7 @@ class FoamGridEntity<0, 2, GridImp> :
         template<int cc>
         int count () const
         {
-#if DUNE_VERSION_NEWER(DUNE_COMMON,2,4)
             static_assert(0<=cc && cc<=2, "Only codimensions with 0 <= cc <= 2 are valid!");
-#else
-            dune_static_assert(0<=cc && cc<=2, "Only codimensions with 0 <= cc <= 2 are valid!");
-#endif
             return (cc==0) ? 1 : 3;
         }
 
@@ -309,7 +305,6 @@ class FoamGridEntity<0, 2, GridImp> :
             DUNE_THROW(GridError, "Non-existing codimension requested!");
         }
 
-#if DUNE_VERSION_NEWER(DUNE_COMMON,2,4)
         /** \brief Access to codim 0 subentities */
         template<int codim>
         typename std::enable_if<codim==0, typename Codim<0>::Entity>::type
@@ -336,26 +331,6 @@ class FoamGridEntity<0, 2, GridImp> :
           assert(i==0 || i==1 || i==2);
           return typename Codim<2>::Entity(FoamGridEntity<2, dimgrid, GridImp>(this->target_->vertex_[i]));
         }
-#else
-
-                /** \brief Provide access to sub entity i of given codimension. Entities
-        *  are numbered 0 ... count<cc>()-1
-        */
-        template<int codim>
-        typename GridImp::template Codim<codim>::EntityPointer subEntity (int i) const{
-            if (codim==0) {
-                // The cast is correct when this if clause is executed
-                return FoamGridEntityPointer<codim, GridImp>( (FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld>*)this->target_);
-            } else if (codim==1) {
-                // The cast is correct when this if clause is executed
-                return FoamGridEntityPointer<codim, GridImp>( (FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld>*)this->target_->facet_[i]);
-            } else if (codim==2) {
-                // The cast is correct when this if clause is executed
-                return FoamGridEntityPointer<codim, GridImp>( (FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld>*)this->target_->vertex_[i]);
-            }
-            DUNE_THROW(GridError, "Non-existing codimension requested!");
-        }
-#endif
 
         //! First level intersection
         FoamGridLevelIntersectionIterator<GridImp> ilevelbegin () const{
@@ -404,20 +379,11 @@ class FoamGridEntity<0, 2, GridImp> :
             return target_->mightVanish();
         }
 
-#if DUNE_VERSION_NEWER(DUNE_COMMON,2,4)
         //! Inter-level access to father element on coarser grid.
         //! Assumes that meshes are nested.
         Entity father () const {
             return Entity(FoamGridEntity<0, dimgrid, GridImp>(target_->father_));
         }
-#else
-        //! Inter-level access to father element on coarser grid.
-        //! Assumes that meshes are nested.
-        FoamGridEntityPointer<0, GridImp> father () const {
-            return FoamGridEntityPointer<0, GridImp>(target_->father_);
-        }
-#endif
-
 
         /** \brief Location of this element relative to the reference element element of the father.
         * This is sufficient to interpolate all dofs in conforming case.
@@ -620,12 +586,8 @@ class FoamGridEntity<0, 1, GridImp> :
         template<int cc>
         int count () const
         {
-#if DUNE_VERSION_NEWER(DUNE_COMMON,2,4)
             static_assert(0<=cc && cc<=1, "Only codimensions with 0 <= cc <= 1 are valid!");
-#else
-            dune_static_assert(0<=cc && cc<=1, "Only codimensions with 0 <= cc <= 1 are valid!");
-#endif
-                return (cc==0) ? 1 : 2;
+            return (cc==0) ? 1 : 2;
         }
 
         /** \brief Return the number of subEntities of codimension cc.
@@ -659,7 +621,6 @@ class FoamGridEntity<0, 1, GridImp> :
             DUNE_THROW(GridError, "Non-existing codimension requested!");
         }
 
-#if DUNE_VERSION_NEWER(DUNE_COMMON,2,4)
         /** \brief Access to codim 0 subentities */
         template<int codim>
         typename std::enable_if<codim==0, typename Codim<0>::Entity>::type
@@ -677,21 +638,6 @@ class FoamGridEntity<0, 1, GridImp> :
           assert(i==0 || i==1);
           return typename Codim<1>::Entity(FoamGridEntity<1, dimgrid, GridImp>(this->target_->vertex_[i]));
         }
-#else
-        /** \brief Provide access to sub entity i of given codimension. Entities
-        *  are numbered 0 ... count<cc>()-1
-        */
-        template<int codim>
-        typename GridImp::template Codim<codim>::EntityPointer subEntity (int i) const{
-            if (codim==0) {
-                // The cast is correct when this if clause is executed
-                return FoamGridEntityPointer<codim,GridImp>( (FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld>*)this->target_);
-            } else if (codim==1) {
-                // The cast is correct when this if clause is executed
-                return FoamGridEntityPointer<codim,GridImp>( (FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld>*)this->target_->vertex_[i]);
-            }
-        }
-#endif
 
         //! First level intersection
         FoamGridLevelIntersectionIterator<GridImp> ilevelbegin () const{
@@ -740,19 +686,11 @@ class FoamGridEntity<0, 1, GridImp> :
             return target_->mightVanish();
         }
 
-#if DUNE_VERSION_NEWER(DUNE_COMMON,2,4)
         //! Inter-level access to father element on coarser grid.
         //! Assumes that meshes are nested.
         Entity father () const {
             return Entity(FoamGridEntity<0, dimgrid, GridImp>(target_->father_));
         }
-#else
-        //! Inter-level access to father element on coarser grid.
-        //! Assumes that meshes are nested.
-        FoamGridEntityPointer<0, GridImp> father () const {
-            return FoamGridEntityPointer<0, GridImp>(target_->father_);
-        }
-#endif
 
         /** \brief Location of this element relative to the reference element element of the father.
         * This is sufficient to interpolate all dofs in conforming case.
