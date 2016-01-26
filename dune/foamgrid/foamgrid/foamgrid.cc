@@ -548,8 +548,10 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<2
 
   array<FoamGridEntityImp<1, dimgrid, dimworld>*, 9> nextLevelFacets;
   std::size_t facetIndex=0;
+#ifndef NDEBUG
   const Dune::ReferenceElement<double, dimgrid>& refElement
     = Dune::ReferenceElements<double, dimgrid>::general(element.type());
+#endif
 
   // I am just to dumb for a general facet to vertice mapping.
   // Therefore we just store it here
@@ -560,9 +562,11 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<2
 
   for(FacetIterator facet=element.facet_.begin(); facet != element.facet_.end(); ++facet)
   {
+#ifndef NDEBUG
     typedef FoamGridEntityImp<0, dimgrid, dimworld> FoamGridVertex;
     const FoamGridVertex* v0 = element.vertex_[refElement.subEntity(facetIndex/2, 1, 0, 2)];
     const FoamGridVertex* v1 = element.vertex_[refElement.subEntity(facetIndex/2, 1, 1, 2)];
+#endif
 
     if(!(*facet)->nSons_)
     {
