@@ -199,9 +199,9 @@ class FoamGridLeafIndexSet :
 {
 
     // Grid dimension
-    enum {dimgrid  = remove_const<GridImp>::type::dimension};
+    enum {dimgrid  = std::remove_const<GridImp>::type::dimension};
     // World dimension
-    enum {dimworld = remove_const<GridImp>::type::dimensionworld};
+    enum {dimworld = std::remove_const<GridImp>::type::dimensionworld};
 
 public:
 
@@ -421,11 +421,11 @@ class FoamGridIdSet :
 
         //! get id of an entity
         /*
-        We use the remove_const to extract the Type from the mutable class,
+        We use the std::remove_const to extract the Type from the mutable class,
         because the const class is not instantiated yet.
         */
         template<int cd>
-        IdType id (const typename remove_const<GridImp>::type::Traits::template Codim<cd>::Entity& e) const
+        IdType id (const typename std::remove_const<GridImp>::type::Traits::template Codim<cd>::Entity& e) const
         {
             return GridImp::getRealImplementation(e).target_->id_;
         }
@@ -433,10 +433,10 @@ class FoamGridIdSet :
 
         //! get id of subEntity
         /*
-            We use the remove_const to extract the Type from the mutable class,
+            We use the std::remove_const to extract the Type from the mutable class,
             because the const class is not instantiated yet.
         */
-        IdType subId (const typename remove_const<GridImp>::type::Traits::template Codim<0>::Entity& e, int i, int codim) const
+        IdType subId (const typename std::remove_const<GridImp>::type::Traits::template Codim<0>::Entity& e, int i, int codim) const
         {
             return GridImp::getRealImplementation(e).subId(i,codim);
         }
