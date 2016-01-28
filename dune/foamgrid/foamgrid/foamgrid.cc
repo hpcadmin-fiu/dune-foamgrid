@@ -319,13 +319,15 @@ void Dune::FoamGrid<dimgrid, dimworld>::postAdapt()
   willCoarsen=false;
 
   // Loop over all leaf entities and remove the isNew Marker.
-  for (const auto& element : elements(this->leafGridView()))
+  for (int level = maxLevel(); level >= 0; --level)
   {
-    FoamGridEntityImp<dimgrid, dimgrid, dimworld>& e = *const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(element).target_);
-    e.isNew_=false;
-    assert(!e.willVanish_);
-    if (e.father_)
-      e.father_->markState_=FoamGridEntityImp<dimgrid, dimgrid, dimworld>::DO_NOTHING;
+    for(auto eIt = std::get<dimgrid>(entityImps_[level]).begin(); eIt != std::get<dimgrid>(entityImps_[level]).end(); ++eIt)
+    {
+      eIt->isNew_=false;
+      assert(!eIt->willVanish_);
+      if (eIt->father_)
+        eIt->father_->markState_=FoamGridEntityImp<dimgrid, dimgrid, dimworld>::DO_NOTHING;
+    }
   }
 }
 
