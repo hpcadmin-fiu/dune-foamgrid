@@ -4,7 +4,7 @@
 
 #Name of the module
 Module: dune-foamgrid
-Version: 2.3
+Version: 2.4
 Maintainer: sander@igpm.rwth-aachen.de
-#depending on 
-Depends: dune-common (>= 2.3) dune-geometry (>= 2.3) dune-grid (>= 2.3)
+#depending on
+Depends: dune-common (>= 2.4) dune-geometry (>= 2.4) dune-grid (>= 2.4)
