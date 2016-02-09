@@ -279,7 +279,7 @@ bool Dune::FoamGrid<dimgrid, dimworld>::adapt()
       // check if we have same level elements, if so this facet stays
       bool hasSameLevelElements=false;
       for (ElementIter elem=facet->elements_.begin(); elem != facet->elements_.end(); ++elem)
-        hasSameLevelElements = hasSameLevelElements || (*elem)->level()==level;
+        hasSameLevelElements = hasSameLevelElements || (*elem)->level()==(size_t)level;
 
       assert(facet->willVanish_!=hasSameLevelElements);
 
