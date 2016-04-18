@@ -1419,7 +1419,7 @@ template <int dimgrid, int dimworld>
 void Dune::FoamGrid<dimgrid, dimworld>::setPosition(const typename Traits::template Codim<dimgrid>::Entity & e,
                                                     const FieldVector<ctype, dimworld>& pos)
 {
-  auto vertex = const_cast<FoamGridEntityImp<0, dimgrid, dimworld>*>(this->getRealImplementation(*e).target_);
+  auto vertex = const_cast<FoamGridEntityImp<0, dimgrid, dimworld>*>(this->getRealImplementation(e).target_);
 
   if (!vertex->isLeaf())
     DUNE_THROW(Dune::NotImplemented, "Moving vertices that are not on the leaf!");
