@@ -50,7 +50,6 @@ struct FoamGridFamily
         Dune::FoamGrid<dimgrid, dimworld>,
         FoamGridGeometry,
         FoamGridEntity,
-        FoamGridEntityPointer,
         FoamGridLevelIterator,
         FoamGridLeafIntersection,
         FoamGridLevelIntersection,
