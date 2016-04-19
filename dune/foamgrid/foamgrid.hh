@@ -50,7 +50,6 @@ struct FoamGridFamily
         Dune::FoamGrid<dimgrid, dimworld>,
         FoamGridGeometry,
         FoamGridEntity,
-        FoamGridEntityPointer,
         FoamGridLevelIterator,
         FoamGridLeafIntersection,
         FoamGridLevelIntersection,
@@ -292,17 +291,6 @@ class FoamGrid :
         const typename Traits::LeafIndexSet& leafIndexSet() const
         {
             return leafIndexSet_;
-        }
-
-        /** \brief Create EntityPointer from EnitySeed */
-        template < class EntitySeed >
-        static typename Traits::template Codim<EntitySeed::codimension>::EntityPointer
-        entityPointer(const EntitySeed& seed)
-        {
-            typedef FoamGridEntityPointer<EntitySeed::codimension, const FoamGrid> EntityPointerImpl;
-            typedef typename Traits::template Codim<EntitySeed::codimension>::EntityPointer EntityPointer;
-
-            return EntityPointer(EntityPointerImpl(FoamGrid::getRealImplementation(seed).getImplementationPointer()));
         }
 
         /** \brief Create an Entity from an EntitySeed */
