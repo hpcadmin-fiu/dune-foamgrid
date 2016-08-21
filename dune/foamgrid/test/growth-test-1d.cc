@@ -70,6 +70,13 @@ void checkGridElementGrowth(Grid& grid, int numElements)
   if(!newElementGenerated)
     DUNE_THROW(InvalidStateException,"grid.preGrow() does not return correct information");
 
+  // obtain growth insertion index of new elements
+  for (const auto& element : elements(grid.levelGridView(0)))
+  {
+    if (element.isNew())
+      std::cout << "After calling grow(): found new element with growth insertion index: " << grid.growthInsertionIndex(element) << std::endl;
+  }
+
   grid.postGrow();
 
   // Loop over all levels except the lowest one
