@@ -403,9 +403,11 @@ class FoamGrid :
         /** \brief Add a new element to be added to the grid
         \param type The GeometryType of the new element
         \param vertices The vertices of the new element, using the DUNE numbering
+        \return The growthInsertionIndex that can be used to attach user data to this element.
+                It is valid between until calling postGrow.
         */
-        void insertElement(const GeometryType& type,
-                           const std::vector<unsigned int>& vertices)
+        unsigned int insertElement(const GeometryType& type,
+                                   const std::vector<unsigned int>& vertices)
         {
           // foamgrid only supports simplices until now
           assert(type.isTriangle() || type.isLine());
@@ -436,20 +438,24 @@ class FoamGrid :
           }
           newElement.isNew_ = true;
           newElement.growthInsertionIndex_ = elementsToInsert_.size()-1;
+          return elementsToInsert_.size()-1;
         }
 
         /** \brief Add a new element to be added to the grid
         \param type The GeometryType of the new element
         \param vertices The vertices of the new element, using the DUNE numbering
         \param elementParametrization A function prescribing the shape of this element
+        \return The growthInsertionIndex that can be used to attach user data to this element.
+                It is valid between until calling postGrow.
         */
-        void insertElement(const GeometryType& type,
-                           const std::vector<unsigned int>& vertices,
-                           const std::shared_ptr<VirtualFunction<FieldVector<ctype,dimgrid>,FieldVector<ctype,dimworld> > >& elementParametrization)
+        unsigned int insertElement(const GeometryType& type,
+                                   const std::vector<unsigned int>& vertices,
+                                   const std::shared_ptr<VirtualFunction<FieldVector<ctype,dimgrid>,FieldVector<ctype,dimworld> > >& elementParametrization)
         {
-          insertElement(type, vertices);
+          auto growthInsertionIndex = insertElement(type, vertices);
           // save the pointer to the element parametrization
           elementsToInsert_.back().elementParametrization_ = elementParametrization;
+          return growthInsertionIndex;
         }
 
         /** \brief Mark an element for removal from the grid
