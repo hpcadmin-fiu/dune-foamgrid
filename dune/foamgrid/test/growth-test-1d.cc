@@ -12,7 +12,7 @@
 #include <dune/grid/test/checkindexset.hh>
 
 template <class Grid>
-void checkGridElementGrowth(Grid& grid)
+void checkGridElementGrowth(Grid& grid, int numElements)
 {
   using namespace Dune;
   enum { dimworld = Grid::dimensionworld };
@@ -24,18 +24,33 @@ void checkGridElementGrowth(Grid& grid)
     if(geo.center()[1] >= 0.0 && geo.center()[0] < -1.0)
     {
       Dune::FieldVector<double, dimworld> growPoint = geo.center();
-      growPoint += Dune::FieldVector<double, dimworld>(2.0);
+      double interval = 2.0/numElements;
+      unsigned int oldVIdx = 0;
+      for (int i=0; i<numElements; ++i)
+      {
+        growPoint += Dune::FieldVector<double, dimworld>(interval);
 
-      // insert a new vertex
-      auto vIdx = grid.insertVertex(growPoint);
+        // insert a new vertex
+        auto newVIdx = grid.insertVertex(growPoint);
 
-      // find the second index
-      Dune::LeafMultipleCodimMultipleGeomTypeMapper<Grid,Dune::MCMGVertexLayout> mapper(grid);
+        if (i==0)
+        {
+          // find the second index
+          Dune::LeafMultipleCodimMultipleGeomTypeMapper<Grid,Dune::MCMGVertexLayout> mapper(grid);
 
-      // insert the new element
-      grid.insertElement(Dune::GeometryType(1),
-                         {vIdx, mapper.index(element.template subEntity<dim>(0))}
-                         );
+          // insert the new element
+          grid.insertElement(Dune::GeometryType(1),
+                             {mapper.index(element.template subEntity<dim>(0)), newVIdx}
+                             );
+        }
+        else
+        {
+          grid.insertElement(Dune::GeometryType(1),
+                             {oldVIdx, newVIdx}
+                             );
+        }
+        oldVIdx = newVIdx;
+      }
     }
   }
 
@@ -73,7 +88,8 @@ void checkGridElementGrowth(Grid& grid)
     {
       if(intersection.boundary())
       {
-        std::cout << "Boundary Intersection no"<<isCounter<<" has segment index: " << intersection.boundarySegmentIndex() << std::endl;
+        std::cout << "--Boundary Intersection no"<<isCounter<<" has segment index: " << intersection.boundarySegmentIndex()
+                  << " --> at position: " << intersection.geometry().center() << std::endl;
         ++isCounter;
       }
     }
