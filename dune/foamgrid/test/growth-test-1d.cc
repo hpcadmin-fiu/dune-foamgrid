@@ -12,7 +12,7 @@
 #include <dune/grid/test/checkindexset.hh>
 
 template <class Grid>
-void checkGridElementGrowth(Grid& grid)
+void checkGridElementGrowth(Grid& grid, int numElements)
 {
   using namespace Dune;
   enum { dimworld = Grid::dimensionworld };
@@ -24,18 +24,33 @@ void checkGridElementGrowth(Grid& grid)
     if(geo.center()[1] >= 0.0 && geo.center()[0] < -1.0)
     {
       Dune::FieldVector<double, dimworld> growPoint = geo.center();
-      growPoint += Dune::FieldVector<double, dimworld>(2.0);
+      double interval = 2.0/numElements;
+      unsigned int oldVIdx = 0;
+      for (int i=0; i<numElements; ++i)
+      {
+        growPoint += Dune::FieldVector<double, dimworld>(interval);
 
-      // insert a new vertex
-      auto vIdx = grid.insertVertex(growPoint);
+        // insert a new vertex
+        auto newVIdx = grid.insertVertex(growPoint);
 
-      // find the second index
-      Dune::LeafMultipleCodimMultipleGeomTypeMapper<Grid,Dune::MCMGVertexLayout> mapper(grid);
+        if (i==0)
+        {
+          // find the second index
+          Dune::LeafMultipleCodimMultipleGeomTypeMapper<Grid,Dune::MCMGVertexLayout> mapper(grid);
 
-      // insert the new element
-      grid.insertElement(Dune::GeometryType(1),
-                         {vIdx, mapper.index(element.template subEntity<dim>(0))}
-                         );
+          // insert the new element
+          grid.insertElement(Dune::GeometryType(1),
+                             {mapper.index(element.template subEntity<dim>(0)), newVIdx}
+                             );
+        }
+        else
+        {
+          grid.insertElement(Dune::GeometryType(1),
+                             {oldVIdx, newVIdx}
+                             );
+        }
+        oldVIdx = newVIdx;
+      }
     }
   }
 
@@ -73,7 +88,8 @@ void checkGridElementGrowth(Grid& grid)
     {
       if(intersection.boundary())
       {
-        std::cout << "Boundary Intersection no"<<isCounter<<" has segment index: " << intersection.boundarySegmentIndex() << std::endl;
+        std::cout << "--Boundary Intersection no"<<isCounter<<" has segment index: " << intersection.boundarySegmentIndex()
+                  << " --> at position: " << intersection.geometry().center() << std::endl;
         ++isCounter;
       }
     }
@@ -336,36 +352,42 @@ int main (int argc, char *argv[])
 {
   try
   {
+    //////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////1D-2D/////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+
     const std::string dune_foamgrid_path = std::string(DUNE_FOAMGRID_EXAMPLE_GRIDS_PATH) + "gmsh/";
     std::cout << "Creating a FoamGrid<1, 2> (1d in 2d grid)" << std::endl;
     std::shared_ptr<FoamGrid<1, 2> > grid1d( GmshReader<FoamGrid<1, 2> >::read(dune_foamgrid_path + "line1d2d.msh", /*verbose*/ true, false ) );
 
     Dune::VTKWriter<typename FoamGrid<1, 2>::LeafGridView > writer(grid1d->leafGridView(), VTK::nonconforming);
-    writer.write("before_growth");
+    writer.write("before_growth_1d2d");
 
     // check simple grid growth
     std::cout << std::endl << "Check simple grid growth (add element)" << std::endl;
     Dune::gridinfo(*grid1d);
-    checkGridElementGrowth(*grid1d);
-    writer.write("after_growth");
+    checkGridElementGrowth(*grid1d, 3);
+    writer.write("after_growth_1d2d");
     Dune::gridinfo(*grid1d);
 
     // check a merger, i.e. inserting an element only with existing vertices
     std::cout << std::endl << "Check merger (connect two element facets)" << std::endl;
     checkGridElementMerge(*grid1d);
-    writer.write("after_merge");
+    writer.write("after_merge_1d2d");
     Dune::gridinfo(*grid1d);
 
     // check removal of a grid element
     std::cout << std::endl << "Check removal (remove element)" << std::endl;
     checkGridElementRemoval(*grid1d);
-    writer.write("after_removal");
+    writer.write("after_removal_1d2d");
     Dune::gridinfo(*grid1d);
 
     // check growth when vertices are on different levels
     std::cout << std::endl << "Check growth with vertices on different levels" << std::endl;
     checkGridElementGrowthLevel(*grid1d);
-    writer.write("after_second_growth");
+    writer.write("after_second_growth_1d2d");
     Dune::gridinfo(*grid1d);
     checkIndexSet(*grid1d, grid1d->leafGridView(), std::cout);
     for (std::size_t i = 0; i < grid1d->maxLevel(); ++i)
@@ -376,37 +398,44 @@ int main (int argc, char *argv[])
     grid1d->globalRefine(4);
     gridcheck(*grid1d);
 
+    std::cout << std::endl << std::endl << std::endl;
+    //////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////1D-3D/////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+
     std::cout << std::endl << std::endl << std::endl << std::endl;
     std::cout << "Creating a FoamGrid<1, 3> (1d in 3d grid)" << std::endl;
     std::shared_ptr<FoamGrid<1, 3> > grid1d3d( GmshReader<FoamGrid<1, 3> >::read(dune_foamgrid_path + "line1d2d.msh", /*verbose*/ true, false ) );
 
     Dune::VTKWriter<typename FoamGrid<1, 3>::LeafGridView > writer2(grid1d3d->leafGridView(), VTK::nonconforming);
-    writer2.write("before_growth");
+    writer2.write("before_growth_1d3d");
 
     // check simple grid growth
     std::cout << std::endl << "Check simple grid growth (add element)" << std::endl;
     Dune::gridinfo(*grid1d3d);
-    checkGridElementGrowth(*grid1d3d);
-    writer2.write("after_growth");
+    checkGridElementGrowth(*grid1d3d, 2);
+    writer2.write("after_growth_1d3d");
     Dune::gridinfo(*grid1d3d);
     checkIndexSet(*grid1d3d, grid1d3d->leafGridView(), std::cout);
 
     // check a merger, i.e. inserting an element only with existing vertices
     std::cout << std::endl << "Check merger (connect two element facets)" << std::endl;
     checkGridElementMerge(*grid1d3d);
-    writer2.write("after_merge");
+    writer2.write("after_merge_1d3d");
     Dune::gridinfo(*grid1d3d);
 
     // check removal of a grid element
     std::cout << std::endl << "Check removal (remove element)" << std::endl;
     checkGridElementRemoval(*grid1d3d);
-    writer2.write("after_removal");
+    writer2.write("after_removal_1d3d");
     Dune::gridinfo(*grid1d3d);
 
     // check growth when vertices are on different levels
     std::cout << std::endl << "Check growth with vertices on different levels" << std::endl;
     checkGridElementGrowthLevel(*grid1d3d);
-    writer2.write("after_second_growth");
+    writer2.write("after_second_growth_1d3d");
     Dune::gridinfo(*grid1d3d);
     checkIndexSet(*grid1d3d, grid1d3d->leafGridView(), std::cout);
     for (std::size_t i = 0; i < grid1d3d->maxLevel(); ++i)
