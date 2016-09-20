@@ -35,7 +35,8 @@ namespace Dune {
                           int level, unsigned int id)
             : FoamGridEntityBase(level,id), nSons_(0), father_(nullptr),
               refinementIndex_(-1), markState_(DO_NOTHING), isNew_(false),
-              coarseningBlocked_(false)
+              coarseningBlocked_(false),
+              growthInsertionIndex_(-1)
         {
             vertex_[0] = v0;
             vertex_[1] = v1;
@@ -52,7 +53,8 @@ namespace Dune {
 
             : FoamGridEntityBase(level,id), nSons_(0), father_(father),
               refinementIndex_(-1), markState_(DO_NOTHING), isNew_(false),
-              coarseningBlocked_(false)
+              coarseningBlocked_(false),
+              growthInsertionIndex_(-1)
         {
             vertex_[0] = v0;
             vertex_[1] = v1;
@@ -65,7 +67,8 @@ namespace Dune {
             : FoamGridEntityBase(level, id),
               nSons_(0), refinementIndex_(-1),
               markState_(DO_NOTHING), isNew_(false),
-              coarseningBlocked_(false)
+              coarseningBlocked_(false),
+              growthInsertionIndex_(-1)
         {
           sons_[0] = sons_[1] = nullptr;
           father_ = nullptr;
@@ -168,6 +171,13 @@ namespace Dune {
         /** \brief This flag is set by postGrow() if the element looses its right to coarsen
         *         because it contains a bifurcation facet without father */
         bool coarseningBlocked_;
+
+        /** \brief If this element was created in a growth step this will be the index of insertion
+         *         So if this is the first element added to the growth queue by calling insertElement the index is 0
+         *         The index will be valid until postGrow is called.
+         *         To all other times this shall be -1
+         */
+        int growthInsertionIndex_;
     };
 
     /** \brief Element specialization of FoamGridEntityImp for 2d grids. Element is a grid entity of topological codimension 0 and dimension dimgrid.*/
@@ -188,7 +198,8 @@ namespace Dune {
               refinementIndex_(-1),
               nSons_(0),
               markState_(DO_NOTHING), isNew_(false),
-              coarseningBlocked_(false)
+              coarseningBlocked_(false),
+              growthInsertionIndex_(-1)
         {
           sons_[0]= sons_[1] = sons_[2] = sons_[3] = nullptr;
           father_ = nullptr;
@@ -344,6 +355,13 @@ namespace Dune {
         /** \brief This flag is set by postGrow() if the element looses its right to coarsen
         *         because it contains a bifurcation facet without father */
         bool coarseningBlocked_;
+
+        /** \brief If this element was created in a growth step this will be the index of insertion
+         *         So if this is the first element added to the growth queue by calling insertElement the index is 0
+         *         The index will be valid until postGrow is called.
+         *         To all other times this shall be -1
+         */
+        int growthInsertionIndex_;
     };
 }
 

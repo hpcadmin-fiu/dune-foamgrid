@@ -403,9 +403,11 @@ class FoamGrid :
         /** \brief Add a new element to be added to the grid
         \param type The GeometryType of the new element
         \param vertices The vertices of the new element, using the DUNE numbering
+        \return The growthInsertionIndex that can be used to attach user data to this element.
+                It is valid between until calling postGrow.
         */
-        void insertElement(const GeometryType& type,
-                           const std::vector<unsigned int>& vertices)
+        unsigned int insertElement(const GeometryType& type,
+                                   const std::vector<unsigned int>& vertices)
         {
           // foamgrid only supports simplices until now
           assert(type.isTriangle() || type.isLine());
@@ -435,20 +437,25 @@ class FoamGrid :
             }
           }
           newElement.isNew_ = true;
+          newElement.growthInsertionIndex_ = elementsToInsert_.size()-1;
+          return elementsToInsert_.size()-1;
         }
 
         /** \brief Add a new element to be added to the grid
         \param type The GeometryType of the new element
         \param vertices The vertices of the new element, using the DUNE numbering
         \param elementParametrization A function prescribing the shape of this element
+        \return The growthInsertionIndex that can be used to attach user data to this element.
+                It is valid between until calling postGrow.
         */
-        void insertElement(const GeometryType& type,
-                           const std::vector<unsigned int>& vertices,
-                           const std::shared_ptr<VirtualFunction<FieldVector<ctype,dimgrid>,FieldVector<ctype,dimworld> > >& elementParametrization)
+        unsigned int insertElement(const GeometryType& type,
+                                   const std::vector<unsigned int>& vertices,
+                                   const std::shared_ptr<VirtualFunction<FieldVector<ctype,dimgrid>,FieldVector<ctype,dimworld> > >& elementParametrization)
         {
-          insertElement(type, vertices);
+          auto growthInsertionIndex = insertElement(type, vertices);
           // save the pointer to the element parametrization
           elementsToInsert_.back().elementParametrization_ = elementParametrization;
+          return growthInsertionIndex;
         }
 
         /** \brief Mark an element for removal from the grid
@@ -468,6 +475,21 @@ class FoamGrid :
 
         /** \brief Clean up isNew markers */
         void postGrow();
+
+        /**
+         * \brief The index of insertion if the element was created in the current growth step.
+         *         If this is the first element added to the growth queue by calling insertElement the index is 0 and so on.
+         *         The index will be valid until postGrow is called.
+         * \note   This is useful to attach user data to a created element. The data might only known at element creation time.
+         *         As the final element index and id are not known yet when the element is added to the insertion queue, this
+         *         index can be used to attach user data that can (after calling postGrow) be attached to the real element index/id.
+         */
+        unsigned int growthInsertionIndex(const typename Traits::template Codim<0>::Entity & e) const
+        {
+            int idx = this->getRealImplementation(e).target_->growthInsertionIndex_;
+            assert(idx >= 0);
+            return static_cast<unsigned int>(idx);
+        }
 
         /*@}*/
 

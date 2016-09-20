@@ -1329,11 +1329,13 @@ template <int dimgrid, int dimworld>
 void Dune::FoamGrid<dimgrid, dimworld>::postGrow()
 {
   // Loop over all leaf entities and remove the isNew Marker
+  // and invalidate the growth inserstion index
   // and set the coarseing blocker in case we created a T-junction
   for (auto&& element : elements(this->leafGridView()))
   {
     FoamGridEntityImp<dimgrid, dimgrid, dimworld>& e = *const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(element).target_);
     e.isNew_=false;
+    e.growthInsertionIndex_=-1;
 
     for(auto&& vertex : e.vertex_)
       vertex->isNew_ = false;
