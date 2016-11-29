@@ -10,9 +10,9 @@
 #include <list>
 #include <set>
 #include <map>
+#include <tuple>
 
 #include <dune/common/parallel/collectivecommunication.hh>
-#include <dune/common/tuples.hh>
 #include <dune/common/stdstreams.hh>
 #include <dune/grid/common/capabilities.hh>
 #include <dune/grid/common/grid.hh>
@@ -667,7 +667,7 @@ class FoamGrid :
     typename Traits::CollectiveCommunication ccobj_;
 
     // Stores the lists of vertices, edges, elements for each level
-    // std::vector<tuple<std::list<FoamGridEntityImp<0, dimgrid, dimworld> >,
+    // std::vector<std::tuple<std::list<FoamGridEntityImp<0, dimgrid, dimworld> >,
     // std::list<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld> >,
     // std::list<FoamGridEntityImp<dimgrid, dimgrid, dimworld> > > > entityImps_;
 
