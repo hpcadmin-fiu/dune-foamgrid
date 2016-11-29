@@ -17,11 +17,11 @@ void Dune::FoamGrid<dimgrid, dimworld>::globalRefine (int refCount)
   //conditional typename depending on dimension of grid (1 or 2)
   typedef typename std::conditional<
                       dimgrid==2,
-                      typename std::vector<tuple<std::list<FoamGridEntityImp<0, dimgrid, dimworld> >,
+                      typename std::vector<std::tuple<std::list<FoamGridEntityImp<0, dimgrid, dimworld> >,
                                                  std::list<FoamGridEntityImp<1, dimgrid, dimworld> >,
                                                  std::list<FoamGridEntityImp<2, dimgrid, dimworld> >
                                           > >::reverse_iterator,
-                      typename std::vector<tuple<std::list<FoamGridEntityImp<0, dimgrid, dimworld> >,
+                      typename std::vector<std::tuple<std::list<FoamGridEntityImp<0, dimgrid, dimworld> >,
                                                  std::list<FoamGridEntityImp<1, dimgrid, dimworld> >
                                           > >::reverse_iterator
                    >::type LevelIterator;
