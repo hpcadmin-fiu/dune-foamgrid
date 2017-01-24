@@ -120,6 +120,23 @@ namespace Dune {
             return InteriorEntity;
         }
 
+        /** \brief Compute local cordinates from global ones.
+         * \param coord The global coordinates.
+         * \return The corresponding local coordinates within the element.
+         */
+
+        FieldVector<double, 1> globalToLocal(const FieldVector<double, dimworld>& coord) const
+        {
+            const auto diff = vertex_[1]->pos_ - vertex_[0]->pos_;
+            const double eps = diff.two_norm()*std::numeric_limits<double>::epsilon();
+
+            for (std::size_t dimIdx = 0; dimIdx < dimworld; ++dimIdx)
+              if (std::abs(diff[dimIdx]) > eps)
+                return (coord[dimIdx] - vertex_[0]->pos_[dimIdx]) / diff[dimIdx];
+
+            DUNE_THROW(Dune::GridError, "Global to local mapping failed because element is degenerated.");
+        }
+
         /** \brief Return level index of sub entity with codim = cc and local number i
          */
         int subLevelIndex (int i, unsigned int codim) const {
