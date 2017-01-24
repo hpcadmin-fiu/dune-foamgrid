@@ -61,21 +61,20 @@ int main (int argc, char *argv[]) try
     // check grid adaptation interface
     checkAdaptation(*grid1d);
 
-    // check the index sets
-    checkIndexSet(*grid1d, grid1d->leafGridView(), Dune::dverb);
-    for (int i = 0; i < grid1d->maxLevel(); i++)
-        checkIndexSet(*grid1d, grid1d->levelGridView(i), Dune::dverb, true );
+    // refine single element
+    grid1d->mark(1, *grid1d->leafGridView().begin<0>());
+    grid1d->preAdapt();
+    grid1d->adapt();
+    grid1d->postAdapt();
 
     // check grid after adaptive refinement
     checkAdaptRefinement(*grid1d);
+
+    // write vtk
     {
         Dune::VTKWriter<typename FoamGrid<1, 3>::LeafGridView > writer(grid1d->leafGridView(), VTK::nonconforming);
         writer.write("1d_refined-l");
     }
-    // check the index sets after adaptive refinement
-    checkIndexSet(*grid1d, grid1d->leafGridView(), Dune::dverb);
-    for (int i = 0; i < grid1d->maxLevel(); i++)
-        checkIndexSet(*grid1d, grid1d->levelGridView(i), Dune::dverb, true );
 
     Dune::gridinfo(*grid1d);
     gridcheck(*grid1d);
