@@ -483,29 +483,20 @@ public:
 
     //! intersection of codimension 1 of this neighbor with element where iteration started.
     //! Here returned element is in LOCAL coordinates of neighbor
-    //! In the LevelIntersection we know that the intersection is conforming
-    LocalGeometry geometryInOutside (std::size_t neighborIndex = 0) const {
+    //! In the LeafIntersection the intersection might be non-conforming
+    //! For surface grids with local non-conforming adaptivity the geometryInOutside is undefined
+    LocalGeometry geometryInOutside (std::size_t neighborIndex = 0) const
+    {
+        // Get reference element
+        const auto& refElement = Dune::ReferenceElements<double, dimgrid>::general(this->center_->type());
 
-        // Get two vertices of the intersection
-        const Dune::ReferenceElement<double,dimgrid>& refElement
-           = Dune::ReferenceElements<double, dimgrid>::general(this->center_->type());
-
-        std::array<FoamGridEntityImp<0, dimgrid, dimworld>*, dimgrid> vtx;
-
-        for (std::size_t idx = 0; idx < dimgrid; ++idx)
-            vtx[idx] = this->center_->vertex_[refElement.subEntity(this->facetIndex_, 1, idx, dimgrid)];
-
+        // Map the global position of the intersection vertices to the local position in the neighbor
         std::vector<FieldVector<double, dimgrid> > coordinates(dimgrid);
-
-        // Find the intersection vertices in local numbering of the outside element
-        // That way we get the local orientation correctly.
-        const Dune::ReferenceElement<double, dimgrid>& refElementOther
-            = Dune::ReferenceElements<double, dimgrid>::general((*this->neighbor_)->type());
-
-        for (std::size_t j=0; j< dimgrid; j++)
-          for (int i=0; i<refElementOther.size(dimgrid); i++)
-             if (vtx[j] == (*this->neighbor_)->vertex_[refElementOther.subEntity(0, 0, i, dimgrid)])
-              coordinates[j] = refElement.position(refElement.subEntity(0, 0, i, dimgrid), dimgrid);
+        for (std::size_t vIdx = 0; vIdx < dimgrid; ++vIdx)
+        {
+            const auto vIdxInElement = refElement.subEntity(this->facetIndex_, 1, vIdx, dimgrid);
+            coordinates[vIdx] = (*this->neighbor_)->globalToLocal(this->center_->vertex_[vIdxInElement]->pos_);
+        }
 
         geometryInOutside_ = std::make_shared<LocalGeometryImpl>(this->type(), coordinates);
 
