@@ -7,6 +7,8 @@
 * \brief The FoamGridLeafIntersection and FoamGridLevelIntersection classes
 */
 #include <memory>
+#include <algorithm>
+
 #include <dune/grid/common/intersection.hh>
 
 #include <dune/foamgrid/foamgrid/foamgridintersectioniterators.hh>
@@ -418,22 +420,45 @@ public:
     }
 
     //! local number of codim 1 entity in neighbor where intersection is contained
-    int indexInOutside (std::size_t neighborIndex = 0) const {
-        // Move to the father of the facet until its level is the same as
-        // the level of the neighbor
-        FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>* facet=(this->center_->facet_[this->facetIndex_]);
+    int indexInOutside (std::size_t neighborIndex = 0) const
+    {
+        // get our facet object
+        auto* facet = this->center_->facet_[this->facetIndex_];
 
-        while(facet->level()<(*this->neighbor_)->level())
+        // if the neighbor level is greater than the facet level
+        // walk until our facet's father that has the same level as the neighbor
+        // and look for the father facet in the neighbor to get the index
+        while(facet->level() > (*this->neighbor_)->level())
         {
-            assert(facet->father_!=nullptr);
-            facet=facet->father_;
+          assert(facet->father_ != nullptr);
+          facet = facet->father_;
         }
-        assert(facet->level()==(*this->neighbor_)->level());
-        //std::cout << "number elements: " << facet->elements_.size() << std::endl;
-        //assert(facet->elements_.size()==2); //not necessarily anymore for tjunctions
-        return std::find((*this->neighbor_)->facet_.begin(), (*this->neighbor_)->facet_.end(), facet)
-            - (*this->neighbor_)->facet_.begin();
 
+        if (facet->level() == (*this->neighbor_)->level())
+        {
+          return std::distance((*this->neighbor_)->facet_.begin(),
+                                std::find((*this->neighbor_)->facet_.begin(),
+                                          (*this->neighbor_)->facet_.end(),
+                                          facet)
+                              );
+
+        }
+
+        // the neighbor level is smaller than the facet level
+        // find the neighbor's facet that has the center element in it's element list
+        else
+        {
+          return std::distance((*this->neighbor_)->facet_.begin(),
+                                std::find_if((*this->neighbor_)->facet_.begin(),
+                                             (*this->neighbor_)->facet_.end(),
+                                             [this](const auto& facet) -> bool {
+                                               for (const auto& e : facet->elements_)
+                                                 if (this->center_ == e)
+                                                   return true;
+                                               return false;
+                                             })
+                              );
+        }
     }
 
     //! intersection of codimension 1 of this neighbor with element where
