@@ -105,13 +105,13 @@ namespace Dune {
         }
 
         /** \brief Number of corners (==2) */
-        unsigned int corners() const {
+        int corners() const {
             return 2;
         }
 
         FieldVector<double, dimworld> corner(int i) const {
             assert(i < this->corners());
-            assert(vertex_.size()==this->corners());
+            assert(int(vertex_.size())==this->corners());
             assert(vertex_[i]!=nullptr);
             return vertex_[i]->pos_;
         }
@@ -206,7 +206,7 @@ namespace Dune {
         }
 
 
-        unsigned int corners() const {
+        int corners() const {
             return 3;
         }
 

@@ -67,7 +67,7 @@ namespace Dune {
         }
 
         /** \brief Number of corners (==2) */
-        unsigned int corners() const {
+        int corners() const {
             return 2;
         }
 

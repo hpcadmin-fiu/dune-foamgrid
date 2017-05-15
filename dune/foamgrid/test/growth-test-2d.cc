@@ -165,7 +165,7 @@ int main (int argc, char *argv[])
     writer.write("after_removal");
     Dune::gridinfo(*grid);
     checkIndexSet(*grid, grid->leafGridView(), std::cout);
-    for (std::size_t i = 0; i < grid->maxLevel(); ++i)
+    for (int i = 0; i < grid->maxLevel(); ++i)
         checkIndexSet(*grid, grid->levelGridView(i), std::cout);
 
     // add an element unrelated to the rest of the grid
@@ -179,7 +179,7 @@ int main (int argc, char *argv[])
     writer.write("add_unrelated_element");
     Dune::gridinfo(*grid);
     checkIndexSet(*grid, grid->leafGridView(), std::cout);
-    for (std::size_t i = 0; i < grid->maxLevel(); ++i)
+    for (int i = 0; i < grid->maxLevel(); ++i)
       checkIndexSet(*grid, grid->levelGridView(i), std::cout);
 
     // call growth without adding anything

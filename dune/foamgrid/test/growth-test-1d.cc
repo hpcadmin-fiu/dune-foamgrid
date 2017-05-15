@@ -397,7 +397,7 @@ int main (int argc, char *argv[])
     writer.write("after_second_growth_1d2d");
     Dune::gridinfo(*grid1d);
     checkIndexSet(*grid1d, grid1d->leafGridView(), std::cout);
-    for (std::size_t i = 0; i < grid1d->maxLevel(); ++i)
+    for (int i = 0; i < grid1d->maxLevel(); ++i)
         checkIndexSet(*grid1d, grid1d->levelGridView(i), std::cout);
 
     // do a grid check on a refined grid
@@ -445,7 +445,7 @@ int main (int argc, char *argv[])
     writer2.write("after_second_growth_1d3d");
     Dune::gridinfo(*grid1d3d);
     checkIndexSet(*grid1d3d, grid1d3d->leafGridView(), std::cout);
-    for (std::size_t i = 0; i < grid1d3d->maxLevel(); ++i)
+    for (int i = 0; i < grid1d3d->maxLevel(); ++i)
         checkIndexSet(*grid1d3d, grid1d3d->levelGridView(i), std::cout);
 
     // do a grid check on a refined grid

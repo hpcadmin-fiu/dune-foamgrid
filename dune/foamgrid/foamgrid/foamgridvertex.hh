@@ -19,7 +19,7 @@ namespace Dune {
             : level_(level), id_(id), willVanish_()
         {}
 
-        unsigned int level() const {
+        int level() const {
             return level_;
         }
 
@@ -83,7 +83,7 @@ namespace Dune {
         }
 
         /** \brief Number of corners (==1) */
-        unsigned int corners() const {
+        int corners() const {
             return 1;
         }
 

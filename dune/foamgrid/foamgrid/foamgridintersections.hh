@@ -68,7 +68,7 @@ class FoamGridIntersection
      * \param facet The index of the facet this intersection lives on.
      */
     FoamGridIntersection(const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* center,
-                         std::size_t facet)
+                         int facet)
         : center_(center), facetIndex_(facet), neighbor_(FoamGridNullIteratorFactory<dimgrid, dimworld>::null())
     {}
 
@@ -334,7 +334,7 @@ public:
             = Dune::ReferenceElements<double, dimgrid>::general((*this->neighbor_)->type());
 
         for (std::size_t j=0; j<dimgrid; j++)
-          for (std::size_t i=0; i<refElementOther.size(dimgrid); i++)
+          for (int i=0; i<refElementOther.size(dimgrid); i++)
              if (vtx[j] == (*this->neighbor_)->vertex_[refElementOther.subEntity(0, 0, i, dimgrid)])
               coordinates[j] = refElement.position(refElement.subEntity(0, 0, i, dimgrid), dimgrid);
 

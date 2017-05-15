@@ -345,13 +345,13 @@ void Dune::FoamGrid<dimgrid, dimworld>::erasePointersToEntities(std::list<FoamGr
         father.sons_[i]=nullptr;
       // reset the number of sons for the father
       father.nSons_ = 0;
-      for (unsigned int i=0; i<father.corners(); i++)
+      for (int i=0; i<father.corners(); i++)
         if (father.vertex_[i]->sons_[0]!=nullptr && father.vertex_[i]->sons_[0]->willVanish_)
         {
           father.vertex_[i]->sons_[0]=nullptr;
           --father.vertex_[i]->nSons_;
         }
-      for (unsigned int i=0; i<father.corners(); i++)
+      for (int i=0; i<father.corners(); i++)
         if (father.facet_[i]->sons_[0]!=nullptr
             && father.facet_[i]->sons_[0]->willVanish_)
           for (unsigned int j=0; j<dimgrid; j++)
@@ -518,7 +518,7 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<2
   std::size_t vertexIndex=0;
 
   // create copies of the vertices of the element
-  for(unsigned int c=0; c<element.corners(); ++c)
+  for(int c=0; c<element.corners(); ++c)
   {
     if(element.vertex_[c]->sons_[0]==nullptr){
       // Vertex doesn't exist yet on the next level
@@ -813,7 +813,7 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<1
   std::size_t vertexIndex=0;
 
   // create copies of the vertices of the element
-  for(unsigned int c=0; c<element.corners(); ++c)
+  for(int c=0; c<element.corners(); ++c)
   {
     if(element.vertex_[c]->sons_[0]==nullptr){
       // Vertex doesn't exist yet on the next level
@@ -1099,7 +1099,7 @@ bool Dune::FoamGrid<dimgrid, dimworld>::grow()
         minElementLevel[&(*eIt)] = std::max(minElementLevel[&(*eIt)], minVertexLevel[*vIt]);
 
     // set the element level
-    const unsigned int level = std::max(minElementLevel[&(*eIt)], 0);
+    const int level = std::max(minElementLevel[&(*eIt)], 0);
     eIt->level_ = level;
 
     // set the vertex levels

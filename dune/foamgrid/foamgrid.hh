@@ -420,7 +420,7 @@ class FoamGrid :
 
           for(std::size_t i = 0; i < vertices.size(); i++)
           {
-            if(vertices[i] >= this->leafGridView().size(dimgrid))
+            if(int(vertices[i]) >= this->leafGridView().size(dimgrid))
             {
               // initialize with pointer to vertex in verticesToInsert_ vector, later overwrite with actual pointer
               auto vIt = verticesToInsert_.begin();
