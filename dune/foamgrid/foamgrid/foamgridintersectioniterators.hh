@@ -251,7 +251,7 @@ class FoamGridLevelIntersectionIterator
     //! \brief Constructor for a given grid entity and a given neighbor
     //! \param center Pointer to the element where the iterator was created.
     //! \param facet The index of the facet to start the investigation.
-    FoamGridLevelIntersectionIterator(const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* center, std::size_t facet)
+    FoamGridLevelIntersectionIterator(const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* center, int facet)
         : intersection_(FoamGridLevelIntersection<GridImp>(center,facet))
     {
         if(facet==center->corners())
