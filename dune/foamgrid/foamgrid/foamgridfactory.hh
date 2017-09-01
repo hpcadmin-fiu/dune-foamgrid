@@ -69,7 +69,7 @@ template <int dimgrid, int dimworld>
         virtual void insertVertex(const FieldVector<ctype,dimworld>& pos) {
             std::get<0>(grid_->entityImps_[0]).push_back(FoamGridEntityImp<0, dimgrid, dimworld> (0,   // level
                                                                          pos,  // position
-                                                                         grid_->freeIdCounter_[0]++));
+                                                                         grid_->getNextFreeId()));
             vertexArray_.push_back(&*std::get<0>(grid_->entityImps_[0]).rbegin());
         }
 
@@ -159,7 +159,7 @@ template <int dimworld>
             FoamGridEntityImp<1, dimgrid, dimworld> newElement(this->vertexArray_[vertices[0]],
                                                                this->vertexArray_[vertices[1]],
                                                                0,
-                                                               this->grid_->freeIdCounter_[1]++);
+                                                               this->grid_->getNextFreeId());
 
             std::get<1>(this->grid_->entityImps_[0]).push_back(newElement);
 
@@ -178,7 +178,7 @@ template <int dimworld>
             FoamGridEntityImp<1, dimgrid, dimworld> newElement(this->vertexArray_[vertices[0]],
                                                                this->vertexArray_[vertices[1]],
                                                                0,
-                                                               this->grid_->freeIdCounter_[1]++);
+                                                               this->grid_->getNextFreeId());
             // save the pointer to the element parametrization
             newElement.elementParametrization_ = elementParametrization;
 
@@ -269,7 +269,7 @@ template <int dimworld>
             assert(type.isTriangle());
 
             FoamGridEntityImp<dimgrid, dimgrid, dimworld> newElement(0,   // level
-                                       this->grid_->freeIdCounter_[dimgrid]++);  // id
+                                       this->grid_->getNextFreeId());  // id
             newElement.vertex_[0] = this->vertexArray_[vertices[0]];
             newElement.vertex_[1] = this->vertexArray_[vertices[1]];
             newElement.vertex_[2] = this->vertexArray_[vertices[2]];
@@ -288,7 +288,7 @@ template <int dimworld>
         {
             assert(type.isTriangle());
             FoamGridEntityImp<dimgrid, dimgrid, dimworld> newElement(0,   // level
-                                       this->grid_->freeIdCounter_[dimgrid]++);  // id
+                                       this->grid_->getNextFreeId());  // id
             newElement.vertex_[0] = this->vertexArray_[vertices[0]];
             newElement.vertex_[1] = this->vertexArray_[vertices[1]];
             newElement.vertex_[2] = this->vertexArray_[vertices[2]];
@@ -350,8 +350,8 @@ template <int dimworld>
                         // The current edge has not been inserted already.  We do that now.
                         std::get<1>(this->grid_->entityImps_[0]).push_back(FoamGridEntityImp<1, dimgrid, dimworld>(v0,
                                                                                                     v1,
-                                                                                                    0,   // level
-                                                                                                    this->grid_->freeIdCounter_[1]++    // id
+                                                                                                    0, // level
+                                                                                                    this->grid_->getNextFreeId() // id
                                                                                                     ));
 
                         existingEdge = &*std::get<1>(this->grid_->entityImps_[0]).rbegin();
