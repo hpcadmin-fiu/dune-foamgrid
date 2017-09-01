@@ -7,6 +7,7 @@
 * \brief The FoamGrid class
 */
 
+#include <array>
 #include <list>
 #include <set>
 #include <map>
@@ -702,7 +703,7 @@ class FoamGrid :
     FoamGridIdSet<const FoamGrid > idSet_;
 
     /** \brief Counters that always provide the next free id for each dimension */
-    array<unsigned int, dimgrid+1> freeIdCounter_;
+    std::array<unsigned int, dimgrid+1> freeIdCounter_;
 
     /** \brief How many times was the leaf level globally refined. */
     int globalRefined;

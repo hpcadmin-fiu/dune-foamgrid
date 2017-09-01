@@ -114,7 +114,7 @@ namespace Dune {
         unsigned int boundaryId_;
 
         /** \brief links to refinements of this edge */
-        array<FoamGridEntityImp<1, dimgrid, dimworld>*,2> sons_;
+        std::array<FoamGridEntityImp<1, dimgrid, dimworld>*,2> sons_;
 
         /** \brief The number of refined edges (0 or 2). */
         unsigned int nSons_;
