@@ -134,10 +134,7 @@ class FoamGrid :
           globalRefined(0),
           numBoundarySegments_(0),
           growing_(false)
-    {
-        //static_assert(dimgrid == 2, "FoamGrid currently only works for 2D in nD");
-        std::fill(freeIdCounter_.begin(), freeIdCounter_.end(), 0);
-    }
+    {}
 
         //! Destructor
         ~FoamGrid()
@@ -648,6 +645,14 @@ class FoamGrid :
     //! compute the grid indices and ids
     void setIndices();
 
+    /** \brief Produce an entity id that has not been used in this grid before.
+     *  \note Every entity, no matter which codimension, gets a unique id in the whole grid.
+     */
+    unsigned int getNextFreeId()
+    {
+      return freeIdCounter_++;
+    }
+
     //! Compute the codim 2-0 connectivity useful for removal of elements
     void computeTwoZeroConnectivity()
     {
@@ -702,8 +707,8 @@ class FoamGrid :
     //! The id set
     FoamGridIdSet<const FoamGrid > idSet_;
 
-    /** \brief Counters that always provide the next free id for each dimension */
-    std::array<unsigned int, dimgrid+1> freeIdCounter_;
+    /** \brief a counter that always provides the next free unique id for an entity */
+    unsigned int freeIdCounter_;
 
     /** \brief How many times was the leaf level globally refined. */
     int globalRefined;
