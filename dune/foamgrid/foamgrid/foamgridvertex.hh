@@ -133,7 +133,7 @@ namespace Dune {
         FoamGridEntityImp<0, dimgrid, dimworld>* father_;
 
         //! Son vertex on the next finer grid
-        array<FoamGridEntityImp<0, dimgrid, dimworld>*, 1> sons_;
+        std::array<FoamGridEntityImp<0, dimgrid, dimworld>*, 1> sons_;
 
         //! If the vertex was newly inserted (at run-time)
         bool isNew_;

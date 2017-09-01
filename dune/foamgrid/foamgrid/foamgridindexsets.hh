@@ -188,7 +188,7 @@ namespace Dune {
         int numVertices_;
 
         /** \brief The GeometryTypes present for each codim */
-        array<std::vector<GeometryType>, dimgrid+1> myTypes_;
+        std::array<std::vector<GeometryType>, dimgrid+1> myTypes_;
 
     };
 
@@ -402,7 +402,7 @@ private:
     int numVertices_;
 
     /** \brief The GeometryTypes present for each codim */
-    array<std::vector<GeometryType>, dimgrid+1> myTypes_;
+    std::array<std::vector<GeometryType>, dimgrid+1> myTypes_;
 
 };
 

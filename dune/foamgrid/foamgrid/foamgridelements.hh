@@ -146,12 +146,12 @@ namespace Dune {
             DUNE_THROW(GridError, "Non-existing codimension requested!");
         }
 
-        array<FoamGridEntityImp<0, dimgrid, dimworld>*, 2> vertex_;
+        std::array<FoamGridEntityImp<0, dimgrid, dimworld>*, 2> vertex_;
 
-        array<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>*, 2> facet_;
+        std::array<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>*, 2> facet_;
 
         /** \brief links to refinements of this edge */
-        array<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*, 2> sons_;
+        std::array<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*, 2> sons_;
 
         /** \brief The number of refined edges (0 or 2). */
         unsigned int nSons_;
@@ -335,11 +335,11 @@ namespace Dune {
 
         unsigned int nSons_;
 
-        array<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*, 4> sons_;
+        std::array<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*, 4> sons_;
 
-        array<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>*, 3> facet_;
+        std::array<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>*, 3> facet_;
 
-        array<FoamGridEntityImp<0, dimgrid, dimworld>*, 3> vertex_;
+        std::array<FoamGridEntityImp<0, dimgrid, dimworld>*, 3> vertex_;
 
         /** \brief Stores requests for refinement and coarsening */
         MarkState markState_;
