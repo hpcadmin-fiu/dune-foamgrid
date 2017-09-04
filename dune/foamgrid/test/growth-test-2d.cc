@@ -20,20 +20,21 @@ void checkGridElementGrowth(Grid& grid)
   enum { dim = Grid::dimension };
 
   // the vertex mapper
-  Dune::LeafMultipleCodimMultipleGeomTypeMapper<Grid,Dune::MCMGVertexLayout> mapper(grid);
+  LeafMultipleCodimMultipleGeomTypeMapper<Grid, MCMGVertexLayout> mapper(grid);
 
   // let the top element grow
   for (const auto& element : elements(grid.leafGridView()))
+  {
+    const auto refElement = ReferenceElements<double,dim>::general(element.type());
     for (const auto& intersection : intersections(grid.leafGridView(), element))
+    {
       if(intersection.boundary() && intersection.geometry().center()[1] > 0.5)
       {
-        const Dune::ReferenceElement<double,dim>& refElement
-                    = Dune::ReferenceElements<double,dim>::general(element.type());
         auto&& v0 = element.template subEntity<dim>(refElement.subEntity(intersection.indexInInside(), dim-1, 0, dim));
         auto&& v1 = element.template subEntity<dim>(refElement.subEntity(intersection.indexInInside(), dim-1, 1, dim));
 
         // calculate new vertex position
-        Dune::FieldVector<double, dimworld> newVertex = v0.geometry().center();
+        auto newVertex = v0.geometry().center();
         newVertex += v1.geometry().center(); newVertex /= 2.0;
         newVertex[1] += 0.5;
 
@@ -43,6 +44,8 @@ void checkGridElementGrowth(Grid& grid)
         // insert the element
         grid.insertElement(element.type(), {mapper.index(v0), mapper.index(v1), vIdx});
       }
+    }
+  }
 
   std::size_t numBoundarySegments = grid.numBoundarySegments();
   std::cout << std::endl<< "numBoundarySegments before growth: " << numBoundarySegments << std::endl;

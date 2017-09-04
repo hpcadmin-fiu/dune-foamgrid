@@ -132,8 +132,7 @@ public:
             assert(center_->type().isTriangle() || center_->type().isLine());
 
             // Compute vertices
-            const Dune::ReferenceElement<double, dimgrid>& refElement
-                = Dune::ReferenceElements<double, dimgrid>::general(center_->type());
+            const auto refElement = ReferenceElements<double, dimgrid>::general(center_->type());
 
             // facet vertices (vertex in 1d, edge in 2d)
             int v0 = refElement.subEntity(facetIndex_, 1, 0, dimgrid);
@@ -193,8 +192,7 @@ public:
 
             if(dimgrid == 2)
             {
-                const Dune::ReferenceElement<double, dimgrid>& refElement
-                    = Dune::ReferenceElements<double, dimgrid>::general(center_->type());
+                const auto refElement = ReferenceElements<double, dimgrid>::general(center_->type());
 
                 // facet vertices
                 int v0 = refElement.subEntity(facetIndex_, 1, 0, dimgrid);
@@ -301,8 +299,7 @@ public:
         std::vector<FieldVector<double, dimgrid> > coordinates(dimgrid);
 
         // Get reference element
-        const Dune::ReferenceElement<double, dimgrid>& refElement
-            = Dune::ReferenceElements<double, dimgrid>::general(this->center_->type());
+        const auto refElement = ReferenceElements<double, dimgrid>::general(this->center_->type());
 
         for (int idx = 0; idx < dimgrid; ++idx)
             coordinates[idx] = refElement.position(refElement.subEntity(this->facetIndex_, 1, idx, dimgrid), dimgrid);
@@ -318,8 +315,7 @@ public:
     LocalGeometry geometryInOutside (std::size_t neighborIndex = 0) const {
 
         // Get two vertices of the intersection
-        const Dune::ReferenceElement<double,dimgrid>& refElement
-           = Dune::ReferenceElements<double, dimgrid>::general(this->center_->type());
+        const auto refElement = ReferenceElements<double, dimgrid>::general(this->center_->type());
 
         std::array<FoamGridEntityImp<0, dimgrid, dimworld>*, dimgrid> vtx;
 
@@ -330,8 +326,7 @@ public:
 
         // Find the intersection vertices in local numbering of the outside element
         // That way we get the local orientation correctly.
-        const Dune::ReferenceElement<double, dimgrid>& refElementOther
-            = Dune::ReferenceElements<double, dimgrid>::general((*this->neighbor_)->type());
+        const auto refElementOther = ReferenceElements<double, dimgrid>::general((*this->neighbor_)->type());
 
         for (std::size_t j=0; j<dimgrid; j++)
           for (int i=0; i<refElementOther.size(dimgrid); i++)
@@ -350,8 +345,7 @@ public:
         std::vector<FieldVector<double, dimworld> > coordinates(dimgrid);
 
         // Get two vertices of the intersection
-        const Dune::ReferenceElement<double, dimgrid>& refElement
-            = Dune::ReferenceElements<double, dimgrid>::general(this->center_->type());
+        const auto refElement = ReferenceElements<double, dimgrid>::general(this->center_->type());
 
         for (std::size_t idx = 0; idx < dimgrid; ++idx)
             coordinates[idx] = this->center_->vertex_[refElement.subEntity(this->facetIndex_, 1, idx, dimgrid)]->pos_;
@@ -470,8 +464,7 @@ public:
         std::vector<FieldVector<double, dimgrid> > coordinates(dimgrid);
 
         // Get reference element
-        const Dune::ReferenceElement<double, dimgrid>& refElement
-            = Dune::ReferenceElements<double, dimgrid>::general(this->center_->type());
+        const auto refElement = ReferenceElements<double, dimgrid>::general(this->center_->type());
 
         for (std::size_t idx = 0; idx < dimgrid; ++idx)
             coordinates[idx] = refElement.position(refElement.subEntity(this->facetIndex_, 1, idx, dimgrid), dimgrid);
@@ -487,8 +480,7 @@ public:
     LocalGeometry geometryInOutside (std::size_t neighborIndex = 0) const {
 
         // Get two vertices of the intersection
-        const Dune::ReferenceElement<double,dimgrid>& refElement
-           = Dune::ReferenceElements<double, dimgrid>::general(this->center_->type());
+        const auto refElement = ReferenceElements<double, dimgrid>::general(this->center_->type());
 
         std::array<FoamGridEntityImp<0, dimgrid, dimworld>*, dimgrid> vtx;
 
@@ -499,8 +491,7 @@ public:
 
         // Find the intersection vertices in local numbering of the outside element
         // That way we get the local orientation correctly.
-        const Dune::ReferenceElement<double, dimgrid>& refElementOther
-            = Dune::ReferenceElements<double, dimgrid>::general((*this->neighbor_)->type());
+        const auto refElementOther = ReferenceElements<double, dimgrid>::general((*this->neighbor_)->type());
 
         for (std::size_t j=0; j< dimgrid; j++)
           for (int i=0; i<refElementOther.size(dimgrid); i++)
@@ -519,8 +510,7 @@ public:
         std::vector<FieldVector<double, dimworld> > coordinates(dimgrid);
 
         // Get two vertices of the intersection
-        const Dune::ReferenceElement<double, dimgrid>& refElement
-            = Dune::ReferenceElements<double, dimgrid>::general(this->center_->type());
+        const auto refElement = ReferenceElements<double, dimgrid>::general(this->center_->type());
 
         for (std::size_t idx = 0; idx < dimgrid; ++idx)
             coordinates[idx] = this->center_->vertex_[refElement.subEntity(this->facetIndex_, 1, idx, dimgrid)]->pos_;

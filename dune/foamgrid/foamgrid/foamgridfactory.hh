@@ -324,8 +324,7 @@ template <int dimworld>
 
                 FoamGridEntityImp<dimgrid, dimgrid, dimworld>* element = &(*eIt);
 
-                const Dune::ReferenceElement<double,dimgrid>& refElement
-                    = Dune::ReferenceElements<double, dimgrid>::general(eIt->type());
+                const auto refElement = ReferenceElements<double, dimgrid>::general(eIt->type());
 
                 // Loop over all edges of this element
                 for (size_t i=0; i<element->facet_.size(); ++i) {
