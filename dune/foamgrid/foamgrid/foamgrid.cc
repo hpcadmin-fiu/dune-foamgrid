@@ -541,7 +541,7 @@ void Dune::FoamGrid<dimgrid, dimworld>::refineSimplexElement(FoamGridEntityImp<2
   std::array<FoamGridEntityImp<1, dimgrid, dimworld>*, 9> nextLevelFacets;
   std::size_t facetIndex=0;
 #ifndef NDEBUG
-  const auto& refElement = Dune::ReferenceElements<double, dimgrid>::general(element.type());
+  const auto refElement = ReferenceElements<double, dimgrid>::general(element.type());
 #endif
 
   // I am just to dumb for a general facet to vertice mapping.
@@ -1167,8 +1167,7 @@ bool Dune::FoamGrid<dimgrid, dimworld>::grow()
         if(fIt->elements_.size() > 0)
         {
           auto element = fIt->elements_[0];
-          const Dune::ReferenceElement<double,dimgrid>& refElement
-                      = Dune::ReferenceElements<double,dimgrid>::general(element->type());
+          const auto refElement = ReferenceElements<double,dimgrid>::general(element->type());
 
           // obtain the local index of this facet
           std::size_t localFacetIndex = 0;
@@ -1193,8 +1192,7 @@ bool Dune::FoamGrid<dimgrid, dimworld>::grow()
       // loop over all elements on this level
       for(auto eIt = std::get<dimgrid>(entityImps_[level]).begin(); eIt != std::get<dimgrid>(entityImps_[level]).end(); ++eIt)
       {
-        const Dune::ReferenceElement<double,dimgrid>& refElement
-                  = Dune::ReferenceElements<double,dimgrid>::general(eIt->type());
+        const auto refElement = ReferenceElements<double, dimgrid>::general(eIt->type());
         // loop over all facets of this element
         for (std::size_t fIdx = 0; fIdx < eIt->facet_.size(); ++fIdx)
         {

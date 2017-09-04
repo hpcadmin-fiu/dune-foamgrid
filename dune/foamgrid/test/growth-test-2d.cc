@@ -27,8 +27,7 @@ void checkGridElementGrowth(Grid& grid)
     for (const auto& intersection : intersections(grid.leafGridView(), element))
       if(intersection.boundary() && intersection.geometry().center()[1] > 0.5)
       {
-        const Dune::ReferenceElement<double,dim>& refElement
-                    = Dune::ReferenceElements<double,dim>::general(element.type());
+        const auto refElement = ReferenceElements<double,dim>::general(element.type());
         auto&& v0 = element.template subEntity<dim>(refElement.subEntity(intersection.indexInInside(), dim-1, 0, dim));
         auto&& v1 = element.template subEntity<dim>(refElement.subEntity(intersection.indexInInside(), dim-1, 1, dim));
 
