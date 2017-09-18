@@ -220,4 +220,6 @@ namespace Dune
 
 } // namespace Dune
 
+#include "dgffoam.cc"
+
 #endif // #ifndef DUNE_FOAMGRID_DGFFOAM_HH
