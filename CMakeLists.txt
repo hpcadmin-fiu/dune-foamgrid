@@ -24,6 +24,10 @@ add_subdirectory(dune)
 add_subdirectory(doc)
 add_subdirectory(cmake/modules)
 add_subdirectory(examples EXCLUDE_FROM_ALL)
+if (dune-corepy_FOUND)
+  add_subdirectory(python)
+  dune_python_install_package(PATH python)
+endif()
 
 # finalize the dune project, e.g. generating config.h etc.
 finalize_dune_project(GENERATE_CONFIG_H_CMAKE)
