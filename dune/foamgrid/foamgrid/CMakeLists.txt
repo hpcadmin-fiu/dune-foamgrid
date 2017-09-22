@@ -15,5 +15,4 @@ install(FILES foamgrid.cc
               foamgridleveliterator.hh
               foamgridnulliteratorfactory.hh
               foamgridvertex.hh
-              foamgridviews.hh
          DESTINATION include/dune/foamgrid/foamgrid)

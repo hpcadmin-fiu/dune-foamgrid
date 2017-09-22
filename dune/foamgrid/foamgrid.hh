@@ -679,17 +679,6 @@ class FoamGrid :
 
     // conditional typename depending on dimension of grid (1 or 2)
     typedef typename std::conditional<
-                      dimgrid==2,
-                      typename std::vector<std::tuple<std::list<FoamGridEntityImp<0, dimgrid, dimworld> >,
-                                                 std::list<FoamGridEntityImp<1, dimgrid, dimworld> >,
-                                                 std::list<FoamGridEntityImp<2, dimgrid, dimworld> > > >,
-                      typename std::vector<std::tuple<std::list<FoamGridEntityImp<0, dimgrid, dimworld> >,
-                                                 std::list<FoamGridEntityImp<1, dimgrid, dimworld> > > >
-                   >::type EntityImps;
-
-    EntityImps entityImps_;
-
-    typedef typename std::conditional<
                         dimgrid==2,
                         std::tuple<std::list<FoamGridEntityImp<0, dimgrid, dimworld> >,
                                      std::list<FoamGridEntityImp<1, dimgrid, dimworld> >,
@@ -697,6 +686,10 @@ class FoamGrid :
                         std::tuple<std::list<FoamGridEntityImp<0, dimgrid, dimworld> >,
                                      std::list<FoamGridEntityImp<1, dimgrid, dimworld> > >
                    >::type EntityTuple;
+
+    using EntityImps = std::vector<EntityTuple>;
+
+    EntityImps entityImps_;
 
     //! Our set of level indices
     mutable std::vector<FoamGridLevelIndexSet<const FoamGrid>*> levelIndexSets_;
