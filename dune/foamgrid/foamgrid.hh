@@ -131,6 +131,7 @@ class FoamGrid :
      */
     FoamGrid()
         : leafIndexSet_(*this),
+          freeIdCounter_(0),
           globalRefined(0),
           numBoundarySegments_(0),
           growing_(false)
