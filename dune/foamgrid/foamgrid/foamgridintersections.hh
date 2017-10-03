@@ -110,7 +110,7 @@ public:
         //! Geometry type of an intersection
         GeometryType type () const
         {
-            return GeometryType(GeometryType::simplex, dimgrid-1);
+            return Dune::GeometryTypes::simplex(dimgrid-1);
         }
 
         //! local number of codim 1 entity in self where intersection is contained in

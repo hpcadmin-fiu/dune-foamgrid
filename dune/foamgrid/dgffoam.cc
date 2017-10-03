@@ -59,7 +59,7 @@ namespace Dune
 
       // simplices
       if( el.size() == std::size_t( dim+1 ) )
-        factory_.insertElement( GeometryType( GeometryType::simplex, dim ), el );
+        factory_.insertElement( Dune::GeometryTypes::simplex(dim) , el );
       else
         DUNE_THROW( DGFException, "Invalid number of element vertices: " << el.size() );
     }

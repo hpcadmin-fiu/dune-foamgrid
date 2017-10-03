@@ -164,18 +164,18 @@ namespace Dune {
                 myTypes_[i].clear();
 
             if (numTriangles_>0 && dimgrid == 2)
-                myTypes_[0].push_back(GeometryType(GeometryType::simplex, 2));
+                myTypes_[0].push_back(Dune::GeometryTypes::simplex(2));
 
             if (numQuads_>0 && dimgrid == 2)
-                myTypes_[0].push_back(GeometryType(GeometryType::cube, 2));
+                myTypes_[0].push_back(Dune::GeometryTypes::cube(2));
 
             if (numEdges_>0 && dimgrid == 2)
-                myTypes_[1].push_back(GeometryType(GeometryType::simplex, 1));
+                myTypes_[1].push_back(Dune::GeometryTypes::simplex(1));
             if (numEdges_>0 && dimgrid == 1)
-                myTypes_[0].push_back(GeometryType(GeometryType::simplex, 1));
+                myTypes_[0].push_back(Dune::GeometryTypes::simplex(1));
 
             if (numVertices_>0)
-                myTypes_[dimgrid].push_back(GeometryType(GeometryType::simplex, 0));
+                myTypes_[dimgrid].push_back(Dune::GeometryTypes::simplex(0));
         }
 
     private:
@@ -378,10 +378,10 @@ public:
 
 
         if (numTriangles_>0 && dimgrid == 2)
-            myTypes_[0].push_back(GeometryType(GeometryType::simplex, 2));
+            myTypes_[0].push_back(Dune::GeometryTypes::simplex(2));
 
         if (numQuads_>0 && dimgrid == 2)
-            myTypes_[0].push_back(GeometryType(GeometryType::cube, 2));
+            myTypes_[0].push_back(Dune::GeometryTypes::cube(2));
 
         if (numEdges_>0 && dimgrid == 2)
             myTypes_[1].push_back(GeometryType(1));
