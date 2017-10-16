@@ -96,7 +96,7 @@ namespace Dune {
         }
 
         GeometryType type() const {
-            return GeometryType(GeometryType::simplex, 1);
+            return Dune::GeometryTypes::simplex(1);
         }
 
         bool hasFather() const
