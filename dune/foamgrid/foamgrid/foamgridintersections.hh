@@ -11,7 +11,7 @@
 
 #include <dune/grid/common/intersection.hh>
 
-#include <dune/foamgrid/foamgrid/foamgridintersectioniterators.hh>
+#include <dune/foamgrid/foamgrid/foamgridentity.hh>
 #include <dune/foamgrid/foamgrid/foamgridvertex.hh>
 #include <dune/foamgrid/foamgrid/foamgridgeometry.hh>
 #include <dune/foamgrid/foamgrid/foamgridnulliteratorfactory.hh>
