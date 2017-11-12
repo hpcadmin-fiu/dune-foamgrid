@@ -1336,7 +1336,10 @@ void Dune::FoamGrid<dimgrid, dimworld>::postGrow()
     e.growthInsertionIndex_=-1;
 
     for(auto&& vertex : e.vertex_)
+    {
       vertex->isNew_ = false;
+      vertex->growthInsertionIndex_=-1;
+    }
 
     //Block elements that do now have a facet being a junction and not having a father for coarsening
     for(auto&& facet : e.facet_)
