@@ -211,7 +211,7 @@ namespace Dune {
         }
 
         GeometryType type() const {
-            return GeometryType(GeometryType::simplex, 2);
+            return GeometryTypes::simplex(2);
         }
 
 

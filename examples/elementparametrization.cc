@@ -445,7 +445,7 @@ void twoDimensionalTest ()
   }
 
   // Create the element geometries
-  Dune::GeometryType type(Dune::GeometryType::simplex, 2);
+  constexpr auto type = Dune::GeometryTypes::simplex(2);
   std::vector<std::vector<unsigned int> > cornerIDs({{1,9,11},{3,9,11},{2,3,5},{2,3,7},
                                                      {0,1,4},{0,1,6},{4,5,8},{4,5,9},
                                                      {0,8,10},{2,8,10},{6,7,10},{6,7,11},

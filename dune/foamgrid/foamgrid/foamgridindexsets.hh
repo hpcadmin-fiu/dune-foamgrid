@@ -12,6 +12,7 @@
 
 #include <dune/common/version.hh>
 
+#include <dune/geometry/type.hh>
 #include <dune/grid/common/indexidset.hh>
 
 #include <dune/foamgrid/foamgrid/foamgridvertex.hh>  // for FoamGridEntityImp
@@ -164,18 +165,18 @@ namespace Dune {
                 myTypes_[i].clear();
 
             if (numTriangles_>0 && dimgrid == 2)
-                myTypes_[0].push_back(Dune::GeometryTypes::simplex(2));
+                myTypes_[0].push_back(GeometryTypes::simplex(2));
 
             if (numQuads_>0 && dimgrid == 2)
-                myTypes_[0].push_back(Dune::GeometryTypes::cube(2));
+                myTypes_[0].push_back(GeometryTypes::cube(2));
 
             if (numEdges_>0 && dimgrid == 2)
-                myTypes_[1].push_back(Dune::GeometryTypes::simplex(1));
+                myTypes_[1].push_back(GeometryTypes::simplex(1));
             if (numEdges_>0 && dimgrid == 1)
-                myTypes_[0].push_back(Dune::GeometryTypes::simplex(1));
+                myTypes_[0].push_back(GeometryTypes::simplex(1));
 
             if (numVertices_>0)
-                myTypes_[dimgrid].push_back(Dune::GeometryTypes::simplex(0));
+                myTypes_[dimgrid].push_back(GeometryTypes::simplex(0));
         }
 
     private:
@@ -378,18 +379,18 @@ public:
 
 
         if (numTriangles_>0 && dimgrid == 2)
-            myTypes_[0].push_back(Dune::GeometryTypes::simplex(2));
+            myTypes_[0].push_back(GeometryTypes::simplex(2));
 
         if (numQuads_>0 && dimgrid == 2)
-            myTypes_[0].push_back(Dune::GeometryTypes::cube(2));
+            myTypes_[0].push_back(GeometryTypes::cube(2));
 
         if (numEdges_>0 && dimgrid == 2)
-            myTypes_[1].push_back(GeometryType(1));
+            myTypes_[1].push_back(GeometryTypes::line);
         if (numEdges_>0 && dimgrid == 1)
-            myTypes_[0].push_back(GeometryType(1));
+            myTypes_[0].push_back(GeometryTypes::line);
 
         if (numVertices_>0)
-            myTypes_[dimgrid].push_back(GeometryType(0));
+            myTypes_[dimgrid].push_back(GeometryTypes::vertex);
         }
 
 private:

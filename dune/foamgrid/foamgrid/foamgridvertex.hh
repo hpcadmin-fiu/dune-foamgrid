@@ -64,7 +64,7 @@ namespace Dune {
         }
 
         GeometryType type() const {
-            return GeometryType(0);
+            return GeometryTypes::vertex;
         }
 
         bool hasFather() const
