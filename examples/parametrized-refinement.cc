@@ -77,8 +77,7 @@ int main (int argc, char *argv[]) try
     factory.insertVertex(parametrization(p));
 
   // Create the element geometries
-  Dune::GeometryType triangle;
-  triangle.makeTriangle();
+  constexpr auto triangle = Dune::GeometryTypes::triangle;
 
   std::array<FieldVector<double,2>, 3> corners0 = {vertices[0], vertices[1], vertices[2]};
   std::array<FieldVector<double,2>, 3> corners1 = {vertices[1], vertices[3], vertices[2]};
