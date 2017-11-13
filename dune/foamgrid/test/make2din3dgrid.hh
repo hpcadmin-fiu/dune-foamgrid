@@ -54,7 +54,7 @@ GridType* make2Din3DHybridTestGrid()
         std::vector<unsigned int> cornerIDs(3);
         for (int j=0; j<3; j++)
             cornerIDs[j] = triangles[i][j];
-        factory.insertElement(Dune::GeometryType(Dune::GeometryType::simplex,2),cornerIDs);
+        factory.insertElement(GeometryTypes::simplex(2), cornerIDs);
     }
 
 
@@ -76,12 +76,12 @@ GridType* make2Din3DHybridTestGrid()
         std::vector<unsigned int> cornerIDs(3);
         for (int j=0; j<3; j++)
             cornerIDs[j] = quadrilaterals[i][j];
-        factory.insertElement(Dune::GeometryType(Dune::GeometryType::simplex,2),cornerIDs);
+        factory.insertElement(GeometryTypes::simplex(2), cornerIDs);
 
         cornerIDs[0] = quadrilaterals[i][3];
         cornerIDs[1] = quadrilaterals[i][2];
         cornerIDs[2] = quadrilaterals[i][1];
-        factory.insertElement(Dune::GeometryType(Dune::GeometryType::simplex,2),cornerIDs);
+        factory.insertElement(GeometryTypes::simplex(2), cornerIDs);
     }
 
 
@@ -93,7 +93,7 @@ GridType* make2Din3DHybridTestGrid()
         std::vector<unsigned int> cornerIDs(4);
         for (int j=0; j<4; j++)
             cornerIDs[j] = quadrilaterals[i][j];
-        factory.insertElement(Dune::GeometryType(Dune::GeometryType::cube,2),cornerIDs);
+        factory.insertElement(GeometryTypes::cube(2), cornerIDs);
     }
 #endif
 

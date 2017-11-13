@@ -175,7 +175,7 @@ int main (int argc, char *argv[])
     auto idx1 = grid->insertVertex({3.0, 3.0, 3.0});
     auto idx2 = grid->insertVertex({3.0, 3.5, 3.0});
     auto idx3 = grid->insertVertex({3.5, 3.0, 3.0});
-    grid->insertElement(Dune::GeometryType(Dune::GeometryType::simplex, dim), {idx1, idx2, idx3});
+    grid->insertElement(GeometryTypes::simplex(dim), {idx1, idx2, idx3});
     grid->preGrow();
     grid->grow();
     grid->postGrow();

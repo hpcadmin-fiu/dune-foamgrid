@@ -39,13 +39,13 @@ void checkGridElementGrowth(Grid& grid, int numElements)
           Dune::LeafMultipleCodimMultipleGeomTypeMapper<Grid,Dune::MCMGVertexLayout> mapper(grid);
 
           // insert the new element
-          grid.insertElement(Dune::GeometryType(1),
+          grid.insertElement(GeometryTypes::line,
                              {mapper.index(element.template subEntity<dim>(0)), newVIdx}
                              );
         }
         else
         {
-          grid.insertElement(Dune::GeometryType(1),
+          grid.insertElement(GeometryTypes::line,
                              {oldVIdx, newVIdx}
                              );
         }
@@ -147,7 +147,7 @@ void checkGridElementMerge(Grid& grid)
       }
     }
   }
-  grid.insertElement(Dune::GeometryType(1), vertices);
+  grid.insertElement(Dune::GeometryTypes::line, vertices);
 
   std::size_t numBoundarySegments = grid.numBoundarySegments();
   std::cout << std::endl<< "numBoundarySegments before merge: " << numBoundarySegments << std::endl;
@@ -274,7 +274,7 @@ void checkGridElementGrowthLevel(Grid& grid)
         }
       }
 
-  grid.insertElement(Dune::GeometryType(1), elementVertices);
+  grid.insertElement(Dune::GeometryTypes::line, elementVertices);
 
   bool elementsWillVanish = grid.preGrow();
   if(elementsWillVanish)
@@ -316,8 +316,8 @@ void checkGridElementGrowthLevel(Grid& grid)
   Dune::FieldVector<double, dimworld> growPoint(6.0);
   growPoint[0] = 0.0;
   auto vIdx = grid.insertVertex(growPoint);
-  grid.insertElement(Dune::GeometryType(1), {vIdx, elementVertices[0]});
-  grid.insertElement(Dune::GeometryType(1), {vIdx, elementVertices[1]});
+  grid.insertElement(Dune::GeometryTypes::line, {vIdx, elementVertices[0]});
+  grid.insertElement(Dune::GeometryTypes::line, {vIdx, elementVertices[1]});
 
   elementsWillVanish = grid.preGrow();
   if(elementsWillVanish)
