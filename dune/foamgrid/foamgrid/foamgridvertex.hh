@@ -55,6 +55,7 @@ namespace Dune {
 
         FoamGridEntityImp(int level, const FieldVector<double, dimworld>& pos, unsigned int id)
             : FoamGridEntityBase(level, id), pos_(pos), nSons_(0), elements_(), father_(nullptr), isNew_(false)
+            , growthInsertionIndex_(-1)
         {
             sons_[0] = nullptr;
         }
@@ -137,6 +138,13 @@ namespace Dune {
 
         //! If the vertex was newly inserted (at run-time)
         bool isNew_;
+
+        /** \brief If this vertex was created in a growth step this will be the index of insertion
+         *         So if this is the first vertex added to the growth queue by calling insertVertex the index is 0
+         *         The index will be valid until postGrow is called.
+         *         To all other times this shall be -1
+         */
+        int growthInsertionIndex_;
     };
 
 }

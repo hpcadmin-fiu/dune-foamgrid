@@ -396,7 +396,8 @@ class FoamGrid :
           newVertex.isNew_ = true;
           // new vertices are numbered consecutively starting from
           // the highest available index in the leaf index set +1
-          return this->leafGridView().size(dimgrid) - 1 + verticesToInsert_.size();
+          newVertex.growthInsertionIndex_ = this->leafGridView().size(dimgrid) - 1 + verticesToInsert_.size();
+          return newVertex.growthInsertionIndex_;
         }
 
         /** \brief Add a new element to be added to the grid
@@ -437,7 +438,7 @@ class FoamGrid :
           }
           newElement.isNew_ = true;
           newElement.growthInsertionIndex_ = elementsToInsert_.size()-1;
-          return elementsToInsert_.size()-1;
+          return newElement.growthInsertionIndex_;
         }
 
         /** \brief Add a new element to be added to the grid
@@ -484,6 +485,21 @@ class FoamGrid :
          *         index can be used to attach user data that can (after calling postGrow) be attached to the real element index/id.
          */
         unsigned int growthInsertionIndex(const typename Traits::template Codim<0>::Entity & e) const
+        {
+            int idx = this->getRealImplementation(e).target_->growthInsertionIndex_;
+            assert(idx >= 0);
+            return static_cast<unsigned int>(idx);
+        }
+
+        /**
+         * \brief The index of insertion if the vertex was created in the current growth step.
+         *         If this is the first vertex added to the growth queue by calling insertVertex the index is 0 and so on.
+         *         The index will be valid until postGrow is called.
+         * \note   This is useful to attach user data to a created vertex. The data might only known at vertex creation time.
+         *         As the final vertex index and id are not known yet when the vertex is added to the insertion queue, this
+         *         index can be used to attach user data that can (after calling postGrow) be attached to the real vertex index/id.
+         */
+        unsigned int growthInsertionIndex(const typename Traits::template Codim<dimgrid>::Entity & e) const
         {
             int idx = this->getRealImplementation(e).target_->growthInsertionIndex_;
             assert(idx >= 0);
