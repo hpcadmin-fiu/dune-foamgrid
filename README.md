@@ -31,4 +31,4 @@ Publications
 
 The concepts of `dune-foamgrid` are presented in the following publication:
 
-[O. Sander, T. Koch, N. Schröder, B. Flemisch, The Dune FoamGrid  implementation for surface and network grids, arXiv:1511.03415, 2015](http://arxiv.org/abs/1511.03415)
+__Sander, O., Koch, T., Schröder, N., & Flemisch, B. (2017).__ *The Dune FoamGrid implementation for surface and network grids. Archive of Numerical Software*, 5(1), 217-244, http://dx.doi.org/10.11588/ans.2017.1.28490.
