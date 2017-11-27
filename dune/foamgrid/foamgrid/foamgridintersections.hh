@@ -56,8 +56,9 @@ class FoamGridIntersection
     friend class Dune::Intersection;
 
     FoamGridIntersection()
-      : center_(nullptr),
-        neighbor_(FoamGridNullIteratorFactory<dimgrid, dimworld>::null())
+      : center_(nullptr)
+      , facetIndex_(-1)
+      , neighbor_(FoamGridNullIteratorFactory<dimgrid, dimworld>::null())
     {}
 
     /**
