@@ -33,46 +33,41 @@ namespace Dune {
         FoamGridEntityImp(FoamGridEntityImp<0, dimgrid, dimworld>* v0,
                           FoamGridEntityImp<0, dimgrid, dimworld>* v1,
                           int level, unsigned int id)
-            : FoamGridEntityBase(level,id), nSons_(0), father_(nullptr),
+            : FoamGridEntityBase(level,id),
+              vertex_{{v0, v1}},
+              facet_{{v0, v1}},
+              sons_{{nullptr, nullptr}},
+              nSons_(0), father_(nullptr),
               refinementIndex_(-1), markState_(DO_NOTHING), isNew_(false),
               coarseningBlocked_(false),
               growthInsertionIndex_(-1)
-        {
-            vertex_[0] = v0;
-            vertex_[1] = v1;
-            facet_[0] = v0;
-            facet_[1] = v1;
-            sons_[0] = sons_[1] = nullptr;
-        }
-
+        {}
 
         FoamGridEntityImp(FoamGridEntityImp<0, dimgrid, dimworld>* v0,
                           FoamGridEntityImp<0, dimgrid, dimworld>* v1,
                           int level, unsigned int id,
                           FoamGridEntityImp* father)
 
-            : FoamGridEntityBase(level,id), nSons_(0), father_(father),
+            : FoamGridEntityBase(level,id),
+              vertex_{{v0, v1}},
+              facet_{{v0, v1}},
+              sons_{{nullptr, nullptr}},
+              nSons_(0), father_(father),
               refinementIndex_(-1), markState_(DO_NOTHING), isNew_(false),
               coarseningBlocked_(false),
               growthInsertionIndex_(-1)
-        {
-            vertex_[0] = v0;
-            vertex_[1] = v1;
-            facet_[0] = v0;
-            facet_[1] = v1;
-            sons_[0] =sons_[1] = nullptr;
-        }
+        {}
 
         FoamGridEntityImp(int level, unsigned int id)
             : FoamGridEntityBase(level, id),
+              vertex_{{nullptr, nullptr}},
+              facet_{{nullptr, nullptr}},
+              sons_{{nullptr, nullptr}},
               nSons_(0), refinementIndex_(-1),
               markState_(DO_NOTHING), isNew_(false),
               coarseningBlocked_(false),
               growthInsertionIndex_(-1)
-        {
-          sons_[0] = sons_[1] = nullptr;
-          father_ = nullptr;
-        }
+        {}
 
         /** \todo Implement this method! */
         bool isLeaf() const {
@@ -197,13 +192,14 @@ namespace Dune {
             : FoamGridEntityBase(level,id),
               refinementIndex_(-1),
               nSons_(0),
+              sons_{{nullptr, nullptr, nullptr, nullptr}},
+              facet_{{nullptr, nullptr, nullptr}},
+              vertex_{{nullptr, nullptr, nullptr}},
               markState_(DO_NOTHING), isNew_(false),
+              father_{nullptr},
               coarseningBlocked_(false),
               growthInsertionIndex_(-1)
-        {
-          sons_[0]= sons_[1] = sons_[2] = sons_[3] = nullptr;
-          father_ = nullptr;
-        }
+        {}
 
 
         int corners() const {
