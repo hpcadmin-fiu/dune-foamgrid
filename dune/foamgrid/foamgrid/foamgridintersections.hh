@@ -528,7 +528,6 @@ public:
 
 private:
 
-    FoamGridEntityImp<dimgrid-1, dimgrid ,dimworld>* facetPointer_;
     //! pointer to global and local intersection geometries
     mutable std::shared_ptr<GeometryImpl> geometry_;
     mutable std::shared_ptr<LocalGeometryImpl> geometryInInside_;
