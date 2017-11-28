@@ -56,8 +56,9 @@ class FoamGridIntersection
     friend class Dune::Intersection;
 
     FoamGridIntersection()
-      : center_(nullptr),
-        neighbor_(FoamGridNullIteratorFactory<dimgrid, dimworld>::null())
+      : center_(nullptr)
+      , facetIndex_(-1)
+      , neighbor_(FoamGridNullIteratorFactory<dimgrid, dimworld>::null())
     {}
 
     /**
@@ -527,7 +528,6 @@ public:
 
 private:
 
-    FoamGridEntityImp<dimgrid-1, dimgrid ,dimworld>* facetPointer_;
     //! pointer to global and local intersection geometries
     mutable std::shared_ptr<GeometryImpl> geometry_;
     mutable std::shared_ptr<LocalGeometryImpl> geometryInInside_;
