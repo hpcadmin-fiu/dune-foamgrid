@@ -534,15 +534,18 @@ class FoamGrid :
             return 0;
         }
 
-
-#if 0
         /** \brief Distributes this grid over the available nodes in a distributed machine
-        *
-        * \param minlevel The coarsest grid level that gets distributed
-        * \param maxlevel does currently get ignored
         */
-        void loadBalance(int strategy, int minlevel, int depth, int maxlevel, int minelement){
-            DUNE_THROW(NotImplemented, "FoamGrid::loadBalance()");
+        template<class DataHandle>
+        void loadBalance(DataHandle& data)
+        {
+            loadBalance();
+        }
+
+        void loadBalance()
+        {
+            if (comm().size() > 1)
+                DUNE_THROW(Dune::NotImplemented, "Load balancing not implemented. Foamgrid does not run in parallel yet!");
         }
 
         /** \brief The communication interface
@@ -557,12 +560,12 @@ class FoamGrid :
         *  the protocol. Therefore P is called the "protocol class".
         */
         template<class T, template<class> class P, int codim>
-        void communicate (T& t, InterfaceType iftype, CommunicationDirection dir, int level);
+        void communicate (T& t, InterfaceType iftype, CommunicationDirection dir, int level) const
+        {}
 
         /*! The new communication interface
-
-        communicate objects for all codims on a given level
-        */
+         *communicate objects for all codims on a given level
+         */
         template<class DataHandle>
         void communicate (DataHandle& data, InterfaceType iftype, CommunicationDirection dir, int level) const
         {}
@@ -570,7 +573,6 @@ class FoamGrid :
         template<class DataHandle>
         void communicate (DataHandle& data, InterfaceType iftype, CommunicationDirection dir) const
         {}
-#endif
 
         /** dummy collective communication */
         const typename Traits::CollectiveCommunication& comm () const
