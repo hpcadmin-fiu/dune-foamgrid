@@ -63,7 +63,9 @@ namespace Dune {
               vertex_{{nullptr, nullptr}},
               facet_{{nullptr, nullptr}},
               sons_{{nullptr, nullptr}},
-              nSons_(0), refinementIndex_(-1),
+              nSons_(0),
+              father_(nullptr),
+              refinementIndex_(-1),
               markState_(DO_NOTHING), isNew_(false),
               coarseningBlocked_(false),
               growthInsertionIndex_(-1)
