@@ -2,6 +2,8 @@
 // vi: set ts=8 sw=4 et sts=4:
 #include <config.h>
 
+#include <dune/common/parallel/mpihelper.hh>
+
 #include <dune/grid/io/file/gmshreader.hh>
 #include <dune/foamgrid/foamgrid.hh>
 #include <dune/grid/common/gridinfo.hh>
@@ -357,6 +359,7 @@ using namespace Dune;
 
 int main (int argc, char *argv[])
 {
+  Dune::MPIHelper::instance(argc, argv);
   try
   {
     //////////////////////////////////////////////////////////////////////////

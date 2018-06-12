@@ -2,6 +2,7 @@
 
 #include <iostream>
 
+#include <dune/common/parallel/mpihelper.hh>
 #include <dune/common/version.hh>
 #include <dune/grid/io/file/gmshreader.hh>
 #include <dune/grid/test/gridcheck.hh>
@@ -145,6 +146,8 @@ void traversal (G& grid)
 
 int main (int argc, char *argv[]) try
 {
+    Dune::MPIHelper::instance(argc, argv);
+
     // paths to gmsh test files
     const std::string dune_grid_path = std::string(DUNE_GRID_EXAMPLE_GRIDS_PATH) + "gmsh/";
     const std::string dune_foamgrid_path = std::string(DUNE_FOAMGRID_EXAMPLE_GRIDS_PATH) + "gmsh/";
