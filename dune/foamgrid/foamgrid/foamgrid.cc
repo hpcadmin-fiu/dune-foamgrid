@@ -371,15 +371,7 @@ template <int dimgrid, int dimworld>
 template <int i>
 void Dune::FoamGrid<dimgrid, dimworld>::eraseVanishedEntities(std::list<FoamGridEntityImp<i, dimgrid, dimworld> >& levelEntities)
 {
-  typedef typename std::list<FoamGridEntityImp<i, dimgrid, dimworld> >::iterator EntityIterator;
-  for (EntityIterator entity=levelEntities.begin();
-      entity != levelEntities.end();)
-  {
-    if(entity->willVanish_)
-      entity=levelEntities.erase(entity);
-    else
-      ++entity;
-  }
+  levelEntities.remove_if([](const auto& entity){ return entity.willVanish_; });
 }
 
 // Coarsen a simplex element
@@ -1384,14 +1376,11 @@ bool Dune::FoamGrid<dimgrid, dimworld>::removeSimplexElement(FoamGridEntityImp<d
         facet->boundarySegmentIndex_= numBoundarySegments_;
         ++numBoundarySegments_;
       }
+
       // remove the entity pointers of the remaining subentities and the father
-      for(auto e = facet->elements_.begin(); e != facet->elements_.end();)
-      {
-        if((*e)->willVanish_)
-          e = facet->elements_.erase(e);
-        else
-          ++e;
-      }
+      facet->elements_.erase( std::remove_if(facet->elements_.begin(), facet->elements_.end(),
+                                             [](const auto& e){ return e->willVanish_; }),
+                              facet->elements_.end() );
     }
   }
   if(element.hasFather())
