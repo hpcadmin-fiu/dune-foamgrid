@@ -12,8 +12,10 @@
 #include <map>
 #include <memory>
 
+#include <dune/common/version.hh>
 #include <dune/common/function.hh>
 #include <dune/common/fvector.hh>
+#include <dune/common/to_unique_ptr.hh>
 
 #include <dune/grid/common/gridfactory.hh>
 #include <dune/foamgrid/foamgrid.hh>
@@ -189,7 +191,11 @@ template <int dimworld>
 
         The receiver takes responsibility of the memory allocated for the grid
         */
-        virtual FoamGrid<1, dimworld>* createGrid() {
+#if DUNE_VERSION_LT(DUNE_COMMON, 2, 7)
+        FoamGrid<1, dimworld>* createGrid() override {
+#else
+        ToUniquePtr<FoamGrid<1, dimworld>> createGrid() override {
+#endif
             // Prevent a crash when this method is called twice in a row
             // You never know who may do this...
             if (this->grid_==nullptr)
@@ -301,7 +307,11 @@ template <int dimworld>
         /** \brief Finalize grid creation and hand over the grid
         The receiver takes responsibility of the memory allocated for the grid
         */
-        virtual FoamGrid<dimgrid, dimworld>* createGrid() {
+#if DUNE_VERSION_LT(DUNE_COMMON, 2, 7)
+        FoamGrid<dimgrid, dimworld>* createGrid() override {
+#else
+        ToUniquePtr<FoamGrid<dimgrid, dimworld>> createGrid() override {
+#endif
             // Prevent a crash when this method is called twice in a row
             // You never know who may do this...
             if (this->grid_==nullptr)
