@@ -19,11 +19,6 @@ namespace Dune {
 template<int codim, class GridImp>
 class FoamGridEntitySeed
 {
-        template<int dimgrid, int dimworld>
-        friend class FoamGrid;
-
-    protected:
-
         enum {dimgrid = GridImp::dimension};
         enum {dimworld = GridImp::dimensionworld};
         enum {mydim = dimgrid-codim};
