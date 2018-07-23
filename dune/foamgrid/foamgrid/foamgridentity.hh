@@ -450,7 +450,7 @@ class FoamGridEntity<0, 2, GridImp> :
                 for (std::size_t i=0; i<target_->nSons(); i++)
                     it.elemStack.push(target_->sons_[i]);
 
-            GridImp::getRealImplementation(it.virtualEntity_).setToTarget((it.elemStack.empty())
+            it.virtualEntity_.impl().setToTarget((it.elemStack.empty())
                                           ? nullptr : it.elemStack.top());
 
             return it;
@@ -749,7 +749,7 @@ class FoamGridEntity<0, 1, GridImp> :
                 for (std::size_t i=0; i<target_->nSons(); i++)
                     it.elemStack.push(target_->sons_[i]);
 
-            GridImp::getRealImplementation(it.virtualEntity_).setToTarget((it.elemStack.empty())
+            it.virtualEntity_.impl().setToTarget((it.elemStack.empty())
                                           ? nullptr : it.elemStack.top());
 
             return it;

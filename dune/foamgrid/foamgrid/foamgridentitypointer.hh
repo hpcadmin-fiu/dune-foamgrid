@@ -45,13 +45,13 @@ class FoamGridEntityPointer
     FoamGridEntityPointer (const typename std::list<FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld> >::const_iterator& it)
         : virtualEntity_(FoamGridEntity<codim, dimgrid, GridImp>())
     {
-        GridImp::getRealImplementation(virtualEntity_).setToTarget(&*it);
+        virtualEntity_.impl().setToTarget(&*it);
     }
 
     FoamGridEntityPointer (const FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld>* it)
         : virtualEntity_(FoamGridEntity<codim, dimgrid, GridImp>())
     {
-        GridImp::getRealImplementation(virtualEntity_).setToTarget(it);
+        virtualEntity_.impl().setToTarget(it);
     }
 
     //! equality
