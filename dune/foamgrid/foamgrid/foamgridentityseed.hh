@@ -55,11 +55,10 @@ class FoamGridEntitySeed
           return target_ != nullptr;
         }
 
-    protected:
-
-        const EntityImplType* getImplementationPointer() const
+        /** \brief Access to the underlying FoamGrid data structure */
+        const EntityImplType* target() const
         {
-            return target_;
+          return target_;
         }
 
     private:
