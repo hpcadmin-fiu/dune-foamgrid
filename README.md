@@ -1,3 +1,5 @@
+![Build Status](https://gitlab.dune-project.org/extensions/dune-foamgrid/badges/master/build.svg)
+
 The `dune-foamgrid` module
 ==========================
 
