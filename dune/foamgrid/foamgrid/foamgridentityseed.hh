@@ -19,52 +19,45 @@ namespace Dune {
 template<int codim, class GridImp>
 class FoamGridEntitySeed
 {
-        template<int dimgrid, int dimworld>
-        friend class FoamGrid;
+  enum { dimgrid = GridImp::dimension };
+  enum { dimworld = GridImp::dimensionworld };
+  enum { mydim = dimgrid-codim };
 
-    protected:
+  // Entity type of the underlying implementation
+  using EntityImplType = FoamGridEntityImp<mydim, dimgrid, dimworld> ;
 
-        enum {dimgrid = GridImp::dimension};
-        enum {dimworld = GridImp::dimensionworld};
-        enum {mydim = dimgrid-codim};
+public:
 
-        // Entity type of the hostgrid
-        typedef FoamGridEntityImp<mydim, dimgrid, dimworld> EntityImplType;
+  enum {codimension = codim};
 
-    public:
+  //! default construct an invalid entity seed
+  FoamGridEntitySeed()
+  : target_(nullptr)
+  {}
 
-        enum {codimension = codim};
+  //! construct entity seed from entity
+  FoamGridEntitySeed(const FoamGridEntity<codim, dimgrid, GridImp>& entity)
+  : target_(entity.target_)
+  {}
 
-        //! default construct an invalid entity seed
-        FoamGridEntitySeed() :
-            target_(nullptr)
-        {}
+  FoamGridEntitySeed(const FoamGridEntity<codim, dimgrid, GridImp>* target)
+  : target_(target)
+  {}
 
-        //! construct entity seed from entity
-        FoamGridEntitySeed(const FoamGridEntity<codim, dimgrid, GridImp>& entity) :
-            target_(entity.target_)
-        {}
+  /** \brief check whether it is safe to create an Entity from this Seed */
+  bool isValid() const
+  {
+    return target_ != nullptr;
+  }
 
-        FoamGridEntitySeed(const FoamGridEntity<codim, dimgrid, GridImp>* target) :
-            target_(target)
-        {}
+  /** \brief Access to the underlying FoamGrid data structure */
+  const EntityImplType* target() const
+  {
+    return target_;
+  }
 
-        /** \brief check whether it is safe to create an Entity from this Seed */
-        bool isValid() const
-        {
-          return target_ != nullptr;
-        }
-
-    protected:
-
-        const EntityImplType* getImplementationPointer() const
-        {
-            return target_;
-        }
-
-    private:
-
-        const EntityImplType* target_;
+private:
+  const EntityImplType* target_;
 };
 
 } // namespace Dune
