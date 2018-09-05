@@ -12,8 +12,10 @@
 #include <map>
 #include <memory>
 
+#include <dune/common/version.hh>
 #include <dune/common/function.hh>
 #include <dune/common/fvector.hh>
+#include <dune/common/to_unique_ptr.hh>
 
 #include <dune/grid/common/gridfactory.hh>
 #include <dune/foamgrid/foamgrid.hh>
@@ -60,13 +62,13 @@ template <int dimgrid, int dimworld>
         }
 
         /** \brief Destructor */
-        virtual ~GridFactoryBase() {
+        ~GridFactoryBase() override {
             if (grid_ && factoryOwnsGrid_)
                 delete grid_;
         }
 
         /** \brief Insert a vertex into the coarse grid */
-        virtual void insertVertex(const FieldVector<ctype,dimworld>& pos) {
+        void insertVertex(const FieldVector<ctype,dimworld>& pos) override {
             std::get<0>(grid_->entityImps_[0]).push_back(FoamGridEntityImp<0, dimgrid, dimworld> (0,   // level
                                                                          pos,  // position
                                                                          grid_->getNextFreeId()));
@@ -77,7 +79,7 @@ template <int dimgrid, int dimworld>
 
         This is only needed if you want to control the numbering of the boundary segments
         */
-        virtual void insertBoundarySegment(const std::vector<unsigned int>& vertices) {
+        void insertBoundarySegment(const std::vector<unsigned int>& vertices) override {
             DUNE_THROW(Dune::NotImplemented, "insertBoundarySegment not implemented yet!");
         }
 
@@ -86,27 +88,26 @@ template <int dimgrid, int dimworld>
             This influences the ordering of the boundary segments.
             Currently, the BoundarySegment object does not actually have any effect.
         */
-        virtual void insertBoundarySegment(const std::vector<unsigned int>& vertices,
-                                           const std::shared_ptr<BoundarySegment<dimgrid, dimworld> >& boundarySegment)
+        void insertBoundarySegment(const std::vector<unsigned int>& vertices,
+                                   const std::shared_ptr<BoundarySegment<dimgrid, dimworld> >& boundarySegment) override
         {
             insertBoundarySegment(vertices);
         }
 
         /** \brief Return the number of the element to insert parameters
          */
-        virtual unsigned int
-        insertionIndex(const typename FoamGrid<dimgrid, dimworld>::Traits::template Codim<0>::Entity &entity) const
+        unsigned int
+        insertionIndex(const typename FoamGrid<dimgrid, dimworld>::Traits::template Codim<0>::Entity &entity) const override
         {
             return grid_->getRealImplementation(entity).target_->leafIndex_;
         }
 
         /** \brief Return the number of the vertex to insert parameters
          */
-        virtual unsigned int
-        insertionIndex(const typename FoamGrid<dimgrid, dimworld>::Traits::template Codim<dimgrid>::Entity &vertex) const
+        unsigned int
+        insertionIndex(const typename FoamGrid<dimgrid, dimworld>::Traits::template Codim<dimgrid>::Entity &vertex) const override
         {
             return grid_->getRealImplementation(vertex).target_->leafIndex_;
-
         }
 
     protected:
@@ -153,8 +154,8 @@ template <int dimworld>
             \param type The GeometryType of the new element
             \param vertices The vertices of the new element, using the DUNE numbering
         */
-        virtual void insertElement(const GeometryType& type,
-                                   const std::vector<unsigned int>& vertices) {
+        void insertElement(const GeometryType& type,
+                           const std::vector<unsigned int>& vertices) override {
             assert(type.isLine());
             FoamGridEntityImp<1, dimgrid, dimworld> newElement(this->vertexArray_[vertices[0]],
                                                                this->vertexArray_[vertices[1]],
@@ -170,9 +171,9 @@ template <int dimworld>
         \param vertices The vertices of the new element, using the DUNE numbering
         \param elementParametrization A function prescribing the shape of this element
         */
-        virtual void insertElement(const GeometryType& type,
-                                   const std::vector<unsigned int>& vertices,
-                                   const std::shared_ptr<VirtualFunction<FieldVector<ctype,dimgrid>,FieldVector<ctype,dimworld> > >& elementParametrization)
+        void insertElement(const GeometryType& type,
+                           const std::vector<unsigned int>& vertices,
+                           const std::shared_ptr<VirtualFunction<FieldVector<ctype,dimgrid>,FieldVector<ctype,dimworld> > >& elementParametrization) override
         {
             assert(type.isLine());
             FoamGridEntityImp<1, dimgrid, dimworld> newElement(this->vertexArray_[vertices[0]],
@@ -189,7 +190,11 @@ template <int dimworld>
 
         The receiver takes responsibility of the memory allocated for the grid
         */
-        virtual FoamGrid<1, dimworld>* createGrid() {
+#if DUNE_VERSION_LT(DUNE_COMMON, 2, 7)
+        FoamGrid<1, dimworld>* createGrid() override {
+#else
+        ToUniquePtr<FoamGrid<1, dimworld>> createGrid() override {
+#endif
             // Prevent a crash when this method is called twice in a row
             // You never know who may do this...
             if (this->grid_==nullptr)
@@ -263,8 +268,8 @@ template <int dimworld>
             \param type The GeometryType of the new element
             \param vertices The vertices of the new element, using the DUNE numbering
         */
-        virtual void insertElement(const GeometryType& type,
-                                   const std::vector<unsigned int>& vertices) {
+        void insertElement(const GeometryType& type,
+                           const std::vector<unsigned int>& vertices) override {
 
             assert(type.isTriangle());
 
@@ -282,9 +287,9 @@ template <int dimworld>
         \param vertices The vertices of the new element, using the DUNE numbering
         \param elementParametrization A function prescribing the shape of this element
         */
-        virtual void insertElement(const GeometryType& type,
-                                   const std::vector<unsigned int>& vertices,
-                                   const std::shared_ptr<VirtualFunction<FieldVector<ctype,dimgrid>,FieldVector<ctype,dimworld> > >& elementParametrization)
+        void insertElement(const GeometryType& type,
+                           const std::vector<unsigned int>& vertices,
+                           const std::shared_ptr<VirtualFunction<FieldVector<ctype,dimgrid>,FieldVector<ctype,dimworld> > >& elementParametrization) override
         {
             assert(type.isTriangle());
             FoamGridEntityImp<dimgrid, dimgrid, dimworld> newElement(0,   // level
@@ -301,7 +306,11 @@ template <int dimworld>
         /** \brief Finalize grid creation and hand over the grid
         The receiver takes responsibility of the memory allocated for the grid
         */
-        virtual FoamGrid<dimgrid, dimworld>* createGrid() {
+#if DUNE_VERSION_LT(DUNE_COMMON, 2, 7)
+        FoamGrid<dimgrid, dimworld>* createGrid() override {
+#else
+        ToUniquePtr<FoamGrid<dimgrid, dimworld>> createGrid() override {
+#endif
             // Prevent a crash when this method is called twice in a row
             // You never know who may do this...
             if (this->grid_==nullptr)
@@ -395,6 +404,7 @@ template <int dimworld>
             return tmp;
         }
     };
-}
+
+} // end namespace Dune
 
 #endif
