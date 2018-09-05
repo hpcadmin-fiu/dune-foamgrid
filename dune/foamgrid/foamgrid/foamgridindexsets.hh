@@ -41,7 +41,7 @@ namespace Dune {
         template<int codim>
         int index (const typename GridImp::Traits::template Codim<codim>::Entity& e) const
         {
-            return GridImp::getRealImplementation(e).target_->levelIndex_;
+            return e.impl().target_->levelIndex_;
         }
 
         //! get index of subentity of an entity
@@ -50,7 +50,7 @@ namespace Dune {
                       int i,
                       unsigned int codim) const
         {
-            return GridImp::getRealImplementation(e).target_->subLevelIndex(i,codim);
+            return e.impl().target_->subLevelIndex(i,codim);
         }
 
         //! get number of entities of given codim, type and on this level
@@ -218,7 +218,7 @@ public:
         template<int codim>
         int index (const typename GridImp::Traits::template Codim<codim>::Entity& e) const
         {
-            return GridImp::getRealImplementation(e).target_->leafIndex_;
+            return e.impl().target_->leafIndex_;
         }
 
         //! get index of subentity of an entity
@@ -227,7 +227,7 @@ public:
                       int i,
                       unsigned int codim) const
         {
-            return GridImp::getRealImplementation(e).target_->subLeafIndex(i,codim);
+            return e.impl().target_->subLeafIndex(i,codim);
         }
 
         //! get number of entities of given codim, type and on this level
@@ -286,7 +286,7 @@ public:
         template<class EntityType>
         bool contains (const EntityType& e) const
         {
-            return GridImp::getRealImplementation(e).target_->isLeaf();
+            return e.impl().target_->isLeaf();
         }
 
         /** Recompute the leaf numbering */
@@ -306,11 +306,11 @@ public:
 
         for (; eIt!=eEndIt; ++eIt){
             if(eIt->type().isTriangle() && dimgrid == 2)
-                *const_cast<unsigned int*>(&(GridImp::getRealImplementation(*eIt).target_->leafIndex_)) = numTriangles_++;
+                *const_cast<unsigned int*>(&(eIt->impl().target_->leafIndex_)) = numTriangles_++;
             if(eIt->type().isQuadrilateral() && dimgrid == 2)
-                *const_cast<unsigned int*>(&(GridImp::getRealImplementation(*eIt).target_->leafIndex_)) = numQuads_++;
+                *const_cast<unsigned int*>(&(eIt->impl().target_->leafIndex_)) = numQuads_++;
             if(eIt->type().isLine() && dimgrid == 1)
-                *const_cast<unsigned int*>(&(GridImp::getRealImplementation(*eIt).target_->leafIndex_)) = numEdges_++;
+                *const_cast<unsigned int*>(&(eIt->impl().target_->leafIndex_)) = numEdges_++;
         }
 
         // //////////////////////////////
@@ -324,7 +324,7 @@ public:
 
             for (; edIt!=edEndIt; ++edIt) {
 
-            const FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>* target = GridImp::getRealImplementation(*edIt).target_;
+            const FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>* target = edIt->impl().target_;
 
             if (target->isLeaf()){
                 // The is a real leaf edge.
@@ -357,7 +357,7 @@ public:
 
                 for (; vIt!=vEndIt; ++vIt) {
 
-                    const FoamGridEntityImp<0, dimgrid, dimworld>* target = GridImp::getRealImplementation(*vIt).target_;
+                    const FoamGridEntityImp<0, dimgrid, dimworld>* target = vIt->impl().target_;
 
                     if (target->isLeaf())
                     {
@@ -428,7 +428,7 @@ class FoamGridIdSet :
         template<int cd>
         IdType id (const typename std::remove_const<GridImp>::type::Traits::template Codim<cd>::Entity& e) const
         {
-            return GridImp::getRealImplementation(e).target_->id_;
+            return e.impl().target_->id_;
         }
 
 
@@ -439,7 +439,7 @@ class FoamGridIdSet :
         */
         IdType subId (const typename std::remove_const<GridImp>::type::Traits::template Codim<0>::Entity& e, int i, int codim) const
         {
-            return GridImp::getRealImplementation(e).subId(i,codim);
+            return e.impl().subId(i,codim);
         }
 
 

@@ -165,14 +165,14 @@ bool Dune::FoamGrid<dimgrid, dimworld>::preAdapt()
     {
       // If the element is marked for coarsening but it is not allowed because of growth
       // i.e. it contains a junction facet with has no father, we reset to DO_NOTHING
-      if(this->getRealImplementation(element).target_->coarseningBlocked_)
-        const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(element).target_)->markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::DO_NOTHING;
+      if(element.impl().target_->coarseningBlocked_)
+        const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(element.impl().target_)->markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::DO_NOTHING;
 
       // If this element is marked for coarsening, but another child
       // of this element's father is marked for refinement or has children, then we
       // need to reset the marker to doNothing
       bool otherChildRefined=false;
-      FoamGridEntityImp<dimgrid, dimgrid, dimworld>& father = *this->getRealImplementation(element).target_->father_;
+      FoamGridEntityImp<dimgrid, dimgrid, dimworld>& father = *element.impl().target_->father_;
       typedef typename std::array<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*, 1<<dimgrid >::iterator ChildrenIter;
       for (ChildrenIter child=father.sons_.begin(); child != father.sons_.end(); ++child)
         otherChildRefined = otherChildRefined ||
@@ -216,7 +216,7 @@ bool Dune::FoamGrid<dimgrid, dimworld>::adapt()
       // Refine simplices
       if (element.type().isTriangle() || element.type().isLine())
       {
-        refineSimplexElement(*const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(element).target_), 1);
+        refineSimplexElement(*const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(element.impl().target_), 1);
         haveRefined=true;
       }
       else
@@ -229,7 +229,7 @@ bool Dune::FoamGrid<dimgrid, dimworld>::adapt()
       if (element.type().isTriangle() || element.type().isLine())
       {
         assert(element.level());
-        coarsenSimplexElement(*const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(element).target_));
+        coarsenSimplexElement(*const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(element.impl().target_));
       }
       else
         DUNE_THROW(NotImplemented, "Coarsening only supported for simplices!");
@@ -1331,7 +1331,7 @@ void Dune::FoamGrid<dimgrid, dimworld>::postGrow()
   // and set the coarseing blocker in case we created a T-junction
   for (auto&& element : elements(this->leafGridView()))
   {
-    FoamGridEntityImp<dimgrid, dimgrid, dimworld>& e = *const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(element).target_);
+    FoamGridEntityImp<dimgrid, dimgrid, dimworld>& e = *const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(element.impl().target_);
     e.isNew_=false;
     e.growthInsertionIndex_=-1;
 
@@ -1427,7 +1427,7 @@ template <int dimgrid, int dimworld>
 void Dune::FoamGrid<dimgrid, dimworld>::setPosition(const typename Traits::template Codim<dimgrid>::Entity & e,
                                                     const FieldVector<ctype, dimworld>& pos)
 {
-  auto vertex = const_cast<FoamGridEntityImp<0, dimgrid, dimworld>*>(this->getRealImplementation(e).target_);
+  auto vertex = const_cast<FoamGridEntityImp<0, dimgrid, dimworld>*>(e.impl().target_);
 
   if (!vertex->isLeaf())
     DUNE_THROW(Dune::NotImplemented, "Moving vertices that are not on the leaf!");

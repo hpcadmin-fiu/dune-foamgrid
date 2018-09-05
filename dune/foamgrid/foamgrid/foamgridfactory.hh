@@ -99,7 +99,7 @@ template <int dimgrid, int dimworld>
         unsigned int
         insertionIndex(const typename FoamGrid<dimgrid, dimworld>::Traits::template Codim<0>::Entity &entity) const override
         {
-            return grid_->getRealImplementation(entity).target_->leafIndex_;
+            return entity.impl().target_->leafIndex_;
         }
 
         /** \brief Return the number of the vertex to insert parameters
@@ -107,7 +107,7 @@ template <int dimgrid, int dimworld>
         unsigned int
         insertionIndex(const typename FoamGrid<dimgrid, dimworld>::Traits::template Codim<dimgrid>::Entity &vertex) const override
         {
-            return grid_->getRealImplementation(vertex).target_->leafIndex_;
+            return vertex.impl().target_->leafIndex_;
         }
 
     protected:

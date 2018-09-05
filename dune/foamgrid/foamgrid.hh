@@ -299,7 +299,7 @@ class FoamGrid :
         {
           const int codim = EntitySeed::codimension;
           typedef typename Traits::template Codim<codim>::Entity Entity;
-          return Entity(FoamGridEntity<codim, dimgrid, const FoamGrid>(FoamGrid::getRealImplementation(seed).getImplementationPointer()));
+          return Entity(FoamGridEntity<codim, dimgrid, const FoamGrid>(seed.impl().getImplementationPointer()));
         }
 
 
@@ -329,11 +329,11 @@ class FoamGrid :
 
             /** \todo Why do I need those const_casts here? */
             if (refCount>=1)
-                const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(e).target_)->markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::REFINE;
+                const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(e.impl().target_)->markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::REFINE;
             else if (refCount<0)
-                const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(e).target_)->markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::COARSEN;
+                const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(e.impl().target_)->markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::COARSEN;
             else
-                const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(this->getRealImplementation(e).target_)->markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::DO_NOTHING;
+                const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(e.impl().target_)->markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::DO_NOTHING;
 
             return true;
         }
@@ -344,7 +344,7 @@ class FoamGrid :
         */
         int getMark(const typename Traits::template Codim<0>::Entity & e) const
         {
-            switch(this->getRealImplementation(e).target_->markState_)
+            switch(e.impl().target_->markState_)
             {
               case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::DO_NOTHING:
               case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::IS_COARSENED:
@@ -464,7 +464,7 @@ class FoamGrid :
         void removeElement(const typename Traits::template Codim<0>::Entity & e)
         {
           // save entity for later, actual removal happens in grow()
-          elementsToRemove_.push_back(const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*> (this->getRealImplementation(e).target_));
+          elementsToRemove_.push_back(const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*> (e.impl().target_));
         }
 
         //! \brief Book-keeping routine to be called before growth
@@ -486,7 +486,7 @@ class FoamGrid :
          */
         unsigned int growthInsertionIndex(const typename Traits::template Codim<0>::Entity & e) const
         {
-            int idx = this->getRealImplementation(e).target_->growthInsertionIndex_;
+            int idx = e.impl().target_->growthInsertionIndex_;
             assert(idx >= 0);
             return static_cast<unsigned int>(idx);
         }
@@ -501,7 +501,7 @@ class FoamGrid :
          */
         unsigned int growthInsertionIndex(const typename Traits::template Codim<dimgrid>::Entity & e) const
         {
-            int idx = this->getRealImplementation(e).target_->growthInsertionIndex_;
+            int idx = e.impl().target_->growthInsertionIndex_;
             assert(idx >= 0);
             return static_cast<unsigned int>(idx);
         }
@@ -596,7 +596,7 @@ class FoamGrid :
       for (const auto& vertex : vertices(this->leafGridView()))
       {
         std::size_t index = leafIndexSet().index(vertex);
-        indexToVertexMap_[index] = const_cast<FoamGridEntityImp<0, dimgrid ,dimworld>*>(this->getRealImplementation(vertex).target_);
+        indexToVertexMap_[index] = const_cast<FoamGridEntityImp<0, dimgrid ,dimworld>*>(vertex.impl().target_);
       }
 
       // tell the grid it's ready for growth
