@@ -28,7 +28,6 @@
 // The components of the FoamGrid interface
 #include "foamgrid/foamgridgeometry.hh"
 #include "foamgrid/foamgridentity.hh"
-#include "foamgrid/foamgridentitypointer.hh"
 #include "foamgrid/foamgridentityseed.hh"
 #include "foamgrid/foamgridintersectioniterators.hh"
 #include "foamgrid/foamgridleveliterator.hh"
@@ -108,10 +107,7 @@ class FoamGrid :
     template<int codim_, int dim_, class GridImp_>
     friend class FoamGridEntity;
 
-    template <int codim_, class GridImp_>
-    friend class FoamGridEntityPointer;
-
-    public:
+public:
 
     /** \brief FoamGrid is only implemented for 1 and 2 dimension */
     static_assert(dimgrid==1 || dimgrid==2, "Use FoamGrid only for 1d and 2d grids!");
