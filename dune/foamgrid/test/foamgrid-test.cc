@@ -155,7 +155,44 @@ int main (int argc, char *argv[]) try
     const std::string dune_foamgrid_path = std::string(DUNE_FOAMGRID_EXAMPLE_GRIDS_PATH) + "gmsh/";
 
     {
-        std::cout << "Checking FoamGrid<2, 2> (2d in 2d grid)" << std::endl;
+        std::cout << "\n################################################\n";
+        std::cout << "Checking default-constructed (empty) FoamGrid<1, 3>\n";
+        std::cout << "################################################\n\n";
+
+        std::cout << "  Creating grid" << std::endl;
+        FoamGrid<1, 3> emptyGrid;
+
+        std::cout << "  Calling gridcheck" << std::endl;
+        gridcheck(emptyGrid);
+
+        std::cout << "  Calling checkIntersectionIterator" << std::endl;
+        checkIntersectionIterator(emptyGrid);
+
+        std::cout << "  Check if has multiple neighbor functionality" << std::endl;
+        traversal(emptyGrid);
+    }
+    {
+        std::cout << "\n################################################\n";
+        std::cout << "Checking FoamGrid<1, 3> created from empty grid factory\n";
+        std::cout << "################################################\n\n";
+
+        std::cout << "  Creating grid" << std::endl;
+        GridFactory<FoamGrid<1, 3>> factory;
+        std::shared_ptr<FoamGrid<1, 3> > emptyGrid(factory.createGrid());
+
+        std::cout << "  Calling gridcheck" << std::endl;
+        gridcheck(*emptyGrid);
+
+        std::cout << "  Calling checkIntersectionIterator" << std::endl;
+        checkIntersectionIterator(*emptyGrid);
+
+        std::cout << "  Check if has multiple neighbor functionality" << std::endl;
+        traversal(*emptyGrid);
+    }
+    {
+        std::cout << "\n################################################\n";
+        std::cout << "Checking FoamGrid<2, 2> (2d in 2d grid)\n";
+        std::cout << "################################################\n\n";
 
         std::cout << "  Creating grid" << std::endl;
         std::shared_ptr<FoamGrid<2, 2> > grid2d( GmshReader<FoamGrid<2, 2> >::read(dune_grid_path + "curved2d.msh", /*verbose*/ true, false ) );
