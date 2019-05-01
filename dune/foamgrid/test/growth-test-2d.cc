@@ -201,7 +201,7 @@ int main (int argc, char *argv[])
   // //////////////////////////////////
   //   Error handler
   // /////////////////////////////////
-  catch (Exception e) {
+  catch (const Exception& e) {
     std::cout << e << std::endl;
     return 1;
   }
