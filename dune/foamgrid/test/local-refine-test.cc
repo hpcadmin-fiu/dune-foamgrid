@@ -84,8 +84,7 @@ int main (int argc, char *argv[]) try
 // //////////////////////////////////
 //   Error handler
 // /////////////////////////////////
- catch (Exception e) {
-
+catch (const Exception& e) {
     std::cout << e << std::endl;
     return 1;
- }
+}

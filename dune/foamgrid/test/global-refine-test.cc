@@ -80,9 +80,9 @@ int main (int argc, char *argv[]) try
     checkIntersectionIterator(*grid2d);
 
     std::cout << "Checking FoamGrid<1, 3> (1d in 3d grid)" << std::endl;
-	std::cout << "  Creating grid" << std::endl;
+    std::cout << "  Creating grid" << std::endl;
     std::shared_ptr<FoamGrid<1, 3> > grid1d( GmshReader<FoamGrid<1, 3> >::read(dune_foamgrid_path + "line1d3d.msh", /*verbose*/ true, false ) );
-	{
+    {
         Dune::VTKWriter<typename FoamGrid<1, 3>::LeafGridView > writer(grid1d->leafGridView(), VTK::nonconforming);
         writer.write("1d_refined0");
     }
@@ -139,7 +139,7 @@ int main (int argc, char *argv[]) try
 // //////////////////////////////////
 //   Error handler
 // /////////////////////////////////
- catch (Exception e) {
+ catch (const Exception& e) {
 
     std::cout << e << std::endl;
     return 1;
