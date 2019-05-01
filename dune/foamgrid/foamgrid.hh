@@ -12,6 +12,8 @@
 #include <set>
 #include <map>
 #include <tuple>
+#include <utility>
+#include <type_traits>
 
 #include <dune/common/parallel/collectivecommunication.hh>
 #include <dune/common/stdstreams.hh>
@@ -130,11 +132,13 @@ class FoamGrid :
     /** \brief Constructor, constructs an empty grid
      */
     FoamGrid()
-        : leafIndexSet_(*this),
-          freeIdCounter_(0),
-          globalRefined(0),
-          numBoundarySegments_(0),
-          growing_(false)
+    : entityImps_(makeEntityImps_())
+    , levelIndexSets_(1) // we always have level 0 (even if it's empty)
+    , leafIndexSet_(*this)
+    , freeIdCounter_(0)
+    , globalRefined(0)
+    , numBoundarySegments_(0)
+    , growing_(false)
     {}
 
         //! Destructor
@@ -277,6 +281,9 @@ class FoamGrid :
         /** \brief Access to the LevelIndexSets */
         const typename Traits::LevelIndexSet& levelIndexSet(int level) const
         {
+          if (level<0 || level>maxLevel())
+            DUNE_THROW(GridError, "LevelIndexSet for nonexisting level " << level << " requested!");
+
           if (! levelIndexSets_[level])
           {
             levelIndexSets_[level] = new FoamGridLevelIndexSet<const FoamGrid>(*this, level);
@@ -691,23 +698,21 @@ class FoamGrid :
     //! Collective communication interface
     typename Traits::CollectiveCommunication ccobj_;
 
-    // Stores the lists of vertices, edges, elements for each level
-    // std::vector<std::tuple<std::list<FoamGridEntityImp<0, dimgrid, dimworld> >,
-    // std::list<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld> >,
-    // std::list<FoamGridEntityImp<dimgrid, dimgrid, dimworld> > > > entityImps_;
+    template<std::size_t... dimEntity>
+    static auto makeEntityImpsImpl_(std::index_sequence<dimEntity...>, std::size_t numLevels)
+    { return std::vector<std::tuple<std::list<FoamGridEntityImp<dimEntity, dimgrid, dimworld>>...>>(numLevels); }
 
-    // conditional typename depending on dimension of grid (1 or 2)
-    typedef typename std::conditional<
-                        dimgrid==2,
-                        std::tuple<std::list<FoamGridEntityImp<0, dimgrid, dimworld> >,
-                                     std::list<FoamGridEntityImp<1, dimgrid, dimworld> >,
-                                     std::list<FoamGridEntityImp<2, dimgrid, dimworld> > >,
-                        std::tuple<std::list<FoamGridEntityImp<0, dimgrid, dimworld> >,
-                                     std::list<FoamGridEntityImp<1, dimgrid, dimworld> > >
-                   >::type EntityTuple;
+    // Create the lists of vertices, edges, elements for each level
+    static auto makeEntityImps_(std::size_t numLevels = 1)
+    { return makeEntityImpsImpl_(std::make_index_sequence<dimgrid+1>{}, numLevels); }
 
-    using EntityImps = std::vector<EntityTuple>;
+    // The vector type for tuple of lists of vertices, edges, elements for each level
+    using EntityImps = std::decay_t<decltype(makeEntityImps_())>;
 
+    // The tuple type of lists of vertices, edges, elements
+    using EntityTuple = typename EntityImps::value_type;
+
+    //! The lists of vertices, edges, elements for each level
     EntityImps entityImps_;
 
     //! Our set of level indices
