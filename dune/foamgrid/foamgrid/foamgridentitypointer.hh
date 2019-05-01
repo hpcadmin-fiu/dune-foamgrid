@@ -1,12 +1,13 @@
 #ifndef DUNE_FOAMGRID_ENTITY_POINTER_HH
 #define DUNE_FOAMGRID_ENTITY_POINTER_HH
+#warning "This header is deprecated and will be removed after release 2.7"
 
 /** \file
 * \brief The FoamGridEntityPointer class
 */
 
 #include <list>
-
+#include <dune/common/deprecated.hh>
 #include <dune/foamgrid/foamgrid/foamgridentity.hh>
 
 namespace Dune {
@@ -15,7 +16,7 @@ namespace Dune {
 /** Acts as a pointer to an  entities of a given codimension.
 */
 template<int codim, class GridImp>
-class FoamGridEntityPointer
+class DUNE_DEPRECATED_MSG("FoamGridEntityPointer is deprecated and will be removed after release 2.7") FoamGridEntityPointer
 {
     private:
 
