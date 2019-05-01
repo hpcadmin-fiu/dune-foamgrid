@@ -204,10 +204,12 @@ int main (int argc, char *argv[]) try
         checkIntersectionIterator(*grid2d);
     }
     {
-        std::cout << "Checking FoamGrid<2, 3> (2d in 3d grid)" << std::endl;
+        std::cout << "\n################################################\n";
+        std::cout << "Checking FoamGrid<2, 3> (2d in 3d grid)\n";
+        std::cout << "################################################\n\n";
 
         std::cout << "  Creating grid" << std::endl;
-        FoamGrid<2, 3>* grid3d = make2Din3DHybridTestGrid<FoamGrid<2, 3> >();
+        std::shared_ptr<FoamGrid<2, 3>> grid3d( make2Din3DHybridTestGrid<FoamGrid<2, 3> >() );
 
         std::cout << "  Calling gridcheck" << std::endl;
         gridcheck(*grid3d);
@@ -271,7 +273,7 @@ int main (int argc, char *argv[]) try
 // //////////////////////////////////
 //   Error handler
 // /////////////////////////////////
-catch (Exception e) {
+catch (const Exception& e) {
     std::cout << e << std::endl;
     return 1;
 }
