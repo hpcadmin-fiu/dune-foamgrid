@@ -281,6 +281,9 @@ class FoamGrid :
         /** \brief Access to the LevelIndexSets */
         const typename Traits::LevelIndexSet& levelIndexSet(int level) const
         {
+          if (level<0 || level>maxLevel())
+            DUNE_THROW(GridError, "LevelIndexSet for nonexisting level " << level << " requested!");
+
           if (! levelIndexSets_[level])
           {
             levelIndexSets_[level] = new FoamGridLevelIndexSet<const FoamGrid>(*this, level);
