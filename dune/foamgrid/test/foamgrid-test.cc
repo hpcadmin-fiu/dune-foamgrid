@@ -1,9 +1,11 @@
 #include <config.h>
 
 #include <iostream>
+#include <memory>
+#include <string>
 
 #include <dune/common/parallel/mpihelper.hh>
-#include <dune/common/version.hh>
+#include <dune/common/exceptions.hh>
 #include <dune/grid/io/file/gmshreader.hh>
 #include <dune/grid/test/gridcheck.hh>
 #include <dune/grid/test/checkintersectionit.hh>
