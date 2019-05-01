@@ -207,7 +207,8 @@ class FoamGridLeafIndexSet :
 public:
 
     /** \brief Copy constructor */
-    FoamGridLeafIndexSet(const GridImp& g): grid_(g)
+    FoamGridLeafIndexSet(const GridImp& g)
+    : grid_(g), numQuads_(0), numTriangles_(0), numEdges_(0), numVertices_(0)
     {}
 
         //! get index of an entity
