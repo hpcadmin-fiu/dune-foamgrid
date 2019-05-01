@@ -1,9 +1,11 @@
 #include <config.h>
 
 #include <iostream>
+#include <memory>
+#include <string>
 
 #include <dune/common/parallel/mpihelper.hh>
-#include <dune/common/version.hh>
+#include <dune/common/exceptions.hh>
 #include <dune/grid/io/file/gmshreader.hh>
 #include <dune/grid/test/gridcheck.hh>
 #include <dune/grid/test/checkintersectionit.hh>
@@ -153,7 +155,44 @@ int main (int argc, char *argv[]) try
     const std::string dune_foamgrid_path = std::string(DUNE_FOAMGRID_EXAMPLE_GRIDS_PATH) + "gmsh/";
 
     {
-        std::cout << "Checking FoamGrid<2, 2> (2d in 2d grid)" << std::endl;
+        std::cout << "\n################################################\n";
+        std::cout << "Checking default-constructed (empty) FoamGrid<1, 3>\n";
+        std::cout << "################################################\n\n";
+
+        std::cout << "  Creating grid" << std::endl;
+        FoamGrid<1, 3> emptyGrid;
+
+        std::cout << "  Calling gridcheck" << std::endl;
+        gridcheck(emptyGrid);
+
+        std::cout << "  Calling checkIntersectionIterator" << std::endl;
+        checkIntersectionIterator(emptyGrid);
+
+        std::cout << "  Check if has multiple neighbor functionality" << std::endl;
+        traversal(emptyGrid);
+    }
+    {
+        std::cout << "\n################################################\n";
+        std::cout << "Checking FoamGrid<1, 3> created from empty grid factory\n";
+        std::cout << "################################################\n\n";
+
+        std::cout << "  Creating grid" << std::endl;
+        GridFactory<FoamGrid<1, 3>> factory;
+        std::shared_ptr<FoamGrid<1, 3> > emptyGrid(factory.createGrid());
+
+        std::cout << "  Calling gridcheck" << std::endl;
+        gridcheck(*emptyGrid);
+
+        std::cout << "  Calling checkIntersectionIterator" << std::endl;
+        checkIntersectionIterator(*emptyGrid);
+
+        std::cout << "  Check if has multiple neighbor functionality" << std::endl;
+        traversal(*emptyGrid);
+    }
+    {
+        std::cout << "\n################################################\n";
+        std::cout << "Checking FoamGrid<2, 2> (2d in 2d grid)\n";
+        std::cout << "################################################\n\n";
 
         std::cout << "  Creating grid" << std::endl;
         std::shared_ptr<FoamGrid<2, 2> > grid2d( GmshReader<FoamGrid<2, 2> >::read(dune_grid_path + "curved2d.msh", /*verbose*/ true, false ) );
@@ -165,10 +204,12 @@ int main (int argc, char *argv[]) try
         checkIntersectionIterator(*grid2d);
     }
     {
-        std::cout << "Checking FoamGrid<2, 3> (2d in 3d grid)" << std::endl;
+        std::cout << "\n################################################\n";
+        std::cout << "Checking FoamGrid<2, 3> (2d in 3d grid)\n";
+        std::cout << "################################################\n\n";
 
         std::cout << "  Creating grid" << std::endl;
-        FoamGrid<2, 3>* grid3d = make2Din3DHybridTestGrid<FoamGrid<2, 3> >();
+        std::shared_ptr<FoamGrid<2, 3>> grid3d( make2Din3DHybridTestGrid<FoamGrid<2, 3> >() );
 
         std::cout << "  Calling gridcheck" << std::endl;
         gridcheck(*grid3d);
@@ -177,7 +218,23 @@ int main (int argc, char *argv[]) try
         checkIntersectionIterator(*grid3d);
     }
     {
-        std::cout << "Checking FoamGrid<1, 2> (1d in 2d grid)" << std::endl;
+        std::cout << "\n################################################\n";
+        std::cout << "Checking FoamGrid<1, 1> (1d in 1d grid)\n";
+        std::cout << "################################################\n\n";
+
+        std::cout << "  Creating grid" << std::endl;
+        std::shared_ptr<FoamGrid<1, 1> > grid11( GmshReader<FoamGrid<1, 1> >::read(dune_foamgrid_path + "line1d2d.msh", /*verbose*/ true, false ) );
+
+        std::cout << "  Calling gridcheck" << std::endl;
+        gridcheck(*grid11);
+
+        std::cout << "  Calling checkIntersectionIterator" << std::endl;
+        checkIntersectionIterator(*grid11);
+    }
+    {
+        std::cout << "\n################################################\n";
+        std::cout << "Checking FoamGrid<1, 2> (1d in 2d grid)\n";
+        std::cout << "################################################\n\n";
 
         std::cout << "  Creating grid" << std::endl;
         std::shared_ptr<FoamGrid<1, 2> > grid12( GmshReader<FoamGrid<1, 2> >::read(dune_foamgrid_path + "line1d2d.msh", /*verbose*/ true, false ) );
@@ -189,7 +246,9 @@ int main (int argc, char *argv[]) try
         checkIntersectionIterator(*grid12);
     }
     {
-        std::cout << "Checking FoamGrid<1, 3> (1d in 3d grid)" << std::endl;
+        std::cout << "\n################################################\n";
+        std::cout << "Checking FoamGrid<1, 3> (1d in 3d grid)\n";
+        std::cout << "################################################\n\n";
 
         std::cout << "  Creating grid" << std::endl;
         std::shared_ptr<FoamGrid<1, 3> > grid13( GmshReader<FoamGrid<1, 3> >::read(dune_foamgrid_path + "line1d3d.msh", /*verbose*/ true, false ) );
@@ -201,7 +260,9 @@ int main (int argc, char *argv[]) try
         checkIntersectionIterator(*grid13);
     }
     {
-        std::cout << "Checking FoamGrid<2, 3> (2d in 3d grid)" << std::endl;
+        std::cout << "\n################################################\n";
+        std::cout << "Checking FoamGrid<2, 3> (2d in 3d grid)\n";
+        std::cout << "################################################\n\n";
 
         // dimworld == 3,  and a grid containing a T-Junction
         std::cout << "  Creating grid" << std::endl;
@@ -214,7 +275,9 @@ int main (int argc, char *argv[]) try
         checkIntersectionIterator(*gridTJunction);
     }
     {
-        std::cout << "Checking FoamGrid<1, 3> (1d in 3d grid)" << std::endl;
+        std::cout << "\n################################################\n";
+        std::cout << "Checking FoamGrid<1, 3> (1d in 3d grid)\n";
+        std::cout << "################################################\n\n";
 
         std::cout << "  Creating grid" << std::endl;
         std::shared_ptr<FoamGrid<1, 3> > gridStar( GmshReader<FoamGrid<1, 3> >::read(dune_foamgrid_path + "bifurcation1d3d.msh", /*verbose*/ true, false ) );
@@ -232,7 +295,7 @@ int main (int argc, char *argv[]) try
 // //////////////////////////////////
 //   Error handler
 // /////////////////////////////////
-catch (Exception e) {
+catch (const Exception& e) {
     std::cout << e << std::endl;
     return 1;
 }
