@@ -1,9 +1,6 @@
 #ifndef DUNE_FOAMGRID_LEAFITERATOR_HH
 #define DUNE_FOAMGRID_LEAFITERATOR_HH
 
-#include <dune/foamgrid/foamgrid/foamgridentitypointer.hh>
-#include <dune/common/parallel/collectivecommunication.hh>
-
 /** \file
 * \brief The FoamGridLeafIterator class
 */
@@ -14,35 +11,46 @@ namespace Dune {
 *  \ingroup FoamGrid
 */
 template<int codim, PartitionIteratorType pitype, class GridImp>
-class FoamGridLeafIterator :
-    public Dune::FoamGridEntityPointer <codim,GridImp>
+class FoamGridLeafIterator
 {
     enum {dimgrid  = GridImp::dimension};
     enum {dimworld = GridImp::dimensionworld};
 
 public:
 
+    using Entity = typename GridImp::template Codim<codim>::Entity;
+    enum { codimension = codim };
+
     FoamGridLeafIterator(const GridImp& grid)
-        : grid_(&grid)
+    : grid_(&grid)
     {
 
         /** \todo Can a make the fullRefineLevel work somehow? */
         const int fullRefineLevel = 0;
 
-        const std::list<FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld> >& entities = std::get<dimgrid-codim>(grid_->entityImps_[fullRefineLevel]);
-        // The &* turns an iterator into a plain pointer
-        this->virtualEntity_.impl().setToTarget(&*entities.begin());
+        const auto& entities = std::get<dimgrid-codim>(grid_->entityImps_[fullRefineLevel]);
         levelIterator_ = entities.begin();
 
-        if (!this->virtualEntity_.impl().target_->isLeaf())
+        if (levelIterator_ != entities.end())
+        {
+
+          // The &* turns an iterator into a plain pointer
+          virtualEntity_.impl().setToTarget(&*entities.begin());
+
+          if (!virtualEntity_.impl().target_->isLeaf())
             increment();
+        }
+
+        // grid doesn't contain entities of this codimension
+        else
+            virtualEntity_.impl().setToTarget(nullptr);
     }
 
     //! Default constructor
     FoamGridLeafIterator()
-        : grid_(nullptr)
+    : grid_(nullptr)
     {
-        this->virtualEntity_.impl().setToTarget(nullptr);
+        virtualEntity_.impl().setToTarget(nullptr);
     }
 
     //! prefix increment
@@ -52,7 +60,15 @@ public:
             globalIncrement();
 
         } while (levelIterator_!=std::get<dimgrid-codim>(grid_->entityImps_[grid_->maxLevel()]).end()
-                 && !this->virtualEntity_.impl().target_->isLeaf());
+                 && !virtualEntity_.impl().target_->isLeaf());
+    }
+
+    //! dereferencing
+    const Entity& dereference() const { return virtualEntity_; }
+
+    //! equality
+    bool equals(const FoamGridLeafIterator<codim, pitype, GridImp>& other) const {
+      return virtualEntity_ == other.virtualEntity_;
     }
 
 private:
@@ -62,20 +78,20 @@ private:
 
         // Backup current level because it may not be accessible anymore after
         // setting the pointer to the next entity.
-        const int oldLevel = this->virtualEntity_.level();
+        const int oldLevel = virtualEntity_.level();
 
         // Increment on this level
         ++levelIterator_;
-        this->virtualEntity_.impl().setToTarget(&(*levelIterator_));
+        virtualEntity_.impl().setToTarget(&(*levelIterator_));
         if (levelIterator_==std::get<dimgrid-codim>(grid_->entityImps_[oldLevel]).end())
-            this->virtualEntity_.impl().setToTarget(nullptr);
+            virtualEntity_.impl().setToTarget(nullptr);
 
         // If beyond the end of this level set to first of next level
         if (levelIterator_==std::get<dimgrid-codim>(grid_->entityImps_[oldLevel]).end() && oldLevel < grid_->maxLevel()) {
 
             const std::list<FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld> >& entities = std::get<dimgrid-codim>(grid_->entityImps_[oldLevel+1]);
             levelIterator_ = entities.begin();
-            this->virtualEntity_.impl().setToTarget(&*entities.begin());
+            virtualEntity_.impl().setToTarget(&*entities.begin());
 
         }
 
@@ -85,6 +101,9 @@ private:
     //   Data members
     // /////////////////////////////////////
     const GridImp* grid_;
+
+    //! The entity that the iterator is pointing to
+    Entity virtualEntity_;
 
     // This iterator derives from FoamGridEntityPointer, and that base class stores the value
     // of the iterator, i.e. the 'pointer' to the entity.  However, that pointer can not be
