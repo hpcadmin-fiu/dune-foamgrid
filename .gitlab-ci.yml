@@ -8,3 +8,12 @@ before_script:
   - duneci-install-module https://gitlab.dune-project.org/core/dune-common.git
   - duneci-install-module https://gitlab.dune-project.org/core/dune-geometry.git
   - duneci-install-module https://gitlab.dune-project.org/core/dune-grid.git
+
+dune:2.6 ubuntu:18.04 clang-6-17:
+  image: registry.dune-project.org/docker/ci/ubuntu:18.04
+  script: duneci-standard-test
+  variables:
+    DUNECI_TOOLCHAIN: clang-6-17
+    DUNECI_CMAKE_FLAGS: "-DDUNE_PYTHON_VIRTUALENV_SETUP=1"
+    DUNECI_BRANCH: releases/2.6
+  tags: [duneci]
