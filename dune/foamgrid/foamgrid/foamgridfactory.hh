@@ -75,25 +75,6 @@ template <int dimgrid, int dimworld>
             vertexArray_.push_back(&*std::get<0>(grid_->entityImps_[0]).rbegin());
         }
 
-        /** \brief Insert a boundary segment.
-
-        This is only needed if you want to control the numbering of the boundary segments
-        */
-        void insertBoundarySegment(const std::vector<unsigned int>& vertices) override {
-            DUNE_THROW(Dune::NotImplemented, "insertBoundarySegment not implemented yet!");
-        }
-
-        /** \brief Insert a boundary segment (== a line) and the boundary segment geometry
-         *
-            This influences the ordering of the boundary segments.
-            Currently, the BoundarySegment object does not actually have any effect.
-        */
-        void insertBoundarySegment(const std::vector<unsigned int>& vertices,
-                                   const std::shared_ptr<BoundarySegment<dimgrid, dimworld> >& boundarySegment) override
-        {
-            insertBoundarySegment(vertices);
-        }
-
         /** \brief Return the number of the element to insert parameters
          */
         unsigned int
@@ -121,6 +102,9 @@ template <int dimgrid, int dimworld>
 
         /** \brief Array containing all vertices */
         std::vector<FoamGridEntityImp<0, dimgrid, dimworld>*> vertexArray_;
+
+        /** \brief Counter that creates the boundary segment indices */
+        unsigned int boundarySegmentCounter_ = 0;
     };
 
 template <int dimgrid, int dimworld>
@@ -146,6 +130,23 @@ template <int dimworld>
         GridFactory(FoamGrid<1, dimworld>* grid):
             GridFactoryBase<1,dimworld>(grid)
         {}
+
+        /** \brief Insert a boundary segment.
+            This is only needed if you want to control the numbering of the boundary segments
+        */
+        void insertBoundarySegment(const std::vector<unsigned int>& vertices) override
+        {
+            boundarySegmentIndices_[ vertices[0] ] = this->boundarySegmentCounter_++;
+        }
+
+        /** \brief Insert a boundary segment and the boundary segment geometry
+            This influences the ordering of the boundary segments.
+        */
+        void insertBoundarySegment(const std::vector<unsigned int>& vertices,
+                                   const std::shared_ptr<BoundarySegment<dimgrid, dimworld> >& boundarySegment) override
+        {
+            insertBoundarySegment(vertices);
+        }
 
         /** \brief Insert an element into the coarse grid
             \param type The GeometryType of the new element
@@ -221,25 +222,31 @@ template <int dimworld>
             //   Set the boundary ids
             // ////////////////////////////////////////////////
 
-            unsigned int boundaryFacetCounter = 0;
-
             // Iterate over all facets (=vertices in 1d)
             FacetIterator fIt = std::get<0>(this->grid_->entityImps_[0]).begin();
             const FacetIterator fEndIt = std::get<0>(this->grid_->entityImps_[0]).end();
             for (; fIt != fEndIt; ++fIt)
                 if(fIt->elements_.size()==1) // if boundary facet
-                    fIt->boundarySegmentIndex_ = boundaryFacetCounter++;
+                {
+                  const auto& it = boundarySegmentIndices_.find( fIt->id_ );
+                  if (it != boundarySegmentIndices_.end())
+                      fIt->boundarySegmentIndex_ = it->second;
+                  else
+                      fIt->boundarySegmentIndex_ = this->boundarySegmentCounter_++;
+                }
 
             // ////////////////////////////////////////////////
             //   Hand over the new grid
             // ////////////////////////////////////////////////
 
             Dune::FoamGrid<dimgrid, dimworld>* tmp = this->grid_;
-            tmp->numBoundarySegments_ = boundaryFacetCounter;
+            tmp->numBoundarySegments_ = this->boundarySegmentCounter_;
             this->grid_ = nullptr;
             return tmp;
         }
 
+      private:
+        std::map<unsigned int, unsigned int> boundarySegmentIndices_;
     };
 
     /** \brief Specialization of GridFactoryBase for 2D-FoamGrid<2, dimworld>
@@ -260,6 +267,23 @@ template <int dimworld>
         GridFactory(FoamGrid<2, dimworld>* grid):
             GridFactoryBase<2,dimworld>(grid)
         {}
+
+        /** \brief Insert a boundary segment.
+            This is only needed if you want to control the numbering of the boundary segments
+        */
+        void insertBoundarySegment(const std::vector<unsigned int>& vertices) override
+        {
+            boundarySegmentIndices_[ std::make_pair( vertices[0], vertices[1] ) ] = this->boundarySegmentCounter_++;
+        }
+
+        /** \brief Insert a boundary segment (== a line) and the boundary segment geometry
+            This influences the ordering of the boundary segments.
+        */
+        void insertBoundarySegment(const std::vector<unsigned int>& vertices,
+                                   const std::shared_ptr<BoundarySegment<dimgrid, dimworld> >& boundarySegment) override
+        {
+            insertBoundarySegment(vertices);
+        }
 
         /** \brief Insert an element into the coarse grid
             \param type The GeometryType of the new element
@@ -381,25 +405,37 @@ template <int dimworld>
             //   Set the boundary ids
             // ////////////////////////////////////////////////
 
-            unsigned int boundaryFacetCounter = 0;
-
             // Iterate over all facets (=edges in 2D)
             FacetIterator fIt = std::get<1>(this->grid_->entityImps_[0]).begin();
             const FacetIterator fEndIt = std::get<1>(this->grid_->entityImps_[0]).end();
             for (; fIt!=fEndIt; ++fIt)
                 if(fIt->elements_.size()==1) //if boundary facet
-                    fIt->boundarySegmentIndex_ = boundaryFacetCounter++;
-
+                {
+                  auto it = boundarySegmentIndices_.find( std::make_pair(fIt->vertex_[0]->id_, fIt->vertex_[1]->id_) );
+                  if (it != boundarySegmentIndices_.end()) {
+                      fIt->boundarySegmentIndex_ = it->second;
+                  } else {
+                    it = boundarySegmentIndices_.find( std::make_pair(fIt->vertex_[1]->id_, fIt->vertex_[0]->id_) );
+                    if (it != boundarySegmentIndices_.end()) {
+                      fIt->boundarySegmentIndex_ = it->second;
+                    } else { // edge was not inserted as boundary segment
+                      fIt->boundarySegmentIndex_ = this->boundarySegmentCounter_++;
+                    }
+                  }
+                }
 
             // ////////////////////////////////////////////////
             //   Hand over the new grid
             // ////////////////////////////////////////////////
 
             Dune::FoamGrid<dimgrid, dimworld>* tmp = this->grid_;
-            tmp->numBoundarySegments_ = boundaryFacetCounter;
+            tmp->numBoundarySegments_ = this->boundarySegmentCounter_;
             this->grid_ = nullptr;
             return tmp;
         }
+
+      private:
+        std::map<std::pair<unsigned int, unsigned int>, unsigned int> boundarySegmentIndices_;
     };
 
 } // end namespace Dune
