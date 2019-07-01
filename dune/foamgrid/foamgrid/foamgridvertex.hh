@@ -54,7 +54,8 @@ namespace Dune {
     public:
 
         FoamGridEntityImp(int level, const FieldVector<double, dimworld>& pos, unsigned int id)
-            : FoamGridEntityBase(level, id), pos_(pos), nSons_(0), elements_(), father_(nullptr), isNew_(false)
+            : FoamGridEntityBase(level, id), pos_(pos), nSons_(0)
+            , elements_(), vertex_{{this}}, father_(nullptr), isNew_(false)
             , growthInsertionIndex_(-1)
         {
             sons_[0] = nullptr;
@@ -122,8 +123,8 @@ namespace Dune {
         //! Elements the vertex is related to
         std::vector<const FoamGridEntityImp<dimgrid, dimgrid ,dimworld>*> elements_;
 
-        //! A vertex array for compatibility reasons with edges. Calling results in undefined behaviour.
-        std::array<const FoamGridEntityImp<0, dimgrid ,dimworld>*, 1> vertex_ = {{ nullptr }};
+        //! A vertex array for compatibility reasons with edges. Initialized with the this pointer. 
+        std::array<const FoamGridEntityImp<0, dimgrid ,dimworld>*, 1> vertex_;
 
         //! Boundary index if vertex is on boundary
         //  only used if the vertex is a boundary vertex
