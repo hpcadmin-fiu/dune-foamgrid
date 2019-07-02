@@ -9,8 +9,8 @@
  */
 
 #include <vector>
-#include <map>
 #include <memory>
+#include <unordered_map>
 
 #include <dune/common/version.hh>
 #include <dune/common/function.hh>
@@ -228,7 +228,7 @@ template <int dimworld>
             for (; fIt != fEndIt; ++fIt)
                 if(fIt->elements_.size()==1) // if boundary facet
                 {
-                  const auto& it = boundarySegmentIndices_.find( fIt->id_ );
+                  const auto& it = boundarySegmentIndices_.find( fIt->vertex_[0]->leafIndex_ );
                   if (it != boundarySegmentIndices_.end())
                       fIt->boundarySegmentIndex_ = it->second;
                   else
@@ -246,7 +246,7 @@ template <int dimworld>
         }
 
       private:
-        std::map<unsigned int, unsigned int> boundarySegmentIndices_;
+        std::unordered_map<unsigned int, unsigned int> boundarySegmentIndices_;
     };
 
     /** \brief Specialization of GridFactoryBase for 2D-FoamGrid<2, dimworld>
@@ -273,7 +273,13 @@ template <int dimworld>
         */
         void insertBoundarySegment(const std::vector<unsigned int>& vertices) override
         {
-            boundarySegmentIndices_[ std::make_pair( vertices[0], vertices[1] ) ] = this->boundarySegmentCounter_++;
+            std::array<unsigned int, 2> vertexIndices {{ vertices[0], vertices[1] }};
+
+            // sort the indices
+            if ( vertexIndices[0] > vertexIndices[1] )
+              std::swap( vertexIndices[0], vertexIndices[1] );
+
+            boundarySegmentIndices_[ vertexIndices ] = this->boundarySegmentCounter_++;
         }
 
         /** \brief Insert a boundary segment (== a line) and the boundary segment geometry
@@ -411,16 +417,17 @@ template <int dimworld>
             for (; fIt!=fEndIt; ++fIt)
                 if(fIt->elements_.size()==1) //if boundary facet
                 {
-                  auto it = boundarySegmentIndices_.find( std::make_pair(fIt->vertex_[0]->id_, fIt->vertex_[1]->id_) );
+                  std::array<unsigned int, 2> vertexIndices {{ fIt->vertex_[0]->leafIndex_, fIt->vertex_[1]->leafIndex_ }};
+
+                  // sort the indices
+                  if ( vertexIndices[0] > vertexIndices[1] )
+                    std::swap( vertexIndices[0], vertexIndices[1] );
+
+                  auto it = boundarySegmentIndices_.find( vertexIndices );
                   if (it != boundarySegmentIndices_.end()) {
                       fIt->boundarySegmentIndex_ = it->second;
-                  } else {
-                    it = boundarySegmentIndices_.find( std::make_pair(fIt->vertex_[1]->id_, fIt->vertex_[0]->id_) );
-                    if (it != boundarySegmentIndices_.end()) {
-                      fIt->boundarySegmentIndex_ = it->second;
-                    } else { // edge was not inserted as boundary segment
+                  } else { // edge was not inserted as boundary segment
                       fIt->boundarySegmentIndex_ = this->boundarySegmentCounter_++;
-                    }
                   }
                 }
 
@@ -435,7 +442,13 @@ template <int dimworld>
         }
 
       private:
-        std::map<std::pair<unsigned int, unsigned int>, unsigned int> boundarySegmentIndices_;
+        struct HashUIntArray {
+          std::size_t operator() (const std::array<unsigned int, 2>& a) const {
+            return std::hash<unsigned int>{}(a[0]) ^ (std::hash<unsigned int>{}(a[1]) << 1);
+          }
+        };
+
+        std::unordered_map<std::array<unsigned int, 2>, unsigned int, HashUIntArray> boundarySegmentIndices_;
     };
 
 } // end namespace Dune
