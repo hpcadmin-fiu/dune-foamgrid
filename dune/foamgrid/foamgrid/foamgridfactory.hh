@@ -148,6 +148,19 @@ template <int dimworld>
             insertBoundarySegment(vertices);
         }
 
+        /** \brief Return true if leaf intersection was inserted as boundary segment
+        */
+        bool wasInserted( const typename FoamGrid<dimgrid, dimworld>::LeafIntersection &intersection ) const override
+        {
+          if ( !intersection.boundary() )
+            return false;
+
+          const auto& vertex = intersection.inside().template subEntity<1>(intersection.indexInInside());
+
+          const auto& it = boundarySegmentIndices_.find( this->insertionIndex(vertex) );
+          return (it != boundarySegmentIndices_.end());
+        }
+
         /** \brief Insert an element into the coarse grid
             \param type The GeometryType of the new element
             \param vertices The vertices of the new element, using the DUNE numbering
@@ -289,6 +302,30 @@ template <int dimworld>
                                    const std::shared_ptr<BoundarySegment<dimgrid, dimworld> >& boundarySegment) override
         {
             insertBoundarySegment(vertices);
+        }
+
+        /** \brief Return true if leaf intersection was inserted as boundary segment
+        */
+        bool wasInserted( const typename FoamGrid<dimgrid, dimworld>::LeafIntersection &intersection ) const override
+        {
+          if ( !intersection.boundary() )
+            return false;
+
+          // obtain the vertices of the intersection by reference element numbering
+          const auto& vertex0 = intersection.inside().template subEntity<2>( ( 3 - intersection.indexInInside() ) % 3 );
+          const auto& vertex1 = intersection.inside().template subEntity<2>( ( 4 - intersection.indexInInside() ) % 3 );
+
+          std::array<unsigned int, 2> vertexIndices {{
+            this->insertionIndex( vertex0 ),
+            this->insertionIndex( vertex1 )
+          }};
+
+          // sort the indices
+          if ( vertexIndices[0] > vertexIndices[1] )
+            std::swap( vertexIndices[0], vertexIndices[1] );
+
+          const auto& it = boundarySegmentIndices_.find( vertexIndices );
+          return (it != boundarySegmentIndices_.end());
         }
 
         /** \brief Insert an element into the coarse grid
