@@ -11,6 +11,7 @@ else()
   dune_add_test(SOURCES local-refine-test.cc)
 endif()
 
+dune_add_test(SOURCES boundary-segment-test.cc)
 dune_add_test(SOURCES global-refine-test.cc)
 dune_add_test(SOURCES growth-test-1d.cc)
 dune_add_test(SOURCES growth-test-2d.cc)
