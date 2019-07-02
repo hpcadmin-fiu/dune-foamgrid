@@ -69,9 +69,11 @@ template <int dimgrid, int dimworld>
 
         /** \brief Insert a vertex into the coarse grid */
         void insertVertex(const FieldVector<ctype,dimworld>& pos) override {
-            std::get<0>(grid_->entityImps_[0]).push_back(FoamGridEntityImp<0, dimgrid, dimworld> (0,   // level
-                                                                         pos,  // position
-                                                                         grid_->getNextFreeId()));
+            std::get<0>(grid_->entityImps_[0]).emplace_back(
+              0,    // level
+              pos,  // position
+              grid_->getNextFreeId()
+            );
             vertexArray_.push_back(&*std::get<0>(grid_->entityImps_[0]).rbegin());
         }
 
