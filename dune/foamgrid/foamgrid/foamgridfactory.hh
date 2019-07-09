@@ -145,7 +145,7 @@ template <int dimworld>
         void insertBoundarySegment(const std::vector<unsigned int>& vertices,
                                    const std::shared_ptr<BoundarySegment<dimgrid, dimworld> >& boundarySegment) override
         {
-            insertBoundarySegment(vertices);
+            DUNE_THROW(Dune::NotImplemented, "Parameterized boundary segments are not implemented");
         }
 
         /** \brief Return true if leaf intersection was inserted as boundary segment
@@ -301,7 +301,7 @@ template <int dimworld>
         void insertBoundarySegment(const std::vector<unsigned int>& vertices,
                                    const std::shared_ptr<BoundarySegment<dimgrid, dimworld> >& boundarySegment) override
         {
-            insertBoundarySegment(vertices);
+            DUNE_THROW(Dune::NotImplemented, "Parameterized boundary segments are not implemented");
         }
 
         /** \brief Return true if leaf intersection was inserted as boundary segment
