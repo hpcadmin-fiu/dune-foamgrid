@@ -78,7 +78,24 @@ int main (int argc, char *argv[]) try
         auto grid = std::shared_ptr<Grid>(factory.createGrid());
 
         // check the boundary segments
-        checkBoundarySegments(*grid, factory,boundaryMarkers,  2, 1, 8);
+        checkBoundarySegments(*grid, factory, boundaryMarkers, 2, 1, 8);
+    }
+
+    {
+        std::cout << "\n################################################\n";
+        std::cout << "Checking FoamGrid<2, 3> (2d in 3d grid)\n";
+        std::cout << "################################################\n\n";
+
+        std::cout << "  Creating grid" << std::endl;
+        using Grid = FoamGrid<2, 3>;
+        GridFactory<Grid> factory;
+
+        std::vector<int> boundaryMarkers, elementMarkers;
+        GmshReader<Grid>::read(factory, dune_foamgrid_path + "junction2d3dbseg.msh", boundaryMarkers, elementMarkers, /*verbose*/ true, /*insertBoundarySegments*/ true);
+        auto grid = std::shared_ptr<Grid>(factory.createGrid());
+
+        // check the boundary segments
+        checkBoundarySegments(*grid, factory, boundaryMarkers, 6, 3, 12);
     }
 }
 // //////////////////////////////////
