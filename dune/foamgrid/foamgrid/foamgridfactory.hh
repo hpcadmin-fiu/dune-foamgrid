@@ -37,8 +37,7 @@ template <int dimgrid, int dimworld>
 
         /** \brief Default constructor */
         GridFactoryBase()
-            : factoryOwnsGrid_(true),
-              vertexIndex_(0)
+        : factoryOwnsGrid_(true)
         {
             grid_ = new FoamGrid<dimgrid, dimworld>;
             grid_->entityImps_.resize(1);
@@ -54,8 +53,7 @@ template <int dimgrid, int dimworld>
         the one you supplied here.
          */
         GridFactoryBase(FoamGrid<dimgrid, dimworld>* grid)
-            : factoryOwnsGrid_(false),
-              vertexIndex_(0)
+        : factoryOwnsGrid_(false)
         {
             grid_ = grid;
             grid_->entityImps_.resize(1);
@@ -120,9 +118,6 @@ template <int dimgrid, int dimworld>
         // True if the factory allocated the grid itself, false if the
         // grid was handed over from the outside
         bool factoryOwnsGrid_;
-
-        /** \brief Counter that creates the vertex indices */
-        unsigned int vertexIndex_;
 
         /** \brief Array containing all vertices */
         std::vector<FoamGridEntityImp<0, dimgrid, dimworld>*> vertexArray_;
