@@ -152,11 +152,10 @@ template <int dimworld>
         */
         bool wasInserted( const typename FoamGrid<dimgrid, dimworld>::LeafIntersection &intersection ) const override
         {
-          if ( !intersection.boundary() )
+          if ( !intersection.boundary() || intersection.inside().level() != 0 )
             return false;
 
           const auto& vertex = intersection.inside().template subEntity<1>(intersection.indexInInside());
-
           const auto& it = boundarySegmentIndices_.find( this->insertionIndex(vertex) );
           return (it != boundarySegmentIndices_.end());
         }
@@ -308,7 +307,7 @@ template <int dimworld>
         */
         bool wasInserted( const typename FoamGrid<dimgrid, dimworld>::LeafIntersection &intersection ) const override
         {
-          if ( !intersection.boundary() )
+          if ( !intersection.boundary() || intersection.inside().level() != 0 )
             return false;
 
           // obtain the vertices of the intersection by reference element numbering
