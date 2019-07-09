@@ -310,9 +310,13 @@ template <int dimworld>
           if ( !intersection.boundary() || intersection.inside().level() != 0 )
             return false;
 
-          // obtain the vertices of the intersection by reference element numbering
-          const auto& vertex0 = intersection.inside().template subEntity<2>( ( 3 - intersection.indexInInside() ) % 3 );
-          const auto& vertex1 = intersection.inside().template subEntity<2>( ( 4 - intersection.indexInInside() ) % 3 );
+          // Get the vertices of the intersection
+          const auto refElement = ReferenceElements<double, dimgrid>::general(intersection.inside().type());
+
+          const int subIdx0 = refElement.subEntity(intersection.indexInInside(), 1, /*idx*/0, dimgrid);
+          const auto vertex0 = intersection.inside().template subEntity<2>( subIdx0 );
+          const int subIdx1 = refElement.subEntity(intersection.indexInInside(), 1, /*idx*/1, dimgrid);
+          const auto vertex1 = intersection.inside().template subEntity<2>( subIdx1 );
 
           std::array<unsigned int, 2> vertexIndices {{
             this->insertionIndex( vertex0 ),
