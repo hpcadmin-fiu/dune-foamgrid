@@ -11,6 +11,7 @@
 
 #include <dune/common/version.hh>
 
+#include <dune/geometry/type.hh>
 #include <dune/grid/common/gridenums.hh>
 #include <dune/grid/common/grid.hh>
 
@@ -159,6 +160,8 @@ class FoamGridEntity :
             return target_ == other.target_;
         }
 
+        //! return the entity's type
+        GeometryType type () const { return target_->type(); }
 };
 
 
@@ -481,6 +484,10 @@ class FoamGridEntity<0, 2, GridImp> :
             return target_ == other.target_;
         }
 
+        //! return the entity's type
+        GeometryType type () const { return target_->type(); }
+
+        //! pointer to the implementation
         const FoamGridEntityImp<dimgrid, dimgrid ,dimworld>* target_;
 
     private:
@@ -780,6 +787,10 @@ class FoamGridEntity<0, 1, GridImp> :
             return target_ == other.target_;
         }
 
+        //! return the entity's type
+        GeometryType type () const { return target_->type(); }
+
+        //! pointer to the implementation
         const FoamGridEntityImp<dimgrid, dimgrid ,dimworld>* target_;
 
     private:
