@@ -540,15 +540,16 @@ public:
         /** \brief Distributes this grid over the available nodes in a distributed machine
         */
         template<class DataHandle>
-        void loadBalance(DataHandle& data)
+        bool loadBalance(DataHandle& data)
         {
-            loadBalance();
+            return loadBalance();
         }
 
-        void loadBalance()
+        bool loadBalance()
         {
             if (comm().size() > 1)
                 DUNE_THROW(Dune::NotImplemented, "Load balancing not implemented. Foamgrid does not run in parallel yet!");
+            return false;
         }
 
         /** \brief The communication interface
