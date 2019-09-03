@@ -23,6 +23,8 @@ class DUNE_DEPRECATED_MSG("FoamGridEntityPointer is deprecated and will be remov
     enum { dimgrid  = GridImp::dimension };
     enum { dimworld = GridImp::dimensionworld };
 
+    typedef typename GridImp::ctype ctype;
+
     public:
 
     //! export the type of the EntityPointer Implementation.
@@ -43,13 +45,13 @@ class DUNE_DEPRECATED_MSG("FoamGridEntityPointer is deprecated and will be remov
         : virtualEntity_(entity)
     {}
 
-    FoamGridEntityPointer (const typename std::list<FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld> >::const_iterator& it)
+    FoamGridEntityPointer (const typename std::list<FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld, ctype> >::const_iterator& it)
         : virtualEntity_(FoamGridEntity<codim, dimgrid, GridImp>())
     {
         virtualEntity_.impl().setToTarget(&*it);
     }
 
-    FoamGridEntityPointer (const FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld>* it)
+    FoamGridEntityPointer (const FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld, ctype>* it)
         : virtualEntity_(FoamGridEntity<codim, dimgrid, GridImp>())
     {
         virtualEntity_.impl().setToTarget(it);

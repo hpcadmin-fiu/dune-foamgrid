@@ -38,18 +38,18 @@
 namespace Dune {
 
 // Forward declaration
-template <int dimgrid, int dimworld>
+template <int dimgrid, int dimworld, class ctype = double>
 class FoamGrid;
 
 
 /** \brief Encapsulates loads of types exported by FoamGrid */
-template<int dimgrid, int dimworld>
+template<int dimgrid, int dimworld, class ctype>
 struct FoamGridFamily
 {
     typedef GridTraits<
         dimgrid,   // dimgrid
         dimworld,   // dimworld
-        Dune::FoamGrid<dimgrid, dimworld>,
+        Dune::FoamGrid<dimgrid, dimworld, ctype>,
         FoamGridGeometry,
         FoamGridEntity,
         FoamGridLevelIterator,
@@ -59,13 +59,13 @@ struct FoamGridFamily
         FoamGridLevelIntersectionIterator,
         FoamGridHierarchicIterator,
         FoamGridLeafIterator,
-        FoamGridLevelIndexSet< const FoamGrid<dimgrid, dimworld> >,
-        FoamGridLeafIndexSet< const FoamGrid<dimgrid, dimworld> >,
-        FoamGridIdSet< const FoamGrid<dimgrid, dimworld> >,  // global IdSet
+        FoamGridLevelIndexSet< const FoamGrid<dimgrid, dimworld, ctype> >,
+        FoamGridLeafIndexSet< const FoamGrid<dimgrid, dimworld, ctype> >,
+        FoamGridIdSet< const FoamGrid<dimgrid, dimworld, ctype> >,  // global IdSet
         unsigned int,   // global id type
-        FoamGridIdSet< const FoamGrid<dimgrid, dimworld> >,  // local IdSet
+        FoamGridIdSet< const FoamGrid<dimgrid, dimworld, ctype> >,  // local IdSet
         unsigned int,   // local id type
-        CollectiveCommunication<Dune::FoamGrid<dimgrid, dimworld> > ,
+        CollectiveCommunication<Dune::FoamGrid<dimgrid, dimworld, ctype> > ,
         DefaultLevelGridViewTraits,
         DefaultLeafGridViewTraits,
         FoamGridEntitySeed
@@ -79,9 +79,9 @@ struct FoamGridFamily
  * \tparam dimgrid Dimension of the grid; must be either 1 or 2
  * \tparam dimworld Dimension of the world space
  */
-template <int dimgrid, int dimworld>
+template <int dimgrid, int dimworld, class ct>
 class FoamGrid :
-        public GridDefaultImplementation  <dimgrid, dimworld, double, FoamGridFamily<dimgrid, dimworld> >
+        public GridDefaultImplementation  <dimgrid, dimworld, ct, FoamGridFamily<dimgrid, dimworld, ct> >
 {
 
     friend class FoamGridLevelIndexSet<const FoamGrid >;
@@ -101,7 +101,7 @@ class FoamGrid :
     template <class GridType_>
     friend class GridFactory;
 
-    template <int dimgrid_, int dimworld_>
+    template <int dimgrid_, int dimworld_, class ct_>
     friend class GridFactoryBase;
 
     template<int codim_, int dim_, class GridImp_>
@@ -117,13 +117,13 @@ public:
     //**********************************************************
 
     //! type of the used GridFamily for this grid
-    typedef FoamGridFamily<dimgrid, dimworld>  GridFamily;
+    typedef FoamGridFamily<dimgrid, dimworld, ct>  GridFamily;
 
     //! Exports various types belonging to this grid class
-    typedef typename FoamGridFamily<dimgrid, dimworld>::Traits Traits;
+    typedef typename FoamGridFamily<dimgrid, dimworld, ct>::Traits Traits;
 
     //! The type used to store coordinates
-    typedef double ctype;
+    typedef ct ctype;
 
     /** \brief Constructor, constructs an empty grid
      */
@@ -160,7 +160,7 @@ public:
             if (level<0 || level>maxLevel())
                 DUNE_THROW(Dune::GridError, "LevelIterator in nonexisting level " << level << " requested!");
 
-            return Dune::FoamGridLevelIterator<codim,All_Partition, const Dune::FoamGrid<dimgrid, dimworld> >(std::get<dimgrid-codim>(entityImps_[level]).begin());
+            return Dune::FoamGridLevelIterator<codim,All_Partition, const Dune::FoamGrid<dimgrid, dimworld, ctype> >(std::get<dimgrid-codim>(entityImps_[level]).begin());
         }
 
 
@@ -170,7 +170,7 @@ public:
             if (level<0 || level>maxLevel())
                 DUNE_THROW(GridError, "LevelIterator in nonexisting level " << level << " requested!");
 
-            return Dune::FoamGridLevelIterator<codim,All_Partition, const Dune::FoamGrid<dimgrid, dimworld> >(std::get<dimgrid-codim>(entityImps_[level]).end());
+            return Dune::FoamGridLevelIterator<codim,All_Partition, const Dune::FoamGrid<dimgrid, dimworld, ctype> >(std::get<dimgrid-codim>(entityImps_[level]).end());
         }
 
 
@@ -180,7 +180,7 @@ public:
             if (level<0 || level>maxLevel())
                 DUNE_THROW(Dune::GridError, "LevelIterator in nonexisting level " << level << " requested!");
 
-            return Dune::FoamGridLevelIterator<codim,PiType, const Dune::FoamGrid<dimgrid, dimworld> >(std::get<dimgrid-codim>(entityImps_[level]).begin());
+            return Dune::FoamGridLevelIterator<codim,PiType, const Dune::FoamGrid<dimgrid, dimworld, ctype> >(std::get<dimgrid-codim>(entityImps_[level]).begin());
         }
 
 
@@ -190,7 +190,7 @@ public:
             if (level<0 || level>maxLevel())
                 DUNE_THROW(GridError, "LevelIterator in nonexisting level " << level << " requested!");
 
-            return Dune::FoamGridLevelIterator<codim,PiType, const Dune::FoamGrid<dimgrid, dimworld> >(std::get<dimgrid-codim>(entityImps_[level]).end());
+            return Dune::FoamGridLevelIterator<codim,PiType, const Dune::FoamGrid<dimgrid, dimworld, ctype> >(std::get<dimgrid-codim>(entityImps_[level]).end());
         }
 
 
@@ -332,11 +332,11 @@ public:
 
             /** \todo Why do I need those const_casts here? */
             if (refCount>=1)
-                const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(e.impl().target_)->markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::REFINE;
+                const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>*>(e.impl().target_)->markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>::REFINE;
             else if (refCount<0)
-                const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(e.impl().target_)->markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::COARSEN;
+                const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>*>(e.impl().target_)->markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>::COARSEN;
             else
-                const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>(e.impl().target_)->markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld>::DO_NOTHING;
+                const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>*>(e.impl().target_)->markState_ = FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>::DO_NOTHING;
 
             return true;
         }
@@ -349,12 +349,12 @@ public:
         {
             switch(e.impl().target_->markState_)
             {
-              case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::DO_NOTHING:
-              case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::IS_COARSENED:
+              case FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>::DO_NOTHING:
+              case FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>::IS_COARSENED:
                 return 0;
-              case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::REFINE:
+              case FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>::REFINE:
                 return 1;
-              case FoamGridEntityImp<dimgrid, dimgrid, dimworld>::COARSEN:
+              case FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>::COARSEN:
                 return -1;
             }
             return 0;
@@ -394,8 +394,8 @@ public:
           if(!growing_) initializeGrowth_();
 
           // the final level of the vertex will be the minimum common vertex level of the new element
-          verticesToInsert_.push_back(FoamGridEntityImp<0, dimgrid, dimworld>(0, pos, -verticesToInsert_.size()-1)); // initialize with some invalid id
-          FoamGridEntityImp<0, dimgrid, dimworld>& newVertex = verticesToInsert_.back();
+          verticesToInsert_.push_back(FoamGridEntityImp<0, dimgrid, dimworld, ctype>(0, pos, -verticesToInsert_.size()-1)); // initialize with some invalid id
+          FoamGridEntityImp<0, dimgrid, dimworld, ctype>& newVertex = verticesToInsert_.back();
           newVertex.isNew_ = true;
           // new vertices are numbered consecutively starting from
           // the highest available index in the leaf index set +1
@@ -417,8 +417,8 @@ public:
           assert(vertices.size() == dimgrid + 1);
 
           // the final level of the element will be the minimum common vertex level
-          elementsToInsert_.push_back(FoamGridEntityImp<dimgrid, dimgrid, dimworld>(0, -elementsToInsert_.size()-1)); // initialize with some invalid id
-          FoamGridEntityImp<dimgrid, dimgrid, dimworld>& newElement = elementsToInsert_.back();
+          elementsToInsert_.push_back(FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>(0, -elementsToInsert_.size()-1)); // initialize with some invalid id
+          FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>& newElement = elementsToInsert_.back();
           assert(vertices.size() == newElement.vertex_.size());
 
           for(std::size_t i = 0; i < vertices.size(); i++)
@@ -467,7 +467,7 @@ public:
         void removeElement(const typename Traits::template Codim<0>::Entity & e)
         {
           // save entity for later, actual removal happens in grow()
-          elementsToRemove_.push_back(const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*> (e.impl().target_));
+          elementsToRemove_.push_back(const_cast<FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>*> (e.impl().target_));
         }
 
         //! \brief Book-keeping routine to be called before growth
@@ -599,7 +599,7 @@ public:
       for (const auto& vertex : vertices(this->leafGridView()))
       {
         std::size_t index = leafIndexSet().index(vertex);
-        indexToVertexMap_[index] = const_cast<FoamGridEntityImp<0, dimgrid ,dimworld>*>(vertex.impl().target_);
+        indexToVertexMap_[index] = const_cast<FoamGridEntityImp<0, dimgrid ,dimworld, ctype>*>(vertex.impl().target_);
       }
 
       // tell the grid it's ready for growth
@@ -607,30 +607,30 @@ public:
     }
 
     //! \brief erases pointers in father elements to vanished entities of the element
-    void erasePointersToEntities(std::list<FoamGridEntityImp<dimgrid, dimgrid ,dimworld> >& elements);
+    void erasePointersToEntities(std::list<FoamGridEntityImp<dimgrid, dimgrid ,dimworld, ctype> >& elements);
 
     //! \brief Erase Entities from memory that vanished due to coarsening.
     //! \warning This method has to be called first for i=0.
     //! \tparam i The dimension of the entities.
     //! \param  levelEntities The vector with the level entitied
     template<int i>
-    void eraseVanishedEntities(std::list<FoamGridEntityImp<i, dimgrid, dimworld> >& levelEntities);
+    void eraseVanishedEntities(std::list<FoamGridEntityImp<i, dimgrid, dimworld, ctype> >& levelEntities);
 
     //! \brief Coarsen an Element
     //! \param element The element to coarsen
-    void coarsenSimplexElement(FoamGridEntityImp<dimgrid, dimgrid, dimworld>& element);
+    void coarsenSimplexElement(FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>& element);
 
     //! \brief refine an Element
     //! \param element The element to refine
     //! \param refCount How many times to refine the element
-    void refineSimplexElement(FoamGridEntityImp<2, dimgrid, dimworld>& element,
+    void refineSimplexElement(FoamGridEntityImp<2, dimgrid, dimworld, ctype>& element,
                        int refCount);
     //! Overloaded function for the 1d case
-    void refineSimplexElement(FoamGridEntityImp<1, dimgrid, dimworld>& element,
+    void refineSimplexElement(FoamGridEntityImp<1, dimgrid, dimworld, ctype>& element,
                        int refCount);
 
     //! \brief remove this element resulting in grid shrinkage
-    bool removeSimplexElement(FoamGridEntityImp<dimgrid, dimgrid, dimworld>& element);
+    bool removeSimplexElement(FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>& element);
 
     /**
      * \brief Overwrites the neighbours of this and descendant edges
@@ -641,9 +641,9 @@ public:
      * \param son The son element to substitute the father with.
      * \param father Pointer to the father element that is to be substituted.
      */
-    void overwriteFineLevelNeighbours(FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>& edge,
-                                      const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* son,
-                                      const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* father);
+    void overwriteFineLevelNeighbours(FoamGridEntityImp<dimgrid-1, dimgrid, dimworld, ctype>& edge,
+                                      const FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>* son,
+                                      const FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>* father);
 
     /**
      * \brief An an element to a facet (and all it's sons if it's not on the leaf)
@@ -651,17 +651,17 @@ public:
      * \param element The element to add to the facet's element vector
      * \param facet The facet that needs to add the element
      */
-    void addElementForFacet(const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* element,
-                            FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>* facet);
+    void addElementForFacet(const FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>* element,
+                            FoamGridEntityImp<dimgrid-1, dimgrid, dimworld, ctype>* facet);
 
     //! Add a new facet for 1d grids (the facet already exists as vertex)
-    void addNewFacet(FoamGridEntityImp<0, dimgrid, dimworld>* &facet,
-                     std::array<FoamGridEntityImp<0, dimgrid, dimworld>*,dimgrid> vertexArray,
+    void addNewFacet(FoamGridEntityImp<0, dimgrid, dimworld, ctype>* &facet,
+                     std::array<FoamGridEntityImp<0, dimgrid, dimworld, ctype>*,dimgrid> vertexArray,
                      int level);
 
     //! Add a new facet for 2d grids
-    void addNewFacet(FoamGridEntityImp<1, dimgrid, dimworld>* &facet,
-                     std::array<FoamGridEntityImp<0, dimgrid, dimworld>*,dimgrid> vertexArray,
+    void addNewFacet(FoamGridEntityImp<1, dimgrid, dimworld, ctype>* &facet,
+                     std::array<FoamGridEntityImp<0, dimgrid, dimworld, ctype>*,dimgrid> vertexArray,
                      int level);
 
     //! compute the grid indices and ids
@@ -696,7 +696,7 @@ public:
 
     template<std::size_t... dimEntity>
     static auto makeEntityImpsImpl_(std::index_sequence<dimEntity...>, std::size_t numLevels)
-    { return std::vector<std::tuple<std::list<FoamGridEntityImp<dimEntity, dimgrid, dimworld>>...>>(numLevels); }
+    { return std::vector<std::tuple<std::list<FoamGridEntityImp<dimEntity, dimgrid, dimworld, ctype>>...>>(numLevels); }
 
     // Create the lists of vertices, edges, elements for each level
     static auto makeEntityImps_(std::size_t numLevels = 1)
@@ -733,16 +733,16 @@ public:
     bool willCoarsen;
 
     /** \brief A map from indices to leaf vertices. Gets updated when calling beginGrowth(). */
-    std::vector<FoamGridEntityImp<0, dimgrid, dimworld>* > indexToVertexMap_;
+    std::vector<FoamGridEntityImp<0, dimgrid, dimworld, ctype>* > indexToVertexMap_;
 
     /** \brief The (temporary) vector of element(pointer)s to be deleted at runtime. Gets cleaned when calling grow(). */
-    std::vector<FoamGridEntityImp<dimgrid, dimgrid, dimworld>* > elementsToRemove_;
+    std::vector<FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>* > elementsToRemove_;
 
     /** \brief The (temporary) vector of runtime inserted vertices. Gets cleaned when calling grow(). */
-    std::list<FoamGridEntityImp<0, dimgrid, dimworld> > verticesToInsert_;
+    std::list<FoamGridEntityImp<0, dimgrid, dimworld, ctype> > verticesToInsert_;
 
     /** \brief The (temporary) vector of runtime inserted elements. Gets cleaned when calling grow(). */
-    std::list<FoamGridEntityImp<dimgrid, dimgrid, dimworld> > elementsToInsert_;
+    std::list<FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype> > elementsToInsert_;
 
     /** \brief If the grid is in a growing process (beginGrowth has been called). */
     bool growing_;
@@ -758,22 +758,22 @@ namespace Capabilities
       *
       * FoamGrid implements all codimensions, hence this is always true
       */
-    template<int dimgrid, int dimworld, int codim>
-    struct hasEntity< FoamGrid<dimgrid, dimworld>, codim>
+    template<int dimgrid, int dimworld, class ctype, int codim>
+    struct hasEntity< FoamGrid<dimgrid, dimworld, ctype>, codim>
     {
         static const bool v = true;
     };
 
     //! \todo Please doc me !
-    template <int dimgrid, int dimworld>
-    struct isLevelwiseConforming< FoamGrid<dimgrid, dimworld> >
+    template <int dimgrid, int dimworld, class ctype>
+    struct isLevelwiseConforming< FoamGrid<dimgrid, dimworld, ctype> >
     {
         static const bool v = false;
     };
 
     //! \todo Please doc me !
-    template <int dimgrid, int dimworld>
-    struct isLeafwiseConforming< FoamGrid<dimgrid, dimworld> >
+    template <int dimgrid, int dimworld, class ctype>
+    struct isLeafwiseConforming< FoamGrid<dimgrid, dimworld, ctype> >
     {
         static const bool v = false;
     };

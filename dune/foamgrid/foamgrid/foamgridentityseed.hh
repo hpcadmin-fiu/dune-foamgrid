@@ -24,7 +24,7 @@ class FoamGridEntitySeed
   enum { mydim = dimgrid-codim };
 
   // Entity type of the underlying implementation
-  using EntityImplType = FoamGridEntityImp<mydim, dimgrid, dimworld> ;
+  using EntityImplType = FoamGridEntityImp<mydim, dimgrid, dimworld, typename GridImp::ctype> ;
 
 public:
 

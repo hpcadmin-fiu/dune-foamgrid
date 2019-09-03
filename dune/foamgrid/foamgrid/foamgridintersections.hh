@@ -58,7 +58,7 @@ class FoamGridIntersection
     FoamGridIntersection()
       : center_(nullptr)
       , facetIndex_(-1)
-      , neighbor_(FoamGridNullIteratorFactory<dimgrid, dimworld>::null())
+      , neighbor_(FoamGridNullIteratorFactory<dimgrid, dimworld, ctype>::null())
     {}
 
     /**
@@ -68,9 +68,9 @@ class FoamGridIntersection
      * related to an facet.
      * \param facet The index of the facet this intersection lives on.
      */
-    FoamGridIntersection(const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* center,
+    FoamGridIntersection(const FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>* center,
                          int facet)
-        : center_(center), facetIndex_(facet), neighbor_(FoamGridNullIteratorFactory<dimgrid, dimworld>::null())
+        : center_(center), facetIndex_(facet), neighbor_(FoamGridNullIteratorFactory<dimgrid, dimworld, ctype>::null())
     {}
 
 public:
@@ -133,7 +133,7 @@ public:
             assert(center_->type().isTriangle() || center_->type().isLine());
 
             // Compute vertices
-            const auto refElement = ReferenceElements<double, dimgrid>::general(center_->type());
+            const auto refElement = ReferenceElements<ctype, dimgrid>::general(center_->type());
 
             // facet vertices (vertex in 1d, edge in 2d)
             int v0 = refElement.subEntity(facetIndex_, 1, 0, dimgrid);
@@ -193,7 +193,7 @@ public:
 
             if(dimgrid == 2)
             {
-                const auto refElement = ReferenceElements<double, dimgrid>::general(center_->type());
+                const auto refElement = ReferenceElements<ctype, dimgrid>::general(center_->type());
 
                 // facet vertices
                 int v0 = refElement.subEntity(facetIndex_, 1, 0, dimgrid);
@@ -230,19 +230,19 @@ public:
     private:
 
         //! vector storing the outer normal
-        mutable FieldVector<typename GridImp::ctype, dimworld> outerNormal_;
-        mutable FieldVector<typename GridImp::ctype, dimworld> unitOuterNormal_;
-        mutable FieldVector<typename GridImp::ctype, dimworld> integrationOuterNormal_;
+        mutable FieldVector<ctype, dimworld> outerNormal_;
+        mutable FieldVector<ctype, dimworld> unitOuterNormal_;
+        mutable FieldVector<ctype, dimworld> integrationOuterNormal_;
 
     protected:
 
-        const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* center_;
+        const FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>* center_;
 
         /** \brief Count on which facet we are lookin' at.  */
         int facetIndex_;
 
         /** \brief Iterator to the other neighbor of the intersection. */
-        typename std::vector<const FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>::const_iterator neighbor_;
+        typename std::vector<const FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>*>::const_iterator neighbor_;
 
 };
 
@@ -267,7 +267,9 @@ class FoamGridLevelIntersection
     typedef typename GridImp::Traits::template Codim<1>::GeometryImpl GeometryImpl;
     typedef typename GridImp::Traits::template Codim<1>::LocalGeometryImpl LocalGeometryImpl;
 
-    FoamGridLevelIntersection(const FoamGridEntityImp<dimgrid, dimgrid ,dimworld>* center, std::size_t facet)
+    typedef typename GridImp::ctype ctype;
+
+    FoamGridLevelIntersection(const FoamGridEntityImp<dimgrid, dimgrid ,dimworld, ctype>* center, std::size_t facet)
                               : FoamGridIntersection<GridImp>(center, facet)
     {}
 
@@ -297,10 +299,10 @@ public:
     //! where iteration started.
     LocalGeometry geometryInInside () const
     {
-        std::vector<FieldVector<double, dimgrid> > coordinates(dimgrid);
+        std::vector<FieldVector<ctype, dimgrid> > coordinates(dimgrid);
 
         // Get reference element
-        const auto refElement = ReferenceElements<double, dimgrid>::general(this->center_->type());
+        const auto refElement = ReferenceElements<ctype, dimgrid>::general(this->center_->type());
 
         for (int idx = 0; idx < dimgrid; ++idx)
             coordinates[idx] = refElement.position(refElement.subEntity(this->facetIndex_, 1, idx, dimgrid), dimgrid);
@@ -316,18 +318,18 @@ public:
     LocalGeometry geometryInOutside (std::size_t neighborIndex = 0) const {
 
         // Get two vertices of the intersection
-        const auto refElement = ReferenceElements<double, dimgrid>::general(this->center_->type());
+        const auto refElement = ReferenceElements<ctype, dimgrid>::general(this->center_->type());
 
-        std::array<FoamGridEntityImp<0, dimgrid, dimworld>*, dimgrid> vtx;
+        std::array<FoamGridEntityImp<0, dimgrid, dimworld, ctype>*, dimgrid> vtx;
 
         for (int idx = 0; idx < dimgrid; ++idx)
             vtx[idx] = this->center_->vertex_[refElement.subEntity(this->facetIndex_, 1, idx, dimgrid)];
 
-        std::vector<FieldVector<double, dimgrid> > coordinates(dimgrid);
+        std::vector<FieldVector<ctype, dimgrid> > coordinates(dimgrid);
 
         // Find the intersection vertices in local numbering of the outside element
         // That way we get the local orientation correctly.
-        const auto refElementOther = ReferenceElements<double, dimgrid>::general((*this->neighbor_)->type());
+        const auto refElementOther = ReferenceElements<ctype, dimgrid>::general((*this->neighbor_)->type());
 
         for (std::size_t j=0; j<dimgrid; j++)
           for (int i=0; i<refElementOther.size(dimgrid); i++)
@@ -343,10 +345,10 @@ public:
     //! Here returned element is in GLOBAL coordinates of the element where iteration started.
     Geometry geometry () const {
 
-        std::vector<FieldVector<double, dimworld> > coordinates(dimgrid);
+        std::vector<FieldVector<ctype, dimworld> > coordinates(dimgrid);
 
         // Get two vertices of the intersection
-        const auto refElement = ReferenceElements<double, dimgrid>::general(this->center_->type());
+        const auto refElement = ReferenceElements<ctype, dimgrid>::general(this->center_->type());
 
         for (std::size_t idx = 0; idx < dimgrid; ++idx)
             coordinates[idx] = this->center_->vertex_[refElement.subEntity(this->facetIndex_, 1, idx, dimgrid)]->pos_;
@@ -359,7 +361,7 @@ public:
 
     private:
     /** \brief One-after-last iterator to the neighbor */
-    typename std::vector<const FoamGridEntityImp<dimgrid, dimgrid ,dimworld>*>::const_iterator neighborEnd_;
+    typename std::vector<const FoamGridEntityImp<dimgrid, dimgrid ,dimworld, ctype>*>::const_iterator neighborEnd_;
     //! pointer to global and local intersection geometries
     mutable std::shared_ptr<GeometryImpl> geometry_;
     mutable std::shared_ptr<LocalGeometryImpl> geometryInInside_;
@@ -401,7 +403,7 @@ class FoamGridLeafIntersection
     typedef typename GridImp::Traits::template Codim<1>::GeometryImpl GeometryImpl;
     typedef typename GridImp::Traits::template Codim<1>::LocalGeometryImpl LocalGeometryImpl;
 
-    FoamGridLeafIntersection(const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* center,
+    FoamGridLeafIntersection(const FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>* center,
                              std::size_t facet)
         : FoamGridIntersection<GridImp>(center, facet)
     {}
@@ -462,10 +464,10 @@ public:
     //! where iteration started.
     LocalGeometry geometryInInside () const
     {
-        std::vector<FieldVector<double, dimgrid> > coordinates(dimgrid);
+        std::vector<FieldVector<ctype, dimgrid> > coordinates(dimgrid);
 
         // Get reference element
-        const auto refElement = ReferenceElements<double, dimgrid>::general(this->center_->type());
+        const auto refElement = ReferenceElements<ctype, dimgrid>::general(this->center_->type());
 
         for (std::size_t idx = 0; idx < dimgrid; ++idx)
             coordinates[idx] = refElement.position(refElement.subEntity(this->facetIndex_, 1, idx, dimgrid), dimgrid);
@@ -482,10 +484,10 @@ public:
     LocalGeometry geometryInOutside (std::size_t neighborIndex = 0) const
     {
         // Get reference element
-        const auto refElement = Dune::ReferenceElements<double, dimgrid>::general(this->center_->type());
+        const auto refElement = Dune::ReferenceElements<ctype, dimgrid>::general(this->center_->type());
 
         // Map the global position of the intersection vertices to the local position in the neighbor
-        std::vector<FieldVector<double, dimgrid> > coordinates(dimgrid);
+        std::vector<FieldVector<ctype, dimgrid> > coordinates(dimgrid);
         for (std::size_t vIdx = 0; vIdx < dimgrid; ++vIdx)
         {
             const auto vIdxInElement = refElement.subEntity(this->facetIndex_, 1, vIdx, dimgrid);
@@ -501,10 +503,10 @@ public:
     //! Here returned element is in GLOBAL coordinates of the element where iteration started.
     Geometry geometry () const {
 
-        std::vector<FieldVector<double, dimworld> > coordinates(dimgrid);
+        std::vector<FieldVector<ctype, dimworld> > coordinates(dimgrid);
 
         // Get two vertices of the intersection
-        const auto refElement = ReferenceElements<double, dimgrid>::general(this->center_->type());
+        const auto refElement = ReferenceElements<ctype, dimgrid>::general(this->center_->type());
 
         for (std::size_t idx = 0; idx < dimgrid; ++idx)
             coordinates[idx] = this->center_->vertex_[refElement.subEntity(this->facetIndex_, 1, idx, dimgrid)]->pos_;
@@ -516,7 +518,7 @@ public:
 
     //! return true if across the facet a neighbor on this level exists
     bool neighbor () const {
-        return this->neighbor_!=FoamGridNullIteratorFactory<dimgrid, dimworld>::null();
+        return this->neighbor_!=FoamGridNullIteratorFactory<dimgrid, dimworld, ctype>::null();
     }
 
 private:

@@ -126,7 +126,7 @@ namespace Dune {
             // //////////////////////////////
             //   Init the vertex indices
             // //////////////////////////////
-            typename std::list<FoamGridEntityImp<0, dimgrid, dimworld> >::const_iterator vIt;
+            typename std::list<FoamGridEntityImp<0, dimgrid, dimworld, typename GridImp::ctype> >::const_iterator vIt;
             for (vIt =  std::get<0>(grid_->entityImps_[level_]).begin();
                  vIt != std::get<0>(grid_->entityImps_[level_]).end();
                  ++vIt)
@@ -136,7 +136,7 @@ namespace Dune {
              // ///////////////////////////////
             //   Init the edges(2d) / element(1d) indices
             // ///////////////////////////////
-            typename std::list<FoamGridEntityImp<1, dimgrid, dimworld> >::const_iterator edIt;
+            typename std::list<FoamGridEntityImp<1, dimgrid, dimworld, typename GridImp::ctype> >::const_iterator edIt;
             for (edIt =  std::get<1>(grid_->entityImps_[level_]).begin();
                  edIt != std::get<1>(grid_->entityImps_[level_]).end();
                  ++edIt)
@@ -149,7 +149,7 @@ namespace Dune {
             // ///////////////////////////////
             if(dimgrid == 2) {
 
-                typename std::list<FoamGridEntityImp<dimgrid, dimgrid, dimworld> >::const_iterator eIt;
+                typename std::list<FoamGridEntityImp<dimgrid, dimgrid, dimworld, typename GridImp::ctype> >::const_iterator eIt;
                 for (eIt =  std::get<dimgrid>(grid_->entityImps_[level_]).begin();
                     eIt != std::get<dimgrid>(grid_->entityImps_[level_]).end();
                     ++eIt)
@@ -325,7 +325,7 @@ public:
 
             for (; edIt!=edEndIt; ++edIt) {
 
-            const FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>* target = edIt->impl().target_;
+            const FoamGridEntityImp<dimgrid-1, dimgrid, dimworld, typename GridImp::ctype>* target = edIt->impl().target_;
 
             if (target->isLeaf()){
                 // The is a real leaf edge.
@@ -358,7 +358,7 @@ public:
 
                 for (; vIt!=vEndIt; ++vIt) {
 
-                    const FoamGridEntityImp<0, dimgrid, dimworld>* target = vIt->impl().target_;
+                    const FoamGridEntityImp<0, dimgrid, dimworld, typename GridImp::ctype>* target = vIt->impl().target_;
 
                     if (target->isLeaf())
                     {

@@ -44,8 +44,8 @@ namespace Dune
 
 
 
-  template< int dim , int dimworld>
-  struct DGFGridInfo< FoamGrid< dim, dimworld > >
+  template< int dim , int dimworld , class ctype >
+  struct DGFGridInfo< FoamGrid< dim, dimworld, ctype > >
   {
     static int refineStepsForHalf ()
     {
@@ -63,11 +63,11 @@ namespace Dune
   // DGFGridFactory< FoamGrid< dim , dimworld> >
   // -------------------------------
 
-  template< int dim , int dimworld>
-  struct DGFGridFactory< FoamGrid< dim, dimworld> >
+  template< int dim , int dimworld , class ctype >
+  struct DGFGridFactory< FoamGrid< dim, dimworld, ctype > >
   {
     /** \brief grid type */
-    typedef FoamGrid< dim, dimworld > Grid;
+    typedef FoamGrid< dim, dimworld, ctype > Grid;
     /** \brief grid dimension */
     static const int dimension = dim;
     /** \brief gridWorld dimension */
@@ -214,7 +214,7 @@ namespace Dune
     }
 
     Grid *grid_;
-    GridFactory< FoamGrid< dim, dimworld > > factory_;
+    GridFactory< FoamGrid< dim, dimworld, ctype > > factory_;
     DuneGridFormatParser dgf_;
   };
 

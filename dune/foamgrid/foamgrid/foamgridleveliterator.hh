@@ -19,7 +19,7 @@ class FoamGridLevelIterator
     enum {dimgrid  = GridImp::dimension};
     enum {dimworld = GridImp::dimensionworld};
 
-    using EntityImp = FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld>;
+    using EntityImp = FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld, typename GridImp::ctype>;
 
 public:
 

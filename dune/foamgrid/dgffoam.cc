@@ -24,8 +24,8 @@ namespace Dune
   // Implementation of DGFGridFactory< FoamGrid >
   // -------------------------------------------
 
-  template< int dim , int dimworld>
-  void DGFGridFactory< FoamGrid< dim, dimworld  > >::generate ( std::istream &input )
+  template< int dim , int dimworld , class ctype >
+  void DGFGridFactory< FoamGrid< dim, dimworld, ctype > >::generate ( std::istream &input )
   {
     dgf_.element = DuneGridFormatParser::General;
 
@@ -44,7 +44,7 @@ namespace Dune
 
     for( int n = 0; n < dgf_.nofvtx; n++ )
     {
-      FieldVector< double, dimworld > v;
+      FieldVector< ctype, dimworld > v;
       for( int j = 0; j < dimworld; j++ )
         v[ j ] = dgf_.vtx[ n ][ j ];
       factory_.insertVertex( v );
