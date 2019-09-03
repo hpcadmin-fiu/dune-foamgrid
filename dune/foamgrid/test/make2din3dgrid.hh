@@ -25,7 +25,8 @@ ToUniquePtr<GridType> make2Din3DHybridTestGrid()
     // The list of grid vertex positions
     int numVertices = 16;
 
-    double vertices[16][3] = {{0,    0,    0},
+    using ctype = typename GridType::ctype;
+    ctype vertices[16][3] =  {{0,    0,    0},
                               {0.5,  0,    0},
                               {0.5,  0.5,  0},
                               {0,    0.5,  0},
@@ -44,7 +45,7 @@ ToUniquePtr<GridType> make2Din3DHybridTestGrid()
 
     // Create the grid vertices
     for (int i=0; i<numVertices; i++) {
-        Dune::FieldVector<double,3> pos;
+        Dune::FieldVector<ctype,3> pos;
         pos[0] = vertices[i][0];
         pos[1] = vertices[i][1];
         pos[2] = vertices[i][2];

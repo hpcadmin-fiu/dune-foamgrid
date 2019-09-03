@@ -291,6 +291,20 @@ int main (int argc, char *argv[]) try
         std::cout << "  Check if has multiple neighbor functionality" << std::endl;
         traversal(*gridStar);
     }
+    {
+        std::cout << "\n################################################\n";
+        std::cout << "Checking FoamGrid<2, 3, float> (2d in 3d grid with float coordinates)\n";
+        std::cout << "################################################\n\n";
+
+        std::cout << "  Creating grid" << std::endl;
+        std::shared_ptr<FoamGrid<2, 3, float>> grid3d( make2Din3DHybridTestGrid<FoamGrid<2, 3, float> >() );
+
+        std::cout << "  Calling gridcheck" << std::endl;
+        gridcheck(*grid3d);
+
+        std::cout << "  Calling checkIntersectionIterator" << std::endl;
+        checkIntersectionIterator(*grid3d);
+    }
 }
 // //////////////////////////////////
 //   Error handler
