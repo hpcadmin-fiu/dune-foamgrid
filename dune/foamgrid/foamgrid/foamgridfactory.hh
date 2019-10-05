@@ -168,9 +168,9 @@ template <int dimworld, class ct>
                            const std::vector<unsigned int>& vertices) override {
             assert(type.isLine());
             FoamGridEntityImp<1, dimgrid, dimworld, ctype> newElement(this->vertexArray_[vertices[0]],
-                                                               this->vertexArray_[vertices[1]],
-                                                               0,
-                                                               this->grid_->getNextFreeId());
+                                                                      this->vertexArray_[vertices[1]],
+                                                                      0,
+                                                                      this->grid_->getNextFreeId());
 
             std::get<1>(this->grid_->entityImps_[0]).push_back(newElement);
 
@@ -187,9 +187,9 @@ template <int dimworld, class ct>
         {
             assert(type.isLine());
             FoamGridEntityImp<1, dimgrid, dimworld, ctype> newElement(this->vertexArray_[vertices[0]],
-                                                               this->vertexArray_[vertices[1]],
-                                                               0,
-                                                               this->grid_->getNextFreeId());
+                                                                      this->vertexArray_[vertices[1]],
+                                                                      0,
+                                                                      this->grid_->getNextFreeId());
             // save the pointer to the element parametrization
             newElement.elementParametrization_ = elementParametrization;
 
@@ -277,7 +277,7 @@ template <int dimworld, class ct>
         GridFactory() {}
 
         GridFactory(FoamGrid<2, dimworld, ctype>* grid):
-            GridFactoryBase<2,dimworld,ctype>(grid)
+            GridFactoryBase<2, dimworld, ctype>(grid)
         {}
 
         /** \brief Insert a boundary segment.
