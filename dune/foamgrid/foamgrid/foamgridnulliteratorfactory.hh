@@ -11,19 +11,19 @@
 
 namespace Dune {
 
-template <int dimgrid, int dimworld>
-class FoamGridNullIteratorFactory 
+template <int dimgrid, int dimworld, class ctype>
+class FoamGridNullIteratorFactory
 {
   public:
-    static typename std::vector<const FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>::const_iterator null() 
+    static typename std::vector<const FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>*>::const_iterator null()
     { return emptyVector_.end(); }
   private:
-    static typename std::vector<const FoamGridEntityImp<dimgrid, dimgrid, dimworld>*> emptyVector_;
+    static typename std::vector<const FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>*> emptyVector_;
 };
 
-template <int dimgrid, int dimworld>
-typename std::vector<const FoamGridEntityImp<dimgrid, dimgrid, dimworld>*> 
-FoamGridNullIteratorFactory<dimgrid, dimworld>::emptyVector_;
+template <int dimgrid, int dimworld, class ctype>
+typename std::vector<const FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>*>
+FoamGridNullIteratorFactory<dimgrid, dimworld, ctype>::emptyVector_;
 }
 
 #endif

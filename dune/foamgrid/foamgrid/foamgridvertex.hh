@@ -43,17 +43,17 @@ namespace Dune {
      * \tparam dimgrid The dimension of the grid
      * \tparam dimworld The world diemnsion
      */
-    template <int dimentity, int dimgrid, int dimworld>
+    template <int dimentity, int dimgrid, int dimworld, class ctype>
     class FoamGridEntityImp {};
 
     /** \brief Vertex specialization of FoamGridEntityImp */
-    template <int dimgrid, int dimworld>
-    class FoamGridEntityImp<0, dimgrid, dimworld>
+    template <int dimgrid, int dimworld, class ctype>
+    class FoamGridEntityImp<0, dimgrid, dimworld, ctype>
         : public FoamGridEntityBase
     {
     public:
 
-        FoamGridEntityImp(int level, const FieldVector<double, dimworld>& pos, unsigned int id)
+        FoamGridEntityImp(int level, const FieldVector<ctype, dimworld>& pos, unsigned int id)
             : FoamGridEntityBase(level, id), pos_(pos), nSons_(0)
             , elements_(), vertex_{{this}}, father_(nullptr), isNew_(false)
             , growthInsertionIndex_(-1)
@@ -89,7 +89,7 @@ namespace Dune {
             return 1;
         }
 
-        FieldVector<double, dimworld> corner(int i) const {
+        FieldVector<ctype, dimworld> corner(int i) const {
             assert(i<this->corners());
             return pos_;
         }
@@ -115,16 +115,16 @@ namespace Dune {
         }
 
         //! Position vector of this vertex
-        FieldVector<double, dimworld> pos_;
+        FieldVector<ctype, dimworld> pos_;
 
          //! The number of refined vertices */
         unsigned int nSons_;
 
         //! Elements the vertex is related to
-        std::vector<const FoamGridEntityImp<dimgrid, dimgrid ,dimworld>*> elements_;
+        std::vector<const FoamGridEntityImp<dimgrid, dimgrid ,dimworld, ctype>*> elements_;
 
-        //! A vertex array for compatibility reasons with edges. Initialized with the this pointer. 
-        std::array<const FoamGridEntityImp<0, dimgrid ,dimworld>*, 1> vertex_;
+        //! A vertex array for compatibility reasons with edges. Initialized with the this pointer.
+        std::array<const FoamGridEntityImp<0, dimgrid ,dimworld, ctype>*, 1> vertex_;
 
         //! Boundary index if vertex is on boundary
         //  only used if the vertex is a boundary vertex
@@ -132,10 +132,10 @@ namespace Dune {
         unsigned int boundaryId_;
 
         //! Pointer to father vertex on next coarser grid */
-        FoamGridEntityImp<0, dimgrid, dimworld>* father_;
+        FoamGridEntityImp<0, dimgrid, dimworld, ctype>* father_;
 
         //! Son vertex on the next finer grid
-        std::array<FoamGridEntityImp<0, dimgrid, dimworld>*, 1> sons_;
+        std::array<FoamGridEntityImp<0, dimgrid, dimworld, ctype>*, 1> sons_;
 
         //! If the vertex was newly inserted (at run-time)
         bool isNew_;

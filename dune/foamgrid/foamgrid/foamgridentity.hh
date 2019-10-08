@@ -82,7 +82,7 @@ class FoamGridEntity :
 
 
         //! Constructor for an entity in a given grid level
-        explicit FoamGridEntity(const FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld>* target) :
+        explicit FoamGridEntity(const FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld, ctype>* target) :
             target_(target)
         {}
 
@@ -132,7 +132,7 @@ class FoamGridEntity :
         //! geometry of this entity
         Geometry geometry () const
         {
-            std::vector<FieldVector<double, dimworld> > coordinates(target_->corners());
+            std::vector<FieldVector<ctype, dimworld> > coordinates(target_->corners());
             for (int i=0; i<target_->corners(); i++)
                 coordinates[i] = target_->corner(i);
 
@@ -145,11 +145,11 @@ class FoamGridEntity :
             return EntitySeed(*this);
         }
 
-        const FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld>* target_;
+        const FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld, ctype>* target_;
 
 
         //! \todo Please doc me !
-        void setToTarget(const FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld>* target)
+        void setToTarget(const FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld, ctype>* target)
         {
             target_ = target;
         }
@@ -182,6 +182,10 @@ class FoamGridEntity<0, 2, GridImp> :
         enum {dimworld = GridImp::dimensionworld};
         enum {dimgrid = GridImp::dimension};
 
+    private:
+
+        typedef typename GridImp::ctype ctype;
+
     public:
 
         typedef typename GridImp::template Codim<0>::Geometry Geometry;
@@ -210,7 +214,7 @@ class FoamGridEntity<0, 2, GridImp> :
 
 
         //! Constructor for an entity in a given grid level
-        explicit FoamGridEntity(const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* hostEntity) :
+        explicit FoamGridEntity(const FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>* hostEntity) :
             target_(hostEntity)
         {}
 
@@ -252,7 +256,7 @@ class FoamGridEntity<0, 2, GridImp> :
         //! Geometry of this entity
         Geometry geometry () const
         {
-            std::vector<FieldVector<double, dimworld> > coordinates(target_->corners());
+            std::vector<FieldVector<ctype, dimworld> > coordinates(target_->corners());
             for (int i=0; i<target_->corners(); i++)
                 coordinates[i] = target_->vertex_[i]->pos_;
 
@@ -398,7 +402,7 @@ class FoamGridEntity<0, 2, GridImp> :
         * Assumes that meshes are nested.
         */
         LocalGeometry geometryInFather () const {
-            FoamGridEntityImp<dimgrid, dimgrid, dimworld>* father = target_->father_;
+            FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>* father = target_->father_;
             // Check whether there really is a father
             if(father==nullptr)
                 DUNE_THROW(GridError, "There is no father Element.");
@@ -415,14 +419,14 @@ class FoamGridEntity<0, 2, GridImp> :
                 // For the element with all corners on the edge midpoints of
                 // the father, the corner are numbered according to the edge indices
                 // of the father.
-                double mapping[4][3][2] ={
+                ctype mapping[4][3][2] ={
                     { {0.0,0.0}, {0.5,0.0}, {0.0,0.5} },
                     { {1.0,0.0}, {0.5,0.5}, {0.5,0.0} },
                     { {0.0,1.0}, {0.0,0.5}, {0.5,0.5} },
                     { {0.5,0.0}, {0.5,0.5}, {0.0,0.5} }
                 };
 
-                std::vector<FieldVector<typename GridImp::ctype, dimgrid> >
+                std::vector<FieldVector<ctype, dimgrid> >
                     coordinates(3);
 
                 for(int corner=0; corner <3; ++corner)
@@ -473,7 +477,7 @@ class FoamGridEntity<0, 2, GridImp> :
 
 
         /** \brief Make this class point to a new FoamGridEntityImp object */
-        void setToTarget(const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* target)
+        void setToTarget(const FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>* target)
         {
             target_ = target;
         }
@@ -488,11 +492,7 @@ class FoamGridEntity<0, 2, GridImp> :
         GeometryType type () const { return target_->type(); }
 
         //! pointer to the implementation
-        const FoamGridEntityImp<dimgrid, dimgrid ,dimworld>* target_;
-
-    private:
-
-        typedef typename GridImp::ctype ctype;
+        const FoamGridEntityImp<dimgrid, dimgrid ,dimworld, ctype>* target_;
 
 }; // end of FoamGridEntity codim = 0, dimgrid = 2
 
@@ -504,6 +504,10 @@ class FoamGridEntity<0, 1, GridImp> :
 
         enum {dimworld = GridImp::dimensionworld};
         enum {dimgrid = GridImp::dimension};
+
+    private:
+
+        typedef typename GridImp::ctype ctype;
 
     public:
 
@@ -532,7 +536,7 @@ class FoamGridEntity<0, 1, GridImp> :
         typedef typename GridImp::Traits::template Codim<0>::Entity Entity;
 
         //! Constructor for an entity in a given grid level
-        explicit FoamGridEntity(const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* hostEntity) :
+        explicit FoamGridEntity(const FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>* hostEntity) :
             target_(hostEntity)
         {}
 
@@ -574,7 +578,7 @@ class FoamGridEntity<0, 1, GridImp> :
         //! Geometry of this entity
         Geometry geometry () const
         {
-            std::vector<FieldVector<double, dimworld> > coordinates(target_->corners());
+            std::vector<FieldVector<ctype, dimworld> > coordinates(target_->corners());
             for (int i=0; i<target_->corners(); i++)
                 coordinates[i] = target_->corner(i);
 
@@ -709,7 +713,7 @@ class FoamGridEntity<0, 1, GridImp> :
         * Assumes that meshes are nested.
         */
         LocalGeometry geometryInFather () const {
-            FoamGridEntityImp<dimgrid, dimgrid, dimworld>* father = target_->father_;
+            FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>* father = target_->father_;
             // Check whether there really is a father
             if(father==nullptr)
                 DUNE_THROW(GridError, "There is no father Element.");
@@ -726,9 +730,9 @@ class FoamGridEntity<0, 1, GridImp> :
                 // For the element with all corners on the edge midpoints of
                 // the father, the corner are numbered according to the edge indices
                 // of the father.
-                double mapping[2][2] = {{0.0, 0.5}, {0.5, 1.0}};
+                ctype mapping[2][2] = {{0.0, 0.5}, {0.5, 1.0}};
 
-                std::vector<FieldVector<typename GridImp::ctype, dimgrid> > coordinates(2);
+                std::vector<FieldVector<ctype, dimgrid> > coordinates(2);
 
                 for(int corner=0; corner <2; ++corner)
                     coordinates[corner][0] = mapping[target_->refinementIndex_][corner];
@@ -776,7 +780,7 @@ class FoamGridEntity<0, 1, GridImp> :
 
 
         /** \brief Make this class point to a new FoamGridEntityImp object */
-        void setToTarget(const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* target)
+        void setToTarget(const FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>* target)
         {
             target_ = target;
         }
@@ -791,11 +795,7 @@ class FoamGridEntity<0, 1, GridImp> :
         GeometryType type () const { return target_->type(); }
 
         //! pointer to the implementation
-        const FoamGridEntityImp<dimgrid, dimgrid ,dimworld>* target_;
-
-    private:
-
-        typedef typename GridImp::ctype ctype;
+        const FoamGridEntityImp<dimgrid, dimgrid ,dimworld, ctype>* target_;
 
 }; // end of FoamGridEntity codim = 0, dimgrid = 1
 

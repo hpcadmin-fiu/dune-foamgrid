@@ -27,7 +27,7 @@ class FoamGridHierarchicIterator
 
     friend class FoamGridEntity<0, dimgrid,GridImp>;
 
-    using StackEntry = const FoamGridEntityImp<dimgrid, dimgrid, dimworld>*;
+    using StackEntry = const FoamGridEntityImp<dimgrid, dimgrid, dimworld, typename GridImp::ctype>*;
 
 public:
     using Entity = typename GridImp::template Codim<0>::Entity;

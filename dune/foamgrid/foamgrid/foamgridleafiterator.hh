@@ -89,7 +89,7 @@ private:
         // If beyond the end of this level set to first of next level
         if (levelIterator_==std::get<dimgrid-codim>(grid_->entityImps_[oldLevel]).end() && oldLevel < grid_->maxLevel()) {
 
-            const std::list<FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld> >& entities = std::get<dimgrid-codim>(grid_->entityImps_[oldLevel+1]);
+            const std::list<FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld, typename GridImp::ctype> >& entities = std::get<dimgrid-codim>(grid_->entityImps_[oldLevel+1]);
             levelIterator_ = entities.begin();
             virtualEntity_.impl().setToTarget(&*entities.begin());
 
@@ -109,7 +109,7 @@ private:
     // of the iterator, i.e. the 'pointer' to the entity.  However, that pointer can not be
     // set to its successor in the level std::list, not even by magic.  Therefore we keep the
     // same information redundantly in this iterator, which can be incremented.
-    typename std::list<FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld> >::const_iterator levelIterator_;
+    typename std::list<FoamGridEntityImp<dimgrid-codim, dimgrid, dimworld, typename GridImp::ctype> >::const_iterator levelIterator_;
 };
 
 

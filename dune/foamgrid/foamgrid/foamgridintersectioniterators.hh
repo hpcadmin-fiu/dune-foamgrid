@@ -30,7 +30,9 @@ class FoamGridLeafIntersectionIterator
     enum {dimworld = GridImp::dimensionworld};
     enum {dimgrid  = GridImp::dimension};
 
-    typedef std::vector<typename std::vector<const FoamGridEntityImp<dimgrid, dimgrid, dimworld>*>::const_iterator> ElementVector;
+    typedef typename GridImp::ctype ctype;
+
+    typedef std::vector<typename std::vector<const FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>*>::const_iterator> ElementVector;
     typedef typename ElementVector::const_iterator ElementVectorIterator;
 
     // Only the codim-0 entity is allowed to call the constructors
@@ -43,13 +45,13 @@ class FoamGridLeafIntersectionIterator
     {}
 
     //! Constructor for a given grid entity and a given neighbor
-    FoamGridLeafIntersectionIterator(const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* center, int facet)
+    FoamGridLeafIntersectionIterator(const FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>* center, int facet)
         : intersection_(FoamGridLeafIntersection<GridImp>(center,facet)), leafNeighbors_(std::make_shared<ElementVector>())
     {
         if(facet==center->corners())
         {
             // This is the end iterator
-            intersection_.impl().neighbor_=FoamGridNullIteratorFactory<dimgrid, dimworld>::null();
+            intersection_.impl().neighbor_=FoamGridNullIteratorFactory<dimgrid, dimworld, ctype>::null();
             return;
         }
 
@@ -57,7 +59,7 @@ class FoamGridLeafIntersectionIterator
         if(leafNeighbors_->size()==1)
         {
             // This is a boundary facet.
-            intersection_.impl().neighbor_ = FoamGridNullIteratorFactory<dimgrid, dimworld>::null();
+            intersection_.impl().neighbor_ = FoamGridNullIteratorFactory<dimgrid, dimworld, ctype>::null();
             return;
         }
 
@@ -97,18 +99,18 @@ class FoamGridLeafIntersectionIterator
         if(intersection_.impl().facetIndex_ == center->corners())
         {
             // This is an end iterator
-            intersection_.impl().neighbor_=FoamGridNullIteratorFactory<dimgrid, dimworld>::null();
+            intersection_.impl().neighbor_=FoamGridNullIteratorFactory<dimgrid, dimworld, ctype>::null();
         }
     }
 
     /** \brief Constructor creating the 'one-after-last'-iterator */
-    FoamGridLeafIntersectionIterator(const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* center)
+    FoamGridLeafIntersectionIterator(const FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>* center)
         : intersection_(FoamGridLeafIntersection<GridImp>(center,center->corners()))
     {
     }
 
     //! fill the element vector with all leaf neighbors. leafNeighbours is the element vector we need for the iterator.
-    void pushBackLeafNeighbours_(const FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>* facet, std::shared_ptr<ElementVector> leafNeighbours)
+    void pushBackLeafNeighbours_(const FoamGridEntityImp<dimgrid-1, dimgrid, dimworld, ctype>* facet, std::shared_ptr<ElementVector> leafNeighbours)
     {
       if (facet->isLeaf())
         for(auto it = facet->elements_.begin(); it != facet->elements_.end(); ++it)
@@ -153,7 +155,7 @@ public:
             else
             {
                 // This is the end iterator
-                intersection_.impl().neighbor_=FoamGridNullIteratorFactory<dimgrid, dimworld>::null();
+                intersection_.impl().neighbor_=FoamGridNullIteratorFactory<dimgrid, dimworld, ctype>::null();
                 return;
             }
         }else
@@ -170,7 +172,7 @@ public:
             if(leafNeighbors_->size()==1)
             {
                 // This is a boundary intersection.
-                intersection_.impl().neighbor_=FoamGridNullIteratorFactory<dimgrid, dimworld>::null();
+                intersection_.impl().neighbor_=FoamGridNullIteratorFactory<dimgrid, dimworld, ctype>::null();
                 return;
             }
 
@@ -187,7 +189,7 @@ public:
                 if(leafNeighbors_->size()==1)
                 {
                     // This is a boundary intersection.
-                    intersection_.impl().neighbor_=FoamGridNullIteratorFactory<dimgrid, dimworld>::null();
+                    intersection_.impl().neighbor_=FoamGridNullIteratorFactory<dimgrid, dimworld, ctype>::null();
                     return;
                 }
                 else
@@ -211,7 +213,7 @@ public:
         if(intersection_.impl().facetIndex_ == intersection_.impl().center_->corners())
         {
             // This is an end iterator
-            intersection_.impl().neighbor_=FoamGridNullIteratorFactory<dimgrid, dimworld>::null();
+            intersection_.impl().neighbor_=FoamGridNullIteratorFactory<dimgrid, dimworld, ctype>::null();
         }
     }
 
@@ -239,6 +241,8 @@ class FoamGridLevelIntersectionIterator
     enum { dimgrid  = GridImp::dimension };
     enum { dimworld = GridImp::dimensionworld };
 
+    typedef typename GridImp::ctype ctype;
+
     // Only the codim-0 entity is allowed to call the constructors
     friend class FoamGridEntity<0, dimgrid, GridImp>;
 
@@ -251,13 +255,13 @@ class FoamGridLevelIntersectionIterator
     //! \brief Constructor for a given grid entity and a given neighbor
     //! \param center Pointer to the element where the iterator was created.
     //! \param facet The index of the facet to start the investigation.
-    FoamGridLevelIntersectionIterator(const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* center, int facet)
+    FoamGridLevelIntersectionIterator(const FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>* center, int facet)
         : intersection_(FoamGridLevelIntersection<GridImp>(center,facet))
     {
         if(facet==center->corners())
         {
             // This is the end iterator
-            intersection_.impl().neighbor_=FoamGridNullIteratorFactory<dimgrid, dimworld>::null();
+            intersection_.impl().neighbor_=FoamGridNullIteratorFactory<dimgrid, dimworld, ctype>::null();
             return;
         }
 
@@ -298,13 +302,13 @@ class FoamGridLevelIntersectionIterator
         if(intersection_.impl().facetIndex_ == center->corners())
         {
             // This is an end iterator
-            intersection_.impl().neighbor_=FoamGridNullIteratorFactory<dimgrid, dimworld>::null();
+            intersection_.impl().neighbor_=FoamGridNullIteratorFactory<dimgrid, dimworld, ctype>::null();
         }
 
     }
 
     /** \brief Constructor creating the 'one-after-last'-iterator */
-    FoamGridLevelIntersectionIterator(const FoamGridEntityImp<dimgrid, dimgrid, dimworld>* center)
+    FoamGridLevelIntersectionIterator(const FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>* center)
         : intersection_(FoamGridLevelIntersection<GridImp>(center,center->corners()))
     {
     }
@@ -339,7 +343,7 @@ public:
             else
             {
                 // This is the end iterator
-                intersection_.impl().neighbor_=FoamGridNullIteratorFactory<dimgrid, dimworld>::null();
+                intersection_.impl().neighbor_=FoamGridNullIteratorFactory<dimgrid, dimworld, ctype>::null();
                 return;
             }
         }else
@@ -392,7 +396,7 @@ public:
         if(intersection_.impl().facetIndex_ == intersection_.impl().center_->corners())
         {
             // This is an end iterator
-            intersection_.impl().neighbor_=FoamGridNullIteratorFactory<dimgrid, dimworld>::null();
+            intersection_.impl().neighbor_=FoamGridNullIteratorFactory<dimgrid, dimworld, ctype>::null();
         }
     }
 

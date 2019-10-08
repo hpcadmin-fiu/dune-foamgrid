@@ -14,12 +14,12 @@
 namespace Dune {
 
     /** \brief Element specialization of FoamGridEntityImp. Element is a grid entity of topological codimension 0 and dimension dimgrid.*/
-    template <int dimgrid, int dimworld>
-    class FoamGridEntityImp<dimgrid, dimgrid, dimworld> {};
+    template <int dimgrid, int dimworld, class ctype>
+    class FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype> {};
 
     /** \brief Element specialization of FoamGridEntityImp for 1d grids. Element is a grid entity of topological codimension 0 and dimension dimgrid.*/
-    template <int dimworld>
-    class FoamGridEntityImp<1, 1, dimworld>
+    template <int dimworld, class ctype>
+    class FoamGridEntityImp<1, 1, dimworld, ctype>
         : public FoamGridEntityBase
     {
         /** \brief Grid dimension */
@@ -30,8 +30,8 @@ namespace Dune {
         /** \brief The different ways to mark an element for grid changes */
         enum MarkState { DO_NOTHING , COARSEN , REFINE, IS_COARSENED };
 
-        FoamGridEntityImp(FoamGridEntityImp<0, dimgrid, dimworld>* v0,
-                          FoamGridEntityImp<0, dimgrid, dimworld>* v1,
+        FoamGridEntityImp(FoamGridEntityImp<0, dimgrid, dimworld, ctype>* v0,
+                          FoamGridEntityImp<0, dimgrid, dimworld, ctype>* v1,
                           int level, unsigned int id)
             : FoamGridEntityBase(level,id),
               vertex_{{v0, v1}},
@@ -43,8 +43,8 @@ namespace Dune {
               growthInsertionIndex_(-1)
         {}
 
-        FoamGridEntityImp(FoamGridEntityImp<0, dimgrid, dimworld>* v0,
-                          FoamGridEntityImp<0, dimgrid, dimworld>* v1,
+        FoamGridEntityImp(FoamGridEntityImp<0, dimgrid, dimworld, ctype>* v0,
+                          FoamGridEntityImp<0, dimgrid, dimworld, ctype>* v1,
                           int level, unsigned int id,
                           FoamGridEntityImp* father)
 
@@ -106,7 +106,7 @@ namespace Dune {
             return 2;
         }
 
-        FieldVector<double, dimworld> corner(int i) const {
+        FieldVector<ctype, dimworld> corner(int i) const {
             assert(i < this->corners());
             assert(int(vertex_.size())==this->corners());
             assert(vertex_[i]!=nullptr);
@@ -122,13 +122,14 @@ namespace Dune {
          * \return The corresponding local coordinates within the element.
          */
 
-        FieldVector<double, 1> globalToLocal(const FieldVector<double, dimworld>& coord) const
+        FieldVector<ctype, 1> globalToLocal(const FieldVector<ctype, dimworld>& coord) const
         {
             const auto diff = vertex_[1]->pos_ - vertex_[0]->pos_;
-            const double eps = diff.two_norm()*std::numeric_limits<double>::epsilon();
+            const ctype eps = diff.two_norm()*std::numeric_limits<ctype>::epsilon();
 
+            using std::abs;
             for (std::size_t dimIdx = 0; dimIdx < dimworld; ++dimIdx)
-              if (std::abs(diff[dimIdx]) > eps)
+              if (abs(diff[dimIdx]) > eps)
                 return (coord[dimIdx] - vertex_[0]->pos_[dimIdx]) / diff[dimIdx];
 
             DUNE_THROW(Dune::GridError, "Global to local mapping failed because element is degenerated.");
@@ -160,18 +161,18 @@ namespace Dune {
             DUNE_THROW(GridError, "Non-existing codimension requested!");
         }
 
-        std::array<FoamGridEntityImp<0, dimgrid, dimworld>*, 2> vertex_;
+        std::array<FoamGridEntityImp<0, dimgrid, dimworld, ctype>*, 2> vertex_;
 
-        std::array<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>*, 2> facet_;
+        std::array<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld, ctype>*, 2> facet_;
 
         /** \brief links to refinements of this edge */
-        std::array<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*, 2> sons_;
+        std::array<FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>*, 2> sons_;
 
         /** \brief The number of refined edges (0 or 2). */
         unsigned int nSons_;
 
         /** \brief Pointer to father element */
-        FoamGridEntityImp<dimgrid, dimgrid, dimworld>* father_;
+        FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>* father_;
 
         int refinementIndex_;
 
@@ -180,7 +181,7 @@ namespace Dune {
         bool isNew_;
 
         /** \brief The element parametrization */
-        std::shared_ptr<VirtualFunction<FieldVector<double, dimgrid>, FieldVector<double, dimworld> > > elementParametrization_;
+        std::shared_ptr<VirtualFunction<FieldVector<ctype, dimgrid>, FieldVector<ctype, dimworld> > > elementParametrization_;
 
         /** \brief This flag is set by postGrow() if the element looses its right to coarsen
         *         because it contains a bifurcation facet without father */
@@ -195,8 +196,8 @@ namespace Dune {
     };
 
     /** \brief Element specialization of FoamGridEntityImp for 2d grids. Element is a grid entity of topological codimension 0 and dimension dimgrid.*/
-    template <int dimworld>
-    class FoamGridEntityImp<2, 2, dimworld>
+    template <int dimworld, class ctype>
+    class FoamGridEntityImp<2, 2, dimworld, ctype>
         : public FoamGridEntityBase
     {
         /** \brief Grid dimension */
@@ -262,7 +263,7 @@ namespace Dune {
          * \return The corresponding local coordinates within the element.
          */
 
-        FieldVector<double,2> globalToLocal(const FieldVector<double, dimworld>& coord) const
+        FieldVector<ctype,2> globalToLocal(const FieldVector<ctype, dimworld>& coord) const
         {
             // If we set up the overdetermined system matrix we have
             // A[i][0]=vertex_[1].pos_[i]-vertex_[0].pos_[i];
@@ -273,7 +274,7 @@ namespace Dune {
             // A'A x= A' t
             //
 
-            FieldMatrix<double,2,2> mat; // A'A
+            FieldMatrix<ctype,2,2> mat; // A'A
             // mat_{ij}=\sum_k A_{ki}A_{kj}
             mat=0;
             for(std::size_t i=0; i <dimworld; ++i)
@@ -290,7 +291,7 @@ namespace Dune {
                 mat[1][1]+=(vertex_[2]->pos_[i]-vertex_[0]->pos_[i])*(vertex_[2]->pos_[i]-vertex_[0]->pos_[i]);
             }
 
-            FieldVector<double, 2> b, x;
+            FieldVector<ctype, 2> b, x;
             b=0;
             for(std::size_t i=0; i <dimworld; ++i)
             {
@@ -299,12 +300,12 @@ namespace Dune {
             }
             mat.solve(x, b);
 #ifndef NDEBUG
-            FieldVector<double, dimworld> test(vertex_[0]->pos_);
+            FieldVector<ctype, dimworld> test(vertex_[0]->pos_);
             test.axpy(x[0], vertex_[1]->pos_);
             test.axpy(-x[0], vertex_[0]->pos_);
             test.axpy(x[1], vertex_[2]->pos_);
             test.axpy(-x[1], vertex_[0]->pos_);
-            assert((test-coord).two_norm()< std::numeric_limits<double>::epsilon()*8);
+            assert((test-coord).two_norm()< std::numeric_limits<ctype>::epsilon()*8);
 #endif
             return x;
         }
@@ -350,11 +351,11 @@ namespace Dune {
 
         unsigned int nSons_;
 
-        std::array<FoamGridEntityImp<dimgrid, dimgrid, dimworld>*, 4> sons_;
+        std::array<FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>*, 4> sons_;
 
-        std::array<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld>*, 3> facet_;
+        std::array<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld, ctype>*, 3> facet_;
 
-        std::array<FoamGridEntityImp<0, dimgrid, dimworld>*, 3> vertex_;
+        std::array<FoamGridEntityImp<0, dimgrid, dimworld, ctype>*, 3> vertex_;
 
         /** \brief Stores requests for refinement and coarsening */
         MarkState markState_;
@@ -362,10 +363,10 @@ namespace Dune {
         /** \brief This flag is set by adapt() if this element has been newly created. */
         bool isNew_;
 
-        FoamGridEntityImp<dimgrid, dimgrid ,dimworld>* father_;
+        FoamGridEntityImp<dimgrid, dimgrid ,dimworld, ctype>* father_;
 
         /** \brief The element parametrization */
-        std::shared_ptr<VirtualFunction<FieldVector<double, dimgrid>, FieldVector<double, dimworld> > > elementParametrization_;
+        std::shared_ptr<VirtualFunction<FieldVector<ctype, dimgrid>, FieldVector<ctype, dimworld> > > elementParametrization_;
 
         /** \brief This flag is set by postGrow() if the element looses its right to coarsen
         *         because it contains a bifurcation facet without father */
