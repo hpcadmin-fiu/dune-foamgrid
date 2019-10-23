@@ -6,6 +6,7 @@
 */
 
 #include <vector>
+#include <array>
 
 #include <dune/common/version.hh>
 #include <dune/geometry/affinegeometry.hh>
@@ -32,6 +33,14 @@ class FoamGridGeometry :
         AffineGeometry<typename GridImp::ctype, mydim, coorddim>(type, coordinates)
     {}
 
+    /**
+     * \brief Construct geometry from coordinate array
+     * \note more efficient if corner size is known at compile time, e.g. for simplices
+     */
+    template<std::size_t size>
+    FoamGridGeometry(const GeometryType& type, const std::array<FieldVector<typename GridImp::ctype,coorddim>, size>& coordinates) :
+        AffineGeometry<typename GridImp::ctype, mydim, coorddim>(type, coordinates)
+    {}
 };
 
 
