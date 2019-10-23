@@ -8,6 +8,7 @@
 */
 
 #include <memory>
+#include <array>
 
 #include <dune/common/version.hh>
 
@@ -132,7 +133,9 @@ class FoamGridEntity :
         //! geometry of this entity
         Geometry geometry () const
         {
-            std::vector<FieldVector<ctype, dimworld> > coordinates(target_->corners());
+            // we currently only support simplices
+            std::array<FieldVector<ctype, dimworld>, dimgrid-codim+1> coordinates;
+            assert(dimgrid-codim+1 == target_->corners() && "Target entity is not a simplex!");
             for (int i=0; i<target_->corners(); i++)
                 coordinates[i] = target_->corner(i);
 
@@ -256,7 +259,9 @@ class FoamGridEntity<0, 2, GridImp> :
         //! Geometry of this entity
         Geometry geometry () const
         {
-            std::vector<FieldVector<ctype, dimworld> > coordinates(target_->corners());
+            // we currently only support simplices
+            std::array<FieldVector<ctype, dimworld>, dimgrid+1> coordinates;
+            assert(dimgrid+1 == target_->corners() && "Target entity is not a simplex!");
             for (int i=0; i<target_->corners(); i++)
                 coordinates[i] = target_->vertex_[i]->pos_;
 
@@ -426,8 +431,7 @@ class FoamGridEntity<0, 2, GridImp> :
                     { {0.5,0.0}, {0.5,0.5}, {0.0,0.5} }
                 };
 
-                std::vector<FieldVector<ctype, dimgrid> >
-                    coordinates(3);
+                std::array<FieldVector<ctype, dimgrid>, 3> coordinates;
 
                 for(int corner=0; corner <3; ++corner)
                     for(int entry=0; entry <2; ++entry)
@@ -578,7 +582,9 @@ class FoamGridEntity<0, 1, GridImp> :
         //! Geometry of this entity
         Geometry geometry () const
         {
-            std::vector<FieldVector<ctype, dimworld> > coordinates(target_->corners());
+            // we currently only support simplices
+            std::array<FieldVector<ctype, dimworld>, dimgrid+1> coordinates;
+            assert(dimgrid+1 == target_->corners() && "Target entity is not a simplex!");
             for (int i=0; i<target_->corners(); i++)
                 coordinates[i] = target_->corner(i);
 
@@ -732,7 +738,7 @@ class FoamGridEntity<0, 1, GridImp> :
                 // of the father.
                 ctype mapping[2][2] = {{0.0, 0.5}, {0.5, 1.0}};
 
-                std::vector<FieldVector<ctype, dimgrid> > coordinates(2);
+                std::array<FieldVector<ctype, dimgrid>, 2> coordinates;
 
                 for(int corner=0; corner <2; ++corner)
                     coordinates[corner][0] = mapping[target_->refinementIndex_][corner];
