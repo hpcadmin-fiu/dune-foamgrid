@@ -37,7 +37,7 @@ void checkBoundarySegments(const Grid& grid,
         if ( factory.wasInserted( intersection ) )
         {
           insertedBoundaries++;
-          const int bndsegIdx = intersection.boundarySegmentIndex();
+          const int bndsegIdx = factory.insertionIndex(intersection);
           const int bndId = boundaryMarkers[bndsegIdx];
           if (bndId != boundaryIdExpected)
             DUNE_THROW(Dune::GridError, "Wrong boundary ID. Expected " << boundaryIdExpected << " got " << bndId);
