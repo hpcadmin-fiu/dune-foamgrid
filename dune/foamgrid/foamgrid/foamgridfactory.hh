@@ -91,6 +91,14 @@ template <int dimgrid, int dimworld, class ct>
             return vertex.impl().target_->leafIndex_;
         }
 
+        /** \brief Obtain a boundary's insertion index
+         */
+        unsigned int
+        insertionIndex(const typename FoamGrid<dimgrid, dimworld, ctype>::LeafIntersection& intersection) const override
+        {
+            return intersection.boundarySegmentIndex();
+        }
+
     protected:
 
         // Pointer to the grid being built
