@@ -75,7 +75,7 @@ template <int dimgrid, int dimworld, class ct>
             vertexArray_.push_back(&*std::get<0>(grid_->entityImps_[0]).rbegin());
         }
 
-        /** \brief Return the number of the element to insert parameters
+        /** \brief Obtain an element's insertion index
          */
         unsigned int
         insertionIndex(const typename FoamGrid<dimgrid, dimworld, ctype>::Traits::template Codim<0>::Entity &entity) const override
@@ -83,12 +83,20 @@ template <int dimgrid, int dimworld, class ct>
             return entity.impl().target_->leafIndex_;
         }
 
-        /** \brief Return the number of the vertex to insert parameters
+        /** \brief Obtain a vertex' insertion index
          */
         unsigned int
         insertionIndex(const typename FoamGrid<dimgrid, dimworld, ctype>::Traits::template Codim<dimgrid>::Entity &vertex) const override
         {
             return vertex.impl().target_->leafIndex_;
+        }
+
+        /** \brief Obtain a boundary's insertion index
+         */
+        unsigned int
+        insertionIndex(const typename FoamGrid<dimgrid, dimworld, ctype>::LeafIntersection& intersection) const override
+        {
+            return intersection.boundarySegmentIndex();
         }
 
     protected:
