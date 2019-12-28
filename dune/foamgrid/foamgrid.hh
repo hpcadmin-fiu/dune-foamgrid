@@ -15,7 +15,14 @@
 #include <utility>
 #include <type_traits>
 
+
+#include <dune/common/version.hh>
+#if DUNE_VERSION_LT(DUNE_COMMON,2,7)
 #include <dune/common/parallel/collectivecommunication.hh>
+#else
+#include <dune/common/parallel/communication.hh>
+#endif
+
 #include <dune/common/stdstreams.hh>
 #include <dune/grid/common/capabilities.hh>
 #include <dune/grid/common/grid.hh>
