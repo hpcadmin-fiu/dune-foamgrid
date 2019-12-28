@@ -222,21 +222,11 @@ template <int dimworld, class ct>
             if (this->grid_==nullptr)
                 return nullptr;
 
-            auto eIt = std::get<1>(this->grid_->entityImps_[0]).begin();
-            const auto eEndIt = std::get<1>(this->grid_->entityImps_[0]).end();
-
-            for(;eIt!=eEndIt;eIt++) {
-
-                // Get two vertices of the element
-                const auto* v0 = eIt->vertex_[0];
-                const auto* v1 = eIt->vertex_[1];
-
-                // make vertices (facets) know about element
-                // using const_cast because of the implementation of EntityImp<1>
-                // the member variable vertex_ is an array with pointers to const vertices
-                const_cast <EntityImp<0>*> (v0)->elements_.push_back(&*eIt);
-                const_cast <EntityImp<0>*> (v1)->elements_.push_back(&*eIt);
-
+            // make facets (vertices) know about the element
+            for (auto& element : std::get<dimgrid>(this->grid_->entityImps_[0]))
+            {
+                element.vertex_[0]->elements_.push_back(&element);
+                element.vertex_[1]->elements_.push_back(&element);
             }
 
             // Create the index sets
@@ -246,18 +236,17 @@ template <int dimworld, class ct>
             //   Set the boundary ids
             // ////////////////////////////////////////////////
 
-            // Iterate over all facets (=vertices in 1d)
-            auto fIt = std::get<0>(this->grid_->entityImps_[0]).begin();
-            const auto fEndIt = std::get<0>(this->grid_->entityImps_[0]).end();
-            for (; fIt != fEndIt; ++fIt)
-                if(fIt->elements_.size()==1) // if boundary facet
+            for (auto& facet : std::get<0>(this->grid_->entityImps_[0]))
+            {
+                if (facet.elements_.size() == 1) // if boundary facet
                 {
-                  const auto& it = boundarySegmentIndices_.find( fIt->vertex_[0]->leafIndex_ );
-                  if (it != boundarySegmentIndices_.end())
-                      fIt->boundarySegmentIndex_ = it->second;
-                  else
-                      fIt->boundarySegmentIndex_ = this->boundarySegmentCounter_++;
+                    const auto it = boundarySegmentIndices_.find( facet.vertex_[0]->leafIndex_ );
+                    if (it != boundarySegmentIndices_.end())
+                        facet.boundarySegmentIndex_ = it->second;
+                    else
+                        facet.boundarySegmentIndex_ = this->boundarySegmentCounter_++;
                 }
+            }
 
             // ////////////////////////////////////////////////
             //   Hand over the new grid
@@ -461,25 +450,22 @@ template <int dimworld, class ct>
             //   Set the boundary ids
             // ////////////////////////////////////////////////
 
-            // Iterate over all facets (=edges in 2D)
-            auto fIt = std::get<1>(this->grid_->entityImps_[0]).begin();
-            const auto fEndIt = std::get<1>(this->grid_->entityImps_[0]).end();
-            for (; fIt!=fEndIt; ++fIt)
-                if(fIt->elements_.size()==1) //if boundary facet
+            for (auto& facet : std::get<1>(this->grid_->entityImps_[0]))
+            {
+                if (facet.elements_.size() == 1) // if boundary facet
                 {
-                  std::array<unsigned int, 2> vertexIndices {{ fIt->vertex_[0]->leafIndex_, fIt->vertex_[1]->leafIndex_ }};
+                    std::array<unsigned int, 2> vertexIndices {{ facet.vertex_[0]->leafIndex_, facet.vertex_[1]->leafIndex_ }};
+                    // sort the indices
+                    if ( vertexIndices[0] > vertexIndices[1] )
+                      std::swap( vertexIndices[0], vertexIndices[1] );
 
-                  // sort the indices
-                  if ( vertexIndices[0] > vertexIndices[1] )
-                    std::swap( vertexIndices[0], vertexIndices[1] );
-
-                  auto it = boundarySegmentIndices_.find( vertexIndices );
-                  if (it != boundarySegmentIndices_.end()) {
-                      fIt->boundarySegmentIndex_ = it->second;
-                  } else { // edge was not inserted as boundary segment
-                      fIt->boundarySegmentIndex_ = this->boundarySegmentCounter_++;
-                  }
+                    const auto it = boundarySegmentIndices_.find( vertexIndices );
+                    if (it != boundarySegmentIndices_.end())
+                        facet.boundarySegmentIndex_ = it->second;
+                    else
+                        facet.boundarySegmentIndex_ = this->boundarySegmentCounter_++;
                 }
+            }
 
             // ////////////////////////////////////////////////
             //   Hand over the new grid
