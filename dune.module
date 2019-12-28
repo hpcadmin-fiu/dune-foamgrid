@@ -7,5 +7,5 @@ Module: dune-foamgrid
 Version: 2.6-git
 Maintainer: timo.koch@iws.uni-stuttgart.de, oliver.sander@tu-dresden.de
 #depending on
-Depends: dune-common (>= 2.5) dune-geometry (>= 2.5) dune-grid (>= 2.5)
+Depends: dune-common (>= 2.6) dune-geometry (>= 2.6) dune-grid (>= 2.6)
 Suggests: dune-python
