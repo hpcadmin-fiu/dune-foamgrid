@@ -126,7 +126,6 @@ template <int dimworld, class ct>
     {
         /** \brief Grid dimension */
         enum {dimgrid = 1};
-        typedef typename std::list<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld, ct> >::iterator FacetIterator;
         typedef ct ctype;
 
     public:
@@ -241,8 +240,8 @@ template <int dimworld, class ct>
             // ////////////////////////////////////////////////
 
             // Iterate over all facets (=vertices in 1d)
-            FacetIterator fIt = std::get<0>(this->grid_->entityImps_[0]).begin();
-            const FacetIterator fEndIt = std::get<0>(this->grid_->entityImps_[0]).end();
+            auto fIt = std::get<0>(this->grid_->entityImps_[0]).begin();
+            const auto fEndIt = std::get<0>(this->grid_->entityImps_[0]).end();
             for (; fIt != fEndIt; ++fIt)
                 if(fIt->elements_.size()==1) // if boundary facet
                 {
@@ -275,7 +274,6 @@ template <int dimworld, class ct>
     {
         /** \brief Grid dimension */
         enum {dimgrid = 2};
-        typedef typename std::list<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld, ct> >::iterator FacetIterator;
         typedef ct ctype;
 
     public:
@@ -458,8 +456,8 @@ template <int dimworld, class ct>
             // ////////////////////////////////////////////////
 
             // Iterate over all facets (=edges in 2D)
-            FacetIterator fIt = std::get<1>(this->grid_->entityImps_[0]).begin();
-            const FacetIterator fEndIt = std::get<1>(this->grid_->entityImps_[0]).end();
+            auto fIt = std::get<1>(this->grid_->entityImps_[0]).begin();
+            const auto fEndIt = std::get<1>(this->grid_->entityImps_[0]).end();
             for (; fIt!=fEndIt; ++fIt)
                 if(fIt->elements_.size()==1) //if boundary facet
                 {
