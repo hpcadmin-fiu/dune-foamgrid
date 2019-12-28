@@ -126,7 +126,13 @@ template <int dimworld, class ct>
     {
         /** \brief Grid dimension */
         enum {dimgrid = 1};
-        typedef ct ctype;
+
+        /** \brief Type used by the grid for coordinates */
+        using ctype = ct;
+
+        /** \brief Alias for FoamGrid entities */
+        template<int mydim>
+        using EntityImp = FoamGridEntityImp<mydim, dimgrid, dimworld, ctype>;
 
     public:
 
@@ -170,15 +176,16 @@ template <int dimworld, class ct>
             \param vertices The vertices of the new element, using the DUNE numbering
         */
         void insertElement(const GeometryType& type,
-                           const std::vector<unsigned int>& vertices) override {
+                           const std::vector<unsigned int>& vertices) override
+        {
             assert(type.isLine());
-            FoamGridEntityImp<1, dimgrid, dimworld, ctype> newElement(this->vertexArray_[vertices[0]],
-                                                                      this->vertexArray_[vertices[1]],
-                                                                      0,
-                                                                      this->grid_->getNextFreeId());
-
-            std::get<1>(this->grid_->entityImps_[0]).push_back(newElement);
-
+            // insert new element
+            std::get<1>(this->grid_->entityImps_[0]).emplace_back(
+                this->vertexArray_[vertices[0]],
+                this->vertexArray_[vertices[1]],
+                0, // level
+                this->grid_->getNextFreeId()
+            );
         }
 
         /** \brief Insert a parametrized element into the coarse grid
@@ -191,10 +198,10 @@ template <int dimworld, class ct>
                            const std::shared_ptr<VirtualFunction<FieldVector<ctype,dimgrid>,FieldVector<ctype,dimworld> > >& elementParametrization) override
         {
             assert(type.isLine());
-            FoamGridEntityImp<1, dimgrid, dimworld, ctype> newElement(this->vertexArray_[vertices[0]],
-                                                                      this->vertexArray_[vertices[1]],
-                                                                      0,
-                                                                      this->grid_->getNextFreeId());
+            EntityImp<1> newElement(this->vertexArray_[vertices[0]],
+                                    this->vertexArray_[vertices[1]],
+                                    0, // level
+                                    this->grid_->getNextFreeId());
             // save the pointer to the element parametrization
             newElement.elementParametrization_ = elementParametrization;
 
@@ -215,20 +222,20 @@ template <int dimworld, class ct>
             if (this->grid_==nullptr)
                 return nullptr;
 
-            typename std::list<FoamGridEntityImp<1, dimgrid, dimworld, ctype> >::iterator eIt    = std::get<1>(this->grid_->entityImps_[0]).begin();
-            typename std::list<FoamGridEntityImp<1, dimgrid, dimworld, ctype> >::iterator eEndIt = std::get<1>(this->grid_->entityImps_[0]).end();
+            auto eIt = std::get<1>(this->grid_->entityImps_[0]).begin();
+            const auto eEndIt = std::get<1>(this->grid_->entityImps_[0]).end();
 
             for(;eIt!=eEndIt;eIt++) {
 
-                // Get two vertices of the edge
-                const FoamGridEntityImp<0, dimgrid, dimworld, ctype>* v0 = eIt->vertex_[0];
-                const FoamGridEntityImp<0, dimgrid, dimworld, ctype>* v1 = eIt->vertex_[1];
+                // Get two vertices of the element
+                const auto* v0 = eIt->vertex_[0];
+                const auto* v1 = eIt->vertex_[1];
 
-                // make vertices know about edge
-                // using const_cast because of the implementation of FoamGridEntityImp<1,dimgrid,dimworld>
+                // make vertices (facets) know about element
+                // using const_cast because of the implementation of EntityImp<1>
                 // the member variable vertex_ is an array with pointers to const vertices
-                const_cast <FoamGridEntityImp<0, dimgrid, dimworld, ctype>*> (v0)->elements_.push_back(&*eIt);
-                const_cast <FoamGridEntityImp<0, dimgrid, dimworld, ctype>*> (v1)->elements_.push_back(&*eIt);
+                const_cast <EntityImp<0>*> (v0)->elements_.push_back(&*eIt);
+                const_cast <EntityImp<0>*> (v1)->elements_.push_back(&*eIt);
 
             }
 
@@ -274,7 +281,13 @@ template <int dimworld, class ct>
     {
         /** \brief Grid dimension */
         enum {dimgrid = 2};
-        typedef ct ctype;
+
+        /** \brief Type used by the grid for coordinates */
+        using ctype = ct;
+
+        /** \brief Alias for FoamGrid entities */
+        template<int mydim>
+        using EntityImp = FoamGridEntityImp<mydim, dimgrid, dimworld, ctype>;
 
     public:
 
@@ -344,8 +357,7 @@ template <int dimworld, class ct>
 
             assert(type.isTriangle());
 
-            FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype> newElement(0,   // level
-                                       this->grid_->getNextFreeId());  // id
+            EntityImp<dimgrid> newElement(/*level=*/0, this->grid_->getNextFreeId());
             newElement.vertex_[0] = this->vertexArray_[vertices[0]];
             newElement.vertex_[1] = this->vertexArray_[vertices[1]];
             newElement.vertex_[2] = this->vertexArray_[vertices[2]];
@@ -363,8 +375,7 @@ template <int dimworld, class ct>
                            const std::shared_ptr<VirtualFunction<FieldVector<ctype,dimgrid>,FieldVector<ctype,dimworld> > >& elementParametrization) override
         {
             assert(type.isTriangle());
-            FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype> newElement(0,   // level
-                                       this->grid_->getNextFreeId());  // id
+            EntityImp<dimgrid> newElement(/*level=*/0, this->grid_->getNextFreeId());
             newElement.vertex_[0] = this->vertexArray_[vertices[0]];
             newElement.vertex_[1] = this->vertexArray_[vertices[1]];
             newElement.vertex_[2] = this->vertexArray_[vertices[2]];
@@ -391,18 +402,15 @@ template <int dimworld, class ct>
             //   Create the edges
             // ////////////////////////////////////////////////////
 
-            // for convenience
-            typedef FoamGridEntityImp<0, dimgrid, dimworld, ctype> FoamGridVertex;
-
             // For fast retrieval: a map from pairs of vertices to the edge that connects them
-            std::map<std::pair<const FoamGridEntityImp<0, dimgrid, dimworld, ctype>*, const FoamGridEntityImp<0, dimgrid, dimworld, ctype>*>, FoamGridEntityImp<1, dimgrid, dimworld, ctype>*> edgeMap;
+            std::map<std::pair<const EntityImp<0>*, const EntityImp<0>*>, EntityImp<1>*> edgeMap;
 
-            typename std::list<FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype> >::iterator eIt    = std::get<dimgrid>(this->grid_->entityImps_[0]).begin();
-            typename std::list<FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype> >::iterator eEndIt = std::get<dimgrid>(this->grid_->entityImps_[0]).end();
+            auto eIt = std::get<dimgrid>(this->grid_->entityImps_[0]).begin();
+            const auto eEndIt = std::get<dimgrid>(this->grid_->entityImps_[0]).end();
 
             for (; eIt!=eEndIt; ++eIt) {
 
-                FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>* element = &(*eIt);
+                EntityImp<dimgrid>* element = &(*eIt);
 
                 const auto refElement = ReferenceElements<ctype, dimgrid>::general(eIt->type());
 
@@ -410,11 +418,13 @@ template <int dimworld, class ct>
                 for (size_t i=0; i<element->facet_.size(); ++i) {
 
                     // Get two vertices of the potential edge
-                    const FoamGridVertex* v0 = element->vertex_[refElement.subEntity(i, 1, 0, 2)];
-                    const FoamGridVertex* v1 = element->vertex_[refElement.subEntity(i, 1, 1, 2)];
+                    const auto* v0 = element->vertex_[refElement.subEntity(i, 1, 0, 2)];
+                    const auto* v1 = element->vertex_[refElement.subEntity(i, 1, 1, 2)];
 
-                    FoamGridEntityImp<1, dimgrid, dimworld, ctype>* existingEdge = nullptr;
-                    typename std::map<std::pair<const FoamGridEntityImp<0, dimgrid, dimworld, ctype>*, const FoamGridEntityImp<0, dimgrid, dimworld, ctype>*>, FoamGridEntityImp<1, dimgrid, dimworld, ctype>*>::const_iterator e = edgeMap.find(std::make_pair(v0,v1));
+
+
+                    EntityImp<1>* existingEdge = nullptr;
+                    auto e = edgeMap.find(std::make_pair(v0,v1));
 
                     if (e != edgeMap.end()) {
                         existingEdge = e->second;
@@ -427,11 +437,7 @@ template <int dimworld, class ct>
                     if (existingEdge == nullptr) {
 
                         // The current edge has not been inserted already.  We do that now.
-                        std::get<1>(this->grid_->entityImps_[0]).push_back(FoamGridEntityImp<1, dimgrid, dimworld, ctype>(v0,
-                                                                                                    v1,
-                                                                                                    0, // level
-                                                                                                    this->grid_->getNextFreeId() // id
-                                                                                                    ));
+                        std::get<1>(this->grid_->entityImps_[0]).push_back(EntityImp<1>(v0, v1, /*level=*/0, this->grid_->getNextFreeId()));
 
                         existingEdge = &*std::get<1>(this->grid_->entityImps_[0]).rbegin();
 
