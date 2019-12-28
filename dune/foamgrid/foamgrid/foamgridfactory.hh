@@ -29,9 +29,7 @@ template <int dimgrid, int dimworld, class ct>
         : public GridFactoryInterface<FoamGrid<dimgrid, dimworld, ct> >
     {
     /** \brief Type used by the grid for coordinates */
-    typedef ct ctype;
-    /** \brief Vertex iterator */
-    typedef typename std::map<FieldVector<ctype,1>, unsigned int>::iterator VertexIterator;
+    using ctype = ct;
 
     public:
 
