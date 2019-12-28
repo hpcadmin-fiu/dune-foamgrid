@@ -15,6 +15,7 @@
 #include <dune/common/version.hh>
 #include <dune/common/function.hh>
 #include <dune/common/fvector.hh>
+#include <dune/common/hash.hh>
 #include <dune/common/to_unique_ptr.hh>
 
 #include <dune/grid/common/gridfactory.hh>
@@ -471,13 +472,16 @@ template <int dimworld, class ct>
         template<class T, class U = T>
         struct HashPair {
           std::size_t operator() (const std::pair<T, U>& a) const {
-            return std::hash<T>{}(a.first) ^ (std::hash<U>{}(a.second) << 1);
+            std::size_t seed = 0;
+            hash_combine(seed, a.first);
+            hash_combine(seed, a.second);
+            return seed;
           }
         };
 
         struct HashUIntArray {
           std::size_t operator() (const std::array<unsigned int, 2>& a) const {
-            return std::hash<unsigned int>{}(a[0]) ^ (std::hash<unsigned int>{}(a[1]) << 1);
+            return hash_range(a.begin(), a.end());
           }
         };
 
