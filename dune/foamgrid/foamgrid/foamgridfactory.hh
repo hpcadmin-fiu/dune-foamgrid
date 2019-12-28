@@ -392,53 +392,43 @@ template <int dimworld, class ct>
             // ////////////////////////////////////////////////////
 
             // For fast retrieval: a map from pairs of vertices to the edge that connects them
-            std::map<std::pair<const EntityImp<0>*, const EntityImp<0>*>, EntityImp<1>*> edgeMap;
-
-            auto eIt = std::get<dimgrid>(this->grid_->entityImps_[0]).begin();
-            const auto eEndIt = std::get<dimgrid>(this->grid_->entityImps_[0]).end();
-
-            for (; eIt!=eEndIt; ++eIt) {
-
-                EntityImp<dimgrid>* element = &(*eIt);
-
-                const auto refElement = ReferenceElements<ctype, dimgrid>::general(eIt->type());
+            std::unordered_map<std::pair<const EntityImp<0>*, const EntityImp<0>*>, EntityImp<1>*,
+                               HashPair<const EntityImp<0>*>> edgeMap;
+            for (auto& element : std::get<dimgrid>(this->grid_->entityImps_[0]))
+            {
+                const auto refElement = ReferenceElements<ctype, dimgrid>::general(element.type());
 
                 // Loop over all edges of this element
-                for (size_t i=0; i<element->facet_.size(); ++i) {
+                for (std::size_t i=0; i<element.facet_.size(); ++i)
+                {
+                    // get pointer to the edge (insert edge if it's not in the entity list yet)
+                    auto edge = [&](){
+                      // Get two vertices of the potential edge
+                      auto v0 = element.vertex_[refElement.subEntity(i, 1, 0, 2)];
+                      auto v1 = element.vertex_[refElement.subEntity(i, 1, 1, 2)];
+                      // sort pointers
+                      if ( v0 > v1 )
+                        std::swap( v0, v1 );
 
-                    // Get two vertices of the potential edge
-                    const auto* v0 = element->vertex_[refElement.subEntity(i, 1, 0, 2)];
-                    const auto* v1 = element->vertex_[refElement.subEntity(i, 1, 1, 2)];
+                      // see if the edge was already inserted
+                      // the pointer pair hash is symmetric so we don't have to check for pair(v1,v0)
+                      auto e = edgeMap.find(std::make_pair(v0, v1));
+                      if (e != edgeMap.end())
+                        return e->second;
 
-
-
-                    EntityImp<1>* existingEdge = nullptr;
-                    auto e = edgeMap.find(std::make_pair(v0,v1));
-
-                    if (e != edgeMap.end()) {
-                        existingEdge = e->second;
-                    } else {
-                        e = edgeMap.find(std::make_pair(v1,v0));
-                        if (e != edgeMap.end())
-                            existingEdge = e->second;
-                    }
-
-                    if (existingEdge == nullptr) {
-
-                        // The current edge has not been inserted already.  We do that now.
-                        std::get<1>(this->grid_->entityImps_[0]).push_back(EntityImp<1>(v0, v1, /*level=*/0, this->grid_->getNextFreeId()));
-
-                        existingEdge = &*std::get<1>(this->grid_->entityImps_[0]).rbegin();
-
-                        edgeMap.insert(std::make_pair(std::make_pair(v0,v1), existingEdge));
-
-                    }
+                      // edge was not inserted yet: insert the edge now
+                      std::get<1>(this->grid_->entityImps_[0]).emplace_back(v0, v1, /*level=*/0, this->grid_->getNextFreeId());
+                      // insert it into the map of inserted edges
+                      auto newEdge = &*std::get<1>(this->grid_->entityImps_[0]).rbegin();
+                      edgeMap.insert(std::make_pair(std::make_pair(v0, v1), newEdge));
+                      return newEdge;
+                    }();
 
                     // make element know about the edge
-                    element->facet_[i] = existingEdge;
+                    element.facet_[i] = edge;
 
                     // make edge know about the element
-                    existingEdge->elements_.push_back(element);
+                    edge->elements_.push_back(&element);
                 }
             }
 
@@ -478,6 +468,13 @@ template <int dimworld, class ct>
         }
 
       private:
+        template<class T, class U = T>
+        struct HashPair {
+          std::size_t operator() (const std::pair<T, U>& a) const {
+            return std::hash<T>{}(a.first) ^ (std::hash<U>{}(a.second) << 1);
+          }
+        };
+
         struct HashUIntArray {
           std::size_t operator() (const std::array<unsigned int, 2>& a) const {
             return std::hash<unsigned int>{}(a[0]) ^ (std::hash<unsigned int>{}(a[1]) << 1);
