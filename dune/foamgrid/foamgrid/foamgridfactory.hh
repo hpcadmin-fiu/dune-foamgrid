@@ -15,6 +15,7 @@
 #include <dune/common/version.hh>
 #include <dune/common/function.hh>
 #include <dune/common/fvector.hh>
+#include <dune/common/hash.hh>
 #include <dune/common/to_unique_ptr.hh>
 
 #include <dune/grid/common/gridfactory.hh>
@@ -29,9 +30,7 @@ template <int dimgrid, int dimworld, class ct>
         : public GridFactoryInterface<FoamGrid<dimgrid, dimworld, ct> >
     {
     /** \brief Type used by the grid for coordinates */
-    typedef ct ctype;
-    /** \brief Vertex iterator */
-    typedef typename std::map<FieldVector<ctype,1>, unsigned int>::iterator VertexIterator;
+    using ctype = ct;
 
     public:
 
@@ -128,8 +127,13 @@ template <int dimworld, class ct>
     {
         /** \brief Grid dimension */
         enum {dimgrid = 1};
-        typedef typename std::list<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld, ct> >::iterator FacetIterator;
-        typedef ct ctype;
+
+        /** \brief Type used by the grid for coordinates */
+        using ctype = ct;
+
+        /** \brief Alias for FoamGrid entities */
+        template<int mydim>
+        using EntityImp = FoamGridEntityImp<mydim, dimgrid, dimworld, ctype>;
 
     public:
 
@@ -173,15 +177,16 @@ template <int dimworld, class ct>
             \param vertices The vertices of the new element, using the DUNE numbering
         */
         void insertElement(const GeometryType& type,
-                           const std::vector<unsigned int>& vertices) override {
+                           const std::vector<unsigned int>& vertices) override
+        {
             assert(type.isLine());
-            FoamGridEntityImp<1, dimgrid, dimworld, ctype> newElement(this->vertexArray_[vertices[0]],
-                                                                      this->vertexArray_[vertices[1]],
-                                                                      0,
-                                                                      this->grid_->getNextFreeId());
-
-            std::get<1>(this->grid_->entityImps_[0]).push_back(newElement);
-
+            // insert new element
+            std::get<1>(this->grid_->entityImps_[0]).emplace_back(
+                this->vertexArray_[vertices[0]],
+                this->vertexArray_[vertices[1]],
+                0, // level
+                this->grid_->getNextFreeId()
+            );
         }
 
         /** \brief Insert a parametrized element into the coarse grid
@@ -194,10 +199,10 @@ template <int dimworld, class ct>
                            const std::shared_ptr<VirtualFunction<FieldVector<ctype,dimgrid>,FieldVector<ctype,dimworld> > >& elementParametrization) override
         {
             assert(type.isLine());
-            FoamGridEntityImp<1, dimgrid, dimworld, ctype> newElement(this->vertexArray_[vertices[0]],
-                                                                      this->vertexArray_[vertices[1]],
-                                                                      0,
-                                                                      this->grid_->getNextFreeId());
+            EntityImp<1> newElement(this->vertexArray_[vertices[0]],
+                                    this->vertexArray_[vertices[1]],
+                                    0, // level
+                                    this->grid_->getNextFreeId());
             // save the pointer to the element parametrization
             newElement.elementParametrization_ = elementParametrization;
 
@@ -218,21 +223,11 @@ template <int dimworld, class ct>
             if (this->grid_==nullptr)
                 return nullptr;
 
-            typename std::list<FoamGridEntityImp<1, dimgrid, dimworld, ctype> >::iterator eIt    = std::get<1>(this->grid_->entityImps_[0]).begin();
-            typename std::list<FoamGridEntityImp<1, dimgrid, dimworld, ctype> >::iterator eEndIt = std::get<1>(this->grid_->entityImps_[0]).end();
-
-            for(;eIt!=eEndIt;eIt++) {
-
-                // Get two vertices of the edge
-                const FoamGridEntityImp<0, dimgrid, dimworld, ctype>* v0 = eIt->vertex_[0];
-                const FoamGridEntityImp<0, dimgrid, dimworld, ctype>* v1 = eIt->vertex_[1];
-
-                // make vertices know about edge
-                // using const_cast because of the implementation of FoamGridEntityImp<1,dimgrid,dimworld>
-                // the member variable vertex_ is an array with pointers to const vertices
-                const_cast <FoamGridEntityImp<0, dimgrid, dimworld, ctype>*> (v0)->elements_.push_back(&*eIt);
-                const_cast <FoamGridEntityImp<0, dimgrid, dimworld, ctype>*> (v1)->elements_.push_back(&*eIt);
-
+            // make facets (vertices) know about the element
+            for (auto& element : std::get<dimgrid>(this->grid_->entityImps_[0]))
+            {
+                element.vertex_[0]->elements_.push_back(&element);
+                element.vertex_[1]->elements_.push_back(&element);
             }
 
             // Create the index sets
@@ -242,18 +237,17 @@ template <int dimworld, class ct>
             //   Set the boundary ids
             // ////////////////////////////////////////////////
 
-            // Iterate over all facets (=vertices in 1d)
-            FacetIterator fIt = std::get<0>(this->grid_->entityImps_[0]).begin();
-            const FacetIterator fEndIt = std::get<0>(this->grid_->entityImps_[0]).end();
-            for (; fIt != fEndIt; ++fIt)
-                if(fIt->elements_.size()==1) // if boundary facet
+            for (auto& facet : std::get<0>(this->grid_->entityImps_[0]))
+            {
+                if (facet.elements_.size() == 1) // if boundary facet
                 {
-                  const auto& it = boundarySegmentIndices_.find( fIt->vertex_[0]->leafIndex_ );
-                  if (it != boundarySegmentIndices_.end())
-                      fIt->boundarySegmentIndex_ = it->second;
-                  else
-                      fIt->boundarySegmentIndex_ = this->boundarySegmentCounter_++;
+                    const auto it = boundarySegmentIndices_.find( facet.vertex_[0]->leafIndex_ );
+                    if (it != boundarySegmentIndices_.end())
+                        facet.boundarySegmentIndex_ = it->second;
+                    else
+                        facet.boundarySegmentIndex_ = this->boundarySegmentCounter_++;
                 }
+            }
 
             // ////////////////////////////////////////////////
             //   Hand over the new grid
@@ -277,8 +271,13 @@ template <int dimworld, class ct>
     {
         /** \brief Grid dimension */
         enum {dimgrid = 2};
-        typedef typename std::list<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld, ct> >::iterator FacetIterator;
-        typedef ct ctype;
+
+        /** \brief Type used by the grid for coordinates */
+        using ctype = ct;
+
+        /** \brief Alias for FoamGrid entities */
+        template<int mydim>
+        using EntityImp = FoamGridEntityImp<mydim, dimgrid, dimworld, ctype>;
 
     public:
 
@@ -348,8 +347,7 @@ template <int dimworld, class ct>
 
             assert(type.isTriangle());
 
-            FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype> newElement(0,   // level
-                                       this->grid_->getNextFreeId());  // id
+            EntityImp<dimgrid> newElement(/*level=*/0, this->grid_->getNextFreeId());
             newElement.vertex_[0] = this->vertexArray_[vertices[0]];
             newElement.vertex_[1] = this->vertexArray_[vertices[1]];
             newElement.vertex_[2] = this->vertexArray_[vertices[2]];
@@ -367,8 +365,7 @@ template <int dimworld, class ct>
                            const std::shared_ptr<VirtualFunction<FieldVector<ctype,dimgrid>,FieldVector<ctype,dimworld> > >& elementParametrization) override
         {
             assert(type.isTriangle());
-            FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype> newElement(0,   // level
-                                       this->grid_->getNextFreeId());  // id
+            EntityImp<dimgrid> newElement(/*level=*/0, this->grid_->getNextFreeId());
             newElement.vertex_[0] = this->vertexArray_[vertices[0]];
             newElement.vertex_[1] = this->vertexArray_[vertices[1]];
             newElement.vertex_[2] = this->vertexArray_[vertices[2]];
@@ -395,59 +392,44 @@ template <int dimworld, class ct>
             //   Create the edges
             // ////////////////////////////////////////////////////
 
-            // for convenience
-            typedef FoamGridEntityImp<0, dimgrid, dimworld, ctype> FoamGridVertex;
-
             // For fast retrieval: a map from pairs of vertices to the edge that connects them
-            std::map<std::pair<const FoamGridEntityImp<0, dimgrid, dimworld, ctype>*, const FoamGridEntityImp<0, dimgrid, dimworld, ctype>*>, FoamGridEntityImp<1, dimgrid, dimworld, ctype>*> edgeMap;
-
-            typename std::list<FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype> >::iterator eIt    = std::get<dimgrid>(this->grid_->entityImps_[0]).begin();
-            typename std::list<FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype> >::iterator eEndIt = std::get<dimgrid>(this->grid_->entityImps_[0]).end();
-
-            for (; eIt!=eEndIt; ++eIt) {
-
-                FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>* element = &(*eIt);
-
-                const auto refElement = ReferenceElements<ctype, dimgrid>::general(eIt->type());
+            std::unordered_map<std::pair<const EntityImp<0>*, const EntityImp<0>*>, EntityImp<1>*,
+                               HashPair<const EntityImp<0>*>> edgeMap;
+            for (auto& element : std::get<dimgrid>(this->grid_->entityImps_[0]))
+            {
+                const auto refElement = ReferenceElements<ctype, dimgrid>::general(element.type());
 
                 // Loop over all edges of this element
-                for (size_t i=0; i<element->facet_.size(); ++i) {
+                for (std::size_t i=0; i<element.facet_.size(); ++i)
+                {
+                    // get pointer to the edge (insert edge if it's not in the entity list yet)
+                    auto edge = [&](){
+                      // Get two vertices of the potential edge
+                      auto v0 = element.vertex_[refElement.subEntity(i, 1, 0, 2)];
+                      auto v1 = element.vertex_[refElement.subEntity(i, 1, 1, 2)];
+                      // sort pointers
+                      if ( v0 > v1 )
+                        std::swap( v0, v1 );
 
-                    // Get two vertices of the potential edge
-                    const FoamGridVertex* v0 = element->vertex_[refElement.subEntity(i, 1, 0, 2)];
-                    const FoamGridVertex* v1 = element->vertex_[refElement.subEntity(i, 1, 1, 2)];
+                      // see if the edge was already inserted
+                      // the pointer pair hash is symmetric so we don't have to check for pair(v1,v0)
+                      auto e = edgeMap.find(std::make_pair(v0, v1));
+                      if (e != edgeMap.end())
+                        return e->second;
 
-                    FoamGridEntityImp<1, dimgrid, dimworld, ctype>* existingEdge = nullptr;
-                    typename std::map<std::pair<const FoamGridEntityImp<0, dimgrid, dimworld, ctype>*, const FoamGridEntityImp<0, dimgrid, dimworld, ctype>*>, FoamGridEntityImp<1, dimgrid, dimworld, ctype>*>::const_iterator e = edgeMap.find(std::make_pair(v0,v1));
-
-                    if (e != edgeMap.end()) {
-                        existingEdge = e->second;
-                    } else {
-                        e = edgeMap.find(std::make_pair(v1,v0));
-                        if (e != edgeMap.end())
-                            existingEdge = e->second;
-                    }
-
-                    if (existingEdge == nullptr) {
-
-                        // The current edge has not been inserted already.  We do that now.
-                        std::get<1>(this->grid_->entityImps_[0]).push_back(FoamGridEntityImp<1, dimgrid, dimworld, ctype>(v0,
-                                                                                                    v1,
-                                                                                                    0, // level
-                                                                                                    this->grid_->getNextFreeId() // id
-                                                                                                    ));
-
-                        existingEdge = &*std::get<1>(this->grid_->entityImps_[0]).rbegin();
-
-                        edgeMap.insert(std::make_pair(std::make_pair(v0,v1), existingEdge));
-
-                    }
+                      // edge was not inserted yet: insert the edge now
+                      std::get<1>(this->grid_->entityImps_[0]).emplace_back(v0, v1, /*level=*/0, this->grid_->getNextFreeId());
+                      // insert it into the map of inserted edges
+                      auto newEdge = &*std::get<1>(this->grid_->entityImps_[0]).rbegin();
+                      edgeMap.insert(std::make_pair(std::make_pair(v0, v1), newEdge));
+                      return newEdge;
+                    }();
 
                     // make element know about the edge
-                    element->facet_[i] = existingEdge;
+                    element.facet_[i] = edge;
 
                     // make edge know about the element
-                    existingEdge->elements_.push_back(element);
+                    edge->elements_.push_back(&element);
                 }
             }
 
@@ -459,25 +441,22 @@ template <int dimworld, class ct>
             //   Set the boundary ids
             // ////////////////////////////////////////////////
 
-            // Iterate over all facets (=edges in 2D)
-            FacetIterator fIt = std::get<1>(this->grid_->entityImps_[0]).begin();
-            const FacetIterator fEndIt = std::get<1>(this->grid_->entityImps_[0]).end();
-            for (; fIt!=fEndIt; ++fIt)
-                if(fIt->elements_.size()==1) //if boundary facet
+            for (auto& facet : std::get<1>(this->grid_->entityImps_[0]))
+            {
+                if (facet.elements_.size() == 1) // if boundary facet
                 {
-                  std::array<unsigned int, 2> vertexIndices {{ fIt->vertex_[0]->leafIndex_, fIt->vertex_[1]->leafIndex_ }};
+                    std::array<unsigned int, 2> vertexIndices {{ facet.vertex_[0]->leafIndex_, facet.vertex_[1]->leafIndex_ }};
+                    // sort the indices
+                    if ( vertexIndices[0] > vertexIndices[1] )
+                      std::swap( vertexIndices[0], vertexIndices[1] );
 
-                  // sort the indices
-                  if ( vertexIndices[0] > vertexIndices[1] )
-                    std::swap( vertexIndices[0], vertexIndices[1] );
-
-                  auto it = boundarySegmentIndices_.find( vertexIndices );
-                  if (it != boundarySegmentIndices_.end()) {
-                      fIt->boundarySegmentIndex_ = it->second;
-                  } else { // edge was not inserted as boundary segment
-                      fIt->boundarySegmentIndex_ = this->boundarySegmentCounter_++;
-                  }
+                    const auto it = boundarySegmentIndices_.find( vertexIndices );
+                    if (it != boundarySegmentIndices_.end())
+                        facet.boundarySegmentIndex_ = it->second;
+                    else
+                        facet.boundarySegmentIndex_ = this->boundarySegmentCounter_++;
                 }
+            }
 
             // ////////////////////////////////////////////////
             //   Hand over the new grid
@@ -490,9 +469,19 @@ template <int dimworld, class ct>
         }
 
       private:
+        template<class T, class U = T>
+        struct HashPair {
+          std::size_t operator() (const std::pair<T, U>& a) const {
+            std::size_t seed = 0;
+            hash_combine(seed, a.first);
+            hash_combine(seed, a.second);
+            return seed;
+          }
+        };
+
         struct HashUIntArray {
           std::size_t operator() (const std::array<unsigned int, 2>& a) const {
-            return std::hash<unsigned int>{}(a[0]) ^ (std::hash<unsigned int>{}(a[1]) << 1);
+            return hash_range(a.begin(), a.end());
           }
         };
 
