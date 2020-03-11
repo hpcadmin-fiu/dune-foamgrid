@@ -11,8 +11,11 @@
 #include <vector>
 #include <memory>
 #include <unordered_map>
+#include <functional>
 
+#include <dune/common/deprecated.hh>
 #include <dune/common/version.hh>
+#define DUNE_FUNCTION_HH_SILENCE_DEPRECATION
 #include <dune/common/function.hh>
 #include <dune/common/fvector.hh>
 #include <dune/common/hash.hh>
@@ -189,11 +192,17 @@ template <int dimworld, class ct>
             );
         }
 
+#if DUNE_VERSION_GT(DUNE_COMMON, 2, 7)
+DUNE_NO_DEPRECATED_BEGIN
+#endif
         /** \brief Insert a parametrized element into the coarse grid
         \param type The GeometryType of the new element
         \param vertices The vertices of the new element, using the DUNE numbering
         \param elementParametrization A function prescribing the shape of this element
         */
+#if DUNE_VERSION_GT(DUNE_COMMON, 2, 7)
+        [[deprecated("After Dune 2.7: VirtualFunction is deprecated: use overload taking std::function!")]]
+#endif
         void insertElement(const GeometryType& type,
                            const std::vector<unsigned int>& vertices,
                            const std::shared_ptr<VirtualFunction<FieldVector<ctype,dimgrid>,FieldVector<ctype,dimworld> > >& elementParametrization) override
@@ -208,6 +217,28 @@ template <int dimworld, class ct>
 
             std::get<dimgrid>(this->grid_->entityImps_[0]).push_back(newElement);
         }
+#if DUNE_VERSION_GT(DUNE_COMMON, 2, 7)
+DUNE_NO_DEPRECATED_END
+
+        /** \brief Insert a parametrized element into the coarse grid
+        \param type The GeometryType of the new element
+        \param vertices The vertices of the new element, using the DUNE numbering
+        \param elementParametrization A function prescribing the shape of this element
+        */
+        void insertElement(const GeometryType& type,
+                           const std::vector<unsigned int>& vertices,
+                           std::function<FieldVector<ctype,dimworld>(FieldVector<ctype,dimgrid>)> elementParametrization) override
+        {
+            // for the deprecation period forward to the deprecated interface
+            // after release 2.8 remove old interface and adapt internal implementation to use std::function
+            using D = FieldVector<ctype,dimgrid>;
+            using R = FieldVector<ctype,dimworld>;
+DUNE_NO_DEPRECATED_BEGIN
+            auto f = makeVirtualFunction<D,R>(std::move(elementParametrization));
+            insertElement(type, vertices, std::make_unique<decltype(f)>(std::move(f)));
+DUNE_NO_DEPRECATED_END
+        }
+#endif
 
         /** \brief Finalize grid creation and hand over the grid
 
@@ -355,11 +386,17 @@ template <int dimworld, class ct>
             std::get<dimgrid>(this->grid_->entityImps_[0]).push_back(newElement);
         }
 
+#if DUNE_VERSION_GT(DUNE_COMMON, 2, 7)
+DUNE_NO_DEPRECATED_BEGIN
+#endif
         /** \brief Insert a parametrized element into the coarse grid
         \param type The GeometryType of the new element
         \param vertices The vertices of the new element, using the DUNE numbering
         \param elementParametrization A function prescribing the shape of this element
         */
+#if DUNE_VERSION_GT(DUNE_COMMON, 2, 7)
+        [[deprecated("After Dune 2.7: VirtualFunction is deprecated: use overload taking std::function!")]]
+#endif
         void insertElement(const GeometryType& type,
                            const std::vector<unsigned int>& vertices,
                            const std::shared_ptr<VirtualFunction<FieldVector<ctype,dimgrid>,FieldVector<ctype,dimworld> > >& elementParametrization) override
@@ -374,6 +411,28 @@ template <int dimworld, class ct>
 
             std::get<dimgrid>(this->grid_->entityImps_[0]).push_back(newElement);
         }
+#if DUNE_VERSION_GT(DUNE_COMMON, 2, 7)
+DUNE_NO_DEPRECATED_END
+
+        /** \brief Insert a parametrized element into the coarse grid
+        \param type The GeometryType of the new element
+        \param vertices The vertices of the new element, using the DUNE numbering
+        \param elementParametrization A function prescribing the shape of this element
+        */
+        void insertElement(const GeometryType& type,
+                           const std::vector<unsigned int>& vertices,
+                           std::function<FieldVector<ctype,dimworld>(FieldVector<ctype,dimgrid>)> elementParametrization) override
+        {
+            // for the deprecation period forward to the deprecated interface
+            // after release 2.8 remove old interface and adapt internal implementation to use std::function
+            using D = FieldVector<ctype,dimgrid>;
+            using R = FieldVector<ctype,dimworld>;
+DUNE_NO_DEPRECATED_BEGIN
+            auto f = makeVirtualFunction<D,R>(std::move(elementParametrization));
+            insertElement(type, vertices, std::make_unique<decltype(f)>(std::move(f)));
+DUNE_NO_DEPRECATED_END
+        }
+#endif
 
         /** \brief Finalize grid creation and hand over the grid
         The receiver takes responsibility of the memory allocated for the grid
