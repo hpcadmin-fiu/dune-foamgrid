@@ -15,7 +15,8 @@
 
 #include <dune/common/deprecated.hh>
 #include <dune/common/version.hh>
-#define DUNE_FUNCTION_HH_SILENCE_DEPRECATION
+// TODO remove header and macro after release Dune 2.8
+#define DUNE_FUNCTION_HH_SILENCE_DEPRECATION // silence deprecation warning from <dune/common/function.hh>
 #include <dune/common/function.hh>
 #include <dune/common/fvector.hh>
 #include <dune/common/hash.hh>
@@ -192,20 +193,19 @@ template <int dimworld, class ct>
             );
         }
 
-#if DUNE_VERSION_GT(DUNE_COMMON, 2, 7)
 DUNE_NO_DEPRECATED_BEGIN
-#endif
         /** \brief Insert a parametrized element into the coarse grid
         \param type The GeometryType of the new element
         \param vertices The vertices of the new element, using the DUNE numbering
         \param elementParametrization A function prescribing the shape of this element
         */
-#if DUNE_VERSION_GT(DUNE_COMMON, 2, 7)
-        [[deprecated("After Dune 2.7: VirtualFunction is deprecated: use overload taking std::function!")]]
-#endif
+        [[deprecated("Signature with VirtualFunction is deprecated and will be removed after Dune 2.8. Use signature with std::function.")]]
         void insertElement(const GeometryType& type,
                            const std::vector<unsigned int>& vertices,
-                           const std::shared_ptr<VirtualFunction<FieldVector<ctype,dimgrid>,FieldVector<ctype,dimworld> > >& elementParametrization) override
+                           const std::shared_ptr<VirtualFunction<FieldVector<ctype,dimgrid>,FieldVector<ctype,dimworld> > >& elementParametrization)
+#if DUNE_VERSION_LT(DUNE_COMMON, 2, 8)
+        override
+#endif
         {
             assert(type.isLine());
             EntityImp<1> newElement(this->vertexArray_[vertices[0]],
@@ -213,11 +213,15 @@ DUNE_NO_DEPRECATED_BEGIN
                                     0, // level
                                     this->grid_->getNextFreeId());
             // save the pointer to the element parametrization
-            newElement.elementParametrization_ = elementParametrization;
+            newElement.elementParametrization_ =
+              [elementParametrization](const FieldVector<ctype,dimgrid>& x){
+                FieldVector<ctype,dimworld> y;
+                elementParametrization->evaluate(x, y);
+                return y;
+              };
 
             std::get<dimgrid>(this->grid_->entityImps_[0]).push_back(newElement);
         }
-#if DUNE_VERSION_GT(DUNE_COMMON, 2, 7)
 DUNE_NO_DEPRECATED_END
 
         /** \brief Insert a parametrized element into the coarse grid
@@ -227,18 +231,20 @@ DUNE_NO_DEPRECATED_END
         */
         void insertElement(const GeometryType& type,
                            const std::vector<unsigned int>& vertices,
-                           std::function<FieldVector<ctype,dimworld>(FieldVector<ctype,dimgrid>)> elementParametrization) override
-        {
-            // for the deprecation period forward to the deprecated interface
-            // after release 2.8 remove old interface and adapt internal implementation to use std::function
-            using D = FieldVector<ctype,dimgrid>;
-            using R = FieldVector<ctype,dimworld>;
-DUNE_NO_DEPRECATED_BEGIN
-            auto f = makeVirtualFunction<D,R>(std::move(elementParametrization));
-            insertElement(type, vertices, std::make_unique<decltype(f)>(std::move(f)));
-DUNE_NO_DEPRECATED_END
-        }
+                           std::function<FieldVector<ctype,dimworld>(FieldVector<ctype,dimgrid>)> elementParametrization)
+#if DUNE_VERSION_GT(DUNE_COMMON, 2, 7)
+        override
 #endif
+        {
+            assert(type.isLine());
+            EntityImp<1> newElement(this->vertexArray_[vertices[0]],
+                                    this->vertexArray_[vertices[1]],
+                                    0, // level
+                                    this->grid_->getNextFreeId());
+
+            newElement.elementParametrization_ = elementParametrization;
+            std::get<dimgrid>(this->grid_->entityImps_[0]).push_back(newElement);
+        }
 
         /** \brief Finalize grid creation and hand over the grid
 
@@ -386,20 +392,19 @@ template <int dimworld, class ct>
             std::get<dimgrid>(this->grid_->entityImps_[0]).push_back(newElement);
         }
 
-#if DUNE_VERSION_GT(DUNE_COMMON, 2, 7)
 DUNE_NO_DEPRECATED_BEGIN
-#endif
         /** \brief Insert a parametrized element into the coarse grid
         \param type The GeometryType of the new element
         \param vertices The vertices of the new element, using the DUNE numbering
         \param elementParametrization A function prescribing the shape of this element
         */
-#if DUNE_VERSION_GT(DUNE_COMMON, 2, 7)
-        [[deprecated("After Dune 2.7: VirtualFunction is deprecated: use overload taking std::function!")]]
-#endif
+        [[deprecated("Signature with VirtualFunction is deprecated and will be removed after Dune 2.8. Use signature with std::function.")]]
         void insertElement(const GeometryType& type,
                            const std::vector<unsigned int>& vertices,
-                           const std::shared_ptr<VirtualFunction<FieldVector<ctype,dimgrid>,FieldVector<ctype,dimworld> > >& elementParametrization) override
+                           const std::shared_ptr<VirtualFunction<FieldVector<ctype,dimgrid>,FieldVector<ctype,dimworld> > >& elementParametrization)
+#if DUNE_VERSION_LT(DUNE_COMMON, 2, 8)
+        override
+#endif
         {
             assert(type.isTriangle());
             EntityImp<dimgrid> newElement(/*level=*/0, this->grid_->getNextFreeId());
@@ -407,11 +412,15 @@ DUNE_NO_DEPRECATED_BEGIN
             newElement.vertex_[1] = this->vertexArray_[vertices[1]];
             newElement.vertex_[2] = this->vertexArray_[vertices[2]];
             // save the pointer to the element parametrization
-            newElement.elementParametrization_ = elementParametrization;
+            newElement.elementParametrization_ =
+              [elementParametrization](const FieldVector<ctype,dimgrid>& x){
+                FieldVector<ctype,dimworld> y;
+                elementParametrization->evaluate(x, y);
+                return y;
+              };
 
             std::get<dimgrid>(this->grid_->entityImps_[0]).push_back(newElement);
         }
-#if DUNE_VERSION_GT(DUNE_COMMON, 2, 7)
 DUNE_NO_DEPRECATED_END
 
         /** \brief Insert a parametrized element into the coarse grid
@@ -421,18 +430,19 @@ DUNE_NO_DEPRECATED_END
         */
         void insertElement(const GeometryType& type,
                            const std::vector<unsigned int>& vertices,
-                           std::function<FieldVector<ctype,dimworld>(FieldVector<ctype,dimgrid>)> elementParametrization) override
-        {
-            // for the deprecation period forward to the deprecated interface
-            // after release 2.8 remove old interface and adapt internal implementation to use std::function
-            using D = FieldVector<ctype,dimgrid>;
-            using R = FieldVector<ctype,dimworld>;
-DUNE_NO_DEPRECATED_BEGIN
-            auto f = makeVirtualFunction<D,R>(std::move(elementParametrization));
-            insertElement(type, vertices, std::make_unique<decltype(f)>(std::move(f)));
-DUNE_NO_DEPRECATED_END
-        }
+                           std::function<FieldVector<ctype,dimworld>(FieldVector<ctype,dimgrid>)> elementParametrization)
+#if DUNE_VERSION_GT(DUNE_COMMON, 2, 7)
+        override
 #endif
+        {
+            assert(type.isTriangle());
+            EntityImp<dimgrid> newElement(/*level=*/0, this->grid_->getNextFreeId());
+            newElement.vertex_[0] = this->vertexArray_[vertices[0]];
+            newElement.vertex_[1] = this->vertexArray_[vertices[1]];
+            newElement.vertex_[2] = this->vertexArray_[vertices[2]];
+            newElement.elementParametrization_ = elementParametrization;
+            std::get<dimgrid>(this->grid_->entityImps_[0]).push_back(newElement);
+        }
 
         /** \brief Finalize grid creation and hand over the grid
         The receiver takes responsibility of the memory allocated for the grid

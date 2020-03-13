@@ -4,11 +4,9 @@
 #define DUNE_FOAMGRID_ELEMENTS_HH
 
 #include <memory>
+#include <functional>
 
 #include <dune/common/fmatrix.hh>
-
-#define DUNE_FUNCTION_HH_SILENCE_DEPRECATION
-#include <dune/common/function.hh>
 
 #include <dune/foamgrid/foamgrid/foamgridvertex.hh>
 #include <dune/foamgrid/foamgrid/foamgridedge.hh>
@@ -183,8 +181,7 @@ namespace Dune {
         bool isNew_;
 
         /** \brief The element parametrization */
-        // TODO after deprecation period (release 2.8) change this to std::function
-        std::shared_ptr<VirtualFunction<FieldVector<ctype, dimgrid>, FieldVector<ctype, dimworld> > > elementParametrization_;
+        std::function<FieldVector<ctype, dimworld>(FieldVector<ctype, dimgrid>)> elementParametrization_;
 
         /** \brief This flag is set by postGrow() if the element looses its right to coarsen
         *         because it contains a bifurcation facet without father */
@@ -369,8 +366,7 @@ namespace Dune {
         FoamGridEntityImp<dimgrid, dimgrid ,dimworld, ctype>* father_;
 
         /** \brief The element parametrization */
-        // TODO after deprecation period (release 2.8) change this to std::function
-        std::shared_ptr<VirtualFunction<FieldVector<ctype, dimgrid>, FieldVector<ctype, dimworld> > > elementParametrization_;
+        std::function<FieldVector<ctype, dimworld>(FieldVector<ctype, dimgrid>)> elementParametrization_;
 
         /** \brief This flag is set by postGrow() if the element looses its right to coarsen
         *         because it contains a bifurcation facet without father */
