@@ -9,8 +9,8 @@
 #include <iostream>
 #include <cmath>
 #include <memory>
+#include <functional>
 
-#include <dune/common/function.hh>
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
 
 #include <dune/foamgrid/foamgrid.hh>
@@ -21,8 +21,7 @@ using namespace Dune;
  * \brief Mapping from R^d to the graph of a given function
  */
 template<int dim, int dimworld>
-class GraphMapping :
-  public Dune::VirtualFunction<Dune::FieldVector<double, dim>, Dune::FieldVector<double, dimworld> >
+class GraphMapping
 {
   // Element corners in the global parameter domain
   std::array<FieldVector<double,dim>, dim+1> corners_;
@@ -41,14 +40,14 @@ public:
    * \param x Argument for function evaluation.
    * \param y Result of function evaluation.
    */
-  void evaluate(const Dune::FieldVector<double,dim>& x, Dune::FieldVector<double,dimworld>& y) const
+  Dune::FieldVector<double,dimworld> operator() (const Dune::FieldVector<double,dim>& x) const
   {
     // Linear interpolation between the corners
     auto globalX = corners_[0];
     for (size_t i=0; i<x.size(); i++)
       for (int j=0; j<dim; j++)
         globalX[j] += x[i]*(corners_[i+1][j]-corners_[0][j]);
-    y = graph_(globalX);
+    return graph_(globalX);
   }
 
 };
@@ -82,8 +81,8 @@ int main (int argc, char *argv[]) try
   std::array<FieldVector<double,2>, 3> corners0 = {vertices[0], vertices[1], vertices[2]};
   std::array<FieldVector<double,2>, 3> corners1 = {vertices[1], vertices[3], vertices[2]};
 
-  factory.insertElement(triangle, {0,1,2}, std::make_shared<GraphMapping<dim, dimworld> >(corners0, parametrization));
-  factory.insertElement(triangle, {1,3,2}, std::make_shared<GraphMapping<dim, dimworld> >(corners1, parametrization));
+  factory.insertElement(triangle, {0,1,2}, GraphMapping<dim, dimworld>(corners0, parametrization));
+  factory.insertElement(triangle, {1,3,2}, GraphMapping<dim, dimworld>(corners1, parametrization));
 
   // create the grid
   auto grid = factory.createGrid();
