@@ -571,7 +571,7 @@ void Dune::FoamGrid<dimgrid, dimworld, ctype>::refineSimplexElement(FoamGridEnti
           e.target_ = e.target_->father_;
         }
         // overwrite the midpoint with the coordinates mapped by the parametrization
-        element.elementParametrization_->evaluate(localMidPoint, midPoint);
+        midPoint = element.elementParametrization_(localMidPoint);
       }
 
       //create midpoint
@@ -858,7 +858,7 @@ void Dune::FoamGrid<dimgrid, dimworld, ctype>::refineSimplexElement(FoamGridEnti
       e.target_ = e.target_->father_;
     }
     // overwrite the midpoint with the coordinates mapped by the parametrization
-    element.elementParametrization_->evaluate(localMidPoint, midPoint);
+    midPoint = element.elementParametrization_(localMidPoint);
   }
   // Create element midpoint
   std::get<0>(entityImps_[nextLevel]).push_back(FoamGridEntityImp<0, dimgrid, dimworld, ctype>(nextLevel, midPoint, getNextFreeId()));
