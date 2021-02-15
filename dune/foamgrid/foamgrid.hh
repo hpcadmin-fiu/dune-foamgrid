@@ -666,22 +666,8 @@ DUNE_NO_DEPRECATED_END
     //! \brief refine an Element
     //! \param element The element to refine
     //! \param refCount How many times to refine the element
-    void refineSimplexElement(FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>& element,
-                              int refCount)
-    {
-        if constexpr (dimgrid == 1)
-            refineEdge(element, refCount);
-        else
-            refineTriangle(element, refCount);
-    }
-
-    //! Overloaded function for the 1d case
-    template <int dimentity = 1>
-    void refineEdge(FoamGridEntityImp<dimentity, dimentity, dimworld, ctype>& element, int refCount);
-
-    //! Overloaded function for the 2d case
-    template <int dimentity = 2>
-    void refineTriangle(FoamGridEntityImp<dimentity, dimentity, dimworld, ctype>& element, int refCount);
+    void refineSimplexElement(FoamGridEntityImp<1, 1, dimworld, ctype>& element, int refCount);
+    void refineSimplexElement(FoamGridEntityImp<2, 2, dimworld, ctype>& element, int refCount);
 
     //! \brief remove this element resulting in grid shrinkage
     bool removeSimplexElement(FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>& element);
@@ -711,25 +697,7 @@ DUNE_NO_DEPRECATED_END
     //! Add a new facet
     void addNewFacet(FoamGridEntityImp<dimgrid-1, dimgrid, dimworld, ctype>* &facet,
                      std::array<FoamGridEntityImp<0, dimgrid, dimworld, ctype>*,dimgrid> vertexArray,
-                     int level)
-    {
-        if constexpr(dimgrid == 1)
-            addNewFacet1d(facet,vertexArray,level);
-        else
-            addNewFacet2d(facet,vertexArray,level);
-    }
-
-    //! Add a new facet for 1d grids (the facet already exists as vertex)
-    template <int dimfacet = 0>
-    void addNewFacet1d(FoamGridEntityImp<dimfacet, dimgrid, dimworld, ctype>* &facet,
-                       std::array<FoamGridEntityImp<0, dimgrid, dimworld, ctype>*,dimgrid> vertexArray,
-                       int level);
-
-    //! Add a new facet for 2d grids
-    template <int dimfacet = 1>
-    void addNewFacet2d(FoamGridEntityImp<dimfacet, dimgrid, dimworld, ctype>* &facet,
-                       std::array<FoamGridEntityImp<0, dimgrid, dimworld, ctype>*,dimgrid> vertexArray,
-                       int level);
+                     int level);
 
     //! compute the grid indices and ids
     void setIndices();
