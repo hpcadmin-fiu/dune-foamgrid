@@ -503,7 +503,7 @@ template <int dimgrid, int dimworld, class ctype>
 void FoamGrid<dimgrid, dimworld, ctype>::refineSimplexElement(FoamGridEntityImp<2, 2, dimworld, ctype>& element,
                                                               int refCount)
 {
-  if constexpr(dimgrid == 2)
+  if constexpr(dimgrid==2)
   {
     if(refCount<=0)
     {
@@ -801,7 +801,7 @@ template <int dimgrid, int dimworld, class ctype>
 void FoamGrid<dimgrid, dimworld, ctype>::refineSimplexElement(FoamGridEntityImp<1, 1, dimworld, ctype>& element,
                                                               int refCount)
 {
-  if constexpr (dimgrid == 1)
+  if constexpr(dimgrid==1)
   {
     if(refCount<=0)
     {
@@ -1314,9 +1314,9 @@ void FoamGrid<dimgrid, dimworld, ctype>::addNewFacet(FoamGridEntityImp<dimgrid-1
                                                      std::array<FoamGridEntityImp<0, dimgrid, dimworld, ctype>*,dimgrid> vertexArray,
                                                      int level)
 {
-  if constexpr (dimgrid == 1)
+  if constexpr(dimgrid==1)
     facet = vertexArray[0];
-  else if constexpr (dimgrid == 2) {
+  else if constexpr(dimgrid==2) {
     std::get<1>(entityImps_[level]).push_back(FoamGridEntityImp<1, 2, dimworld, ctype>(vertexArray[0], vertexArray[1], level, getNextFreeId()));
     facet = &*std::get<1>(entityImps_[level]).rbegin();
   }
