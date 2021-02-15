@@ -11,5 +11,5 @@ Version: @VERSION@
 Description: dune-foamgrid module
 URL: http://dune-project.org/
 Requires: dune-common dune-geometry dune-grid
-Libs: -L${libdir}
+Libs: -L${libdir} -ldunefoamgrid
 Cflags: -I${includedir}
