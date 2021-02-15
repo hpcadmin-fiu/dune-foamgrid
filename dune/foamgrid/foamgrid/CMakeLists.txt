@@ -1,5 +1,5 @@
 #install headers
-install(FILES foamgrid.cc
+install(FILES foamgrid.impl.hh
               foamgridedge.hh
               foamgridelements.hh
               foamgridentity.hh
@@ -16,3 +16,8 @@ install(FILES foamgrid.cc
               foamgridnulliteratorfactory.hh
               foamgridvertex.hh
          DESTINATION include/dune/foamgrid/foamgrid)
+
+
+target_sources(dunefoamgrid PRIVATE
+     foamgrid.cc
+)
