@@ -48,9 +48,15 @@
 
 namespace Dune {
 
-// Forward declaration
+// Forward declarations
 template <int dimgrid, int dimworld, class ctype = double>
 class FoamGrid;
+
+template <class GridType>
+class GridFactory;
+
+template <int dimgrid, int dimworld, class ct>
+class GridFactoryBase;
 
 
 /** \brief Encapsulates loads of types exported by FoamGrid */
@@ -660,11 +666,8 @@ DUNE_NO_DEPRECATED_END
     //! \brief refine an Element
     //! \param element The element to refine
     //! \param refCount How many times to refine the element
-    void refineSimplexElement(FoamGridEntityImp<2, dimgrid, dimworld, ctype>& element,
-                       int refCount);
-    //! Overloaded function for the 1d case
-    void refineSimplexElement(FoamGridEntityImp<1, dimgrid, dimworld, ctype>& element,
-                       int refCount);
+    void refineSimplexElement(FoamGridEntityImp<1, 1, dimworld, ctype>& element, int refCount);
+    void refineSimplexElement(FoamGridEntityImp<2, 2, dimworld, ctype>& element, int refCount);
 
     //! \brief remove this element resulting in grid shrinkage
     bool removeSimplexElement(FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>& element);
@@ -691,13 +694,8 @@ DUNE_NO_DEPRECATED_END
     void addElementForFacet(const FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>* element,
                             FoamGridEntityImp<dimgrid-1, dimgrid, dimworld, ctype>* facet);
 
-    //! Add a new facet for 1d grids (the facet already exists as vertex)
-    void addNewFacet(FoamGridEntityImp<0, dimgrid, dimworld, ctype>* &facet,
-                     std::array<FoamGridEntityImp<0, dimgrid, dimworld, ctype>*,dimgrid> vertexArray,
-                     int level);
-
-    //! Add a new facet for 2d grids
-    void addNewFacet(FoamGridEntityImp<1, dimgrid, dimworld, ctype>* &facet,
+    //! Add a new facet
+    void addNewFacet(FoamGridEntityImp<dimgrid-1, dimgrid, dimworld, ctype>* &facet,
                      std::array<FoamGridEntityImp<0, dimgrid, dimworld, ctype>*,dimgrid> vertexArray,
                      int level);
 
@@ -786,8 +784,12 @@ DUNE_NO_DEPRECATED_END
 
 }; // end Class FoamGrid
 
-#include <dune/foamgrid/foamgrid/foamgrid.cc>
-
+// Explicit template instantiation of most common dimensions
+extern template class FoamGrid<1, 1, double>;
+extern template class FoamGrid<1, 2, double>;
+extern template class FoamGrid<1, 3, double>;
+extern template class FoamGrid<2, 2, double>;
+extern template class FoamGrid<2, 3, double>;
 
 namespace Capabilities
 {
@@ -818,6 +820,8 @@ namespace Capabilities
 
 } // namespace Dune
 
+// Include the implementation of the methods
+#include <dune/foamgrid/foamgrid/foamgrid.impl.hh>
 
 // The factory should be present whenever the user includes foamgrid.hh.
 // However since the factory needs to know the grid the include directive
