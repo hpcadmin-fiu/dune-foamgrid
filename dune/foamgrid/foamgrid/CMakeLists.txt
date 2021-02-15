@@ -17,7 +17,4 @@ install(FILES foamgrid.impl.hh
               foamgridvertex.hh
          DESTINATION include/dune/foamgrid/foamgrid)
 
-
-target_sources(dunefoamgrid PRIVATE
-     foamgrid.cc
-)
+target_sources(dunefoamgrid PRIVATE foamgrid.cc)
