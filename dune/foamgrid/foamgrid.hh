@@ -48,9 +48,15 @@
 
 namespace Dune {
 
-// Forward declaration
+// Forward declarations
 template <int dimgrid, int dimworld, class ctype = double>
 class FoamGrid;
+
+template <class GridType>
+class GridFactory;
+
+template <int dimgrid, int dimworld, class ct>
+class GridFactoryBase;
 
 
 /** \brief Encapsulates loads of types exported by FoamGrid */
