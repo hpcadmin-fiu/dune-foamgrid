@@ -1,4 +1,4 @@
-![Build Status](https://gitlab.dune-project.org/extensions/dune-foamgrid/badges/master/build.svg)
+![Build Status](https://gitlab.dune-project.org/extensions/dune-foamgrid/badges/master/pipeline.svg)
 
 The `dune-foamgrid` module
 ==========================
