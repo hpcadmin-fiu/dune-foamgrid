@@ -17,8 +17,7 @@ include(DuneMacros)
 
 # start a dune project with information from dune.module
 dune_project()
-dune_add_library(dunefoamgrid)
-list(APPEND DUNE_LIBS dunefoamgrid)
+dune_enable_all_packages(MODULE_LIBRARIES dunefoamgrid)
 
 add_subdirectory(dune)
 add_subdirectory(doc)
