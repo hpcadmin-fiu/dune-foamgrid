@@ -193,6 +193,8 @@ template <int dimworld, class ct>
             );
         }
 
+// disable the deprecated interface when using Dune > 2.8
+#if DUNE_VERSION_LTE(DUNE_COMMON, 2, 8)
 DUNE_NO_DEPRECATED_BEGIN
         /** \brief Insert a parametrized element into the coarse grid
         \param type The GeometryType of the new element
@@ -202,10 +204,7 @@ DUNE_NO_DEPRECATED_BEGIN
         [[deprecated("Signature with VirtualFunction is deprecated and will be removed after Dune 2.8. Use signature with std::function.")]]
         void insertElement(const GeometryType& type,
                            const std::vector<unsigned int>& vertices,
-                           const std::shared_ptr<VirtualFunction<FieldVector<ctype,dimgrid>,FieldVector<ctype,dimworld> > >& elementParametrization)
-#if DUNE_VERSION_LT(DUNE_COMMON, 2, 8)
-        override
-#endif
+                           const std::shared_ptr<VirtualFunction<FieldVector<ctype,dimgrid>,FieldVector<ctype,dimworld> > >& elementParametrization) override
         {
             assert(type.isLine());
             EntityImp<1> newElement(this->vertexArray_[vertices[0]],
@@ -223,6 +222,7 @@ DUNE_NO_DEPRECATED_BEGIN
             std::get<dimgrid>(this->grid_->entityImps_[0]).push_back(newElement);
         }
 DUNE_NO_DEPRECATED_END
+#endif
 
         /** \brief Insert a parametrized element into the coarse grid
         \param type The GeometryType of the new element
@@ -392,6 +392,8 @@ template <int dimworld, class ct>
             std::get<dimgrid>(this->grid_->entityImps_[0]).push_back(newElement);
         }
 
+// disable the deprecated interface when using Dune > 2.8
+#if DUNE_VERSION_LTE(DUNE_COMMON, 2, 8)
 DUNE_NO_DEPRECATED_BEGIN
         /** \brief Insert a parametrized element into the coarse grid
         \param type The GeometryType of the new element
@@ -401,10 +403,7 @@ DUNE_NO_DEPRECATED_BEGIN
         [[deprecated("Signature with VirtualFunction is deprecated and will be removed after Dune 2.8. Use signature with std::function.")]]
         void insertElement(const GeometryType& type,
                            const std::vector<unsigned int>& vertices,
-                           const std::shared_ptr<VirtualFunction<FieldVector<ctype,dimgrid>,FieldVector<ctype,dimworld> > >& elementParametrization)
-#if DUNE_VERSION_LT(DUNE_COMMON, 2, 8)
-        override
-#endif
+                           const std::shared_ptr<VirtualFunction<FieldVector<ctype,dimgrid>,FieldVector<ctype,dimworld> > >& elementParametrization) override
         {
             assert(type.isTriangle());
             EntityImp<dimgrid> newElement(/*level=*/0, this->grid_->getNextFreeId());
@@ -422,6 +421,7 @@ DUNE_NO_DEPRECATED_BEGIN
             std::get<dimgrid>(this->grid_->entityImps_[0]).push_back(newElement);
         }
 DUNE_NO_DEPRECATED_END
+#endif
 
         /** \brief Insert a parametrized element into the coarse grid
         \param type The GeometryType of the new element
