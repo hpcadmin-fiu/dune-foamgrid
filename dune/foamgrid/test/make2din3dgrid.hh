@@ -3,18 +3,10 @@
 
 #include <dune/foamgrid/foamgrid.hh>
 
-#if DUNE_VERSION_GTE(DUNE_COMMON, 2, 7)
-#include <dune/common/to_unique_ptr.hh>
-#endif
-
 using namespace Dune;
 
 template <class GridType>
-#if DUNE_VERSION_LT(DUNE_COMMON, 2, 7)
-GridType* make2Din3DHybridTestGrid()
-#else
-ToUniquePtr<GridType> make2Din3DHybridTestGrid()
-#endif
+auto make2Din3DHybridTestGrid()
 {
     static_assert(GridType::dimension==2,
                        "Instantiate make2dHybridTestGrid only for 2d grids!");
