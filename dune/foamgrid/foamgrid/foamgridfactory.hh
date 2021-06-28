@@ -20,7 +20,10 @@
 #include <dune/common/function.hh>
 #include <dune/common/fvector.hh>
 #include <dune/common/hash.hh>
+
+#if DUNE_VERSION_EQUAL(DUNE_COMMON, 2, 7)
 #include <dune/common/to_unique_ptr.hh>
+#endif
 
 #include <dune/grid/common/gridfactory.hh>
 #include <dune/foamgrid/foamgrid.hh>
@@ -35,6 +38,16 @@ template <int dimgrid, int dimworld, class ct>
     {
     /** \brief Type used by the grid for coordinates */
     using ctype = ct;
+
+    public:
+
+#if DUNE_VERSION_LT(DUNE_COMMON, 2, 7)
+    using GridPtrType = FoamGrid<dimgrid, dimworld, ctype>*;
+#elif DUNE_VERSION_LT(DUNE_COMMON, 2, 8)
+    using GridPtrType = ToUniquePtr<FoamGrid<dimgrid, dimworld, ctype>>;
+#else
+    using GridPtrType = std::unique_ptr<FoamGrid<dimgrid, dimworld,ctype>>;
+#endif
 
     public:
 
@@ -138,6 +151,8 @@ template <int dimworld, class ct>
         /** \brief Alias for FoamGrid entities */
         template<int mydim>
         using EntityImp = FoamGridEntityImp<mydim, dimgrid, dimworld, ctype>;
+
+	using GridPtrType = typename GridFactoryBase<1, dimworld, ct>::GridPtrType;
 
     public:
 
@@ -250,11 +265,8 @@ DUNE_NO_DEPRECATED_END
 
         The receiver takes responsibility of the memory allocated for the grid
         */
-#if DUNE_VERSION_LT(DUNE_COMMON, 2, 7)
-        FoamGrid<1, dimworld, ctype>* createGrid() override {
-#else
-        ToUniquePtr<FoamGrid<1, dimworld, ctype>> createGrid() override {
-#endif
+        GridPtrType createGrid() override
+        {
             // Prevent a crash when this method is called twice in a row
             // You never know who may do this...
             if (this->grid_==nullptr)
@@ -293,7 +305,7 @@ DUNE_NO_DEPRECATED_END
             Dune::FoamGrid<dimgrid, dimworld, ctype>* tmp = this->grid_;
             tmp->numBoundarySegments_ = this->boundarySegmentCounter_;
             this->grid_ = nullptr;
-            return tmp;
+            return GridPtrType(tmp);
         }
 
       private:
@@ -315,6 +327,8 @@ template <int dimworld, class ct>
         /** \brief Alias for FoamGrid entities */
         template<int mydim>
         using EntityImp = FoamGridEntityImp<mydim, dimgrid, dimworld, ctype>;
+
+	using GridPtrType = typename GridFactoryBase<2, dimworld, ct>::GridPtrType;
 
     public:
 
@@ -447,11 +461,8 @@ DUNE_NO_DEPRECATED_END
         /** \brief Finalize grid creation and hand over the grid
         The receiver takes responsibility of the memory allocated for the grid
         */
-#if DUNE_VERSION_LT(DUNE_COMMON, 2, 7)
-        FoamGrid<dimgrid, dimworld, ctype>* createGrid() override {
-#else
-        ToUniquePtr<FoamGrid<dimgrid, dimworld, ctype>> createGrid() override {
-#endif
+        GridPtrType createGrid() override
+        {
             // Prevent a crash when this method is called twice in a row
             // You never know who may do this...
             if (this->grid_==nullptr)
@@ -534,7 +545,7 @@ DUNE_NO_DEPRECATED_END
             Dune::FoamGrid<dimgrid, dimworld, ctype>* tmp = this->grid_;
             tmp->numBoundarySegments_ = this->boundarySegmentCounter_;
             this->grid_ = nullptr;
-            return tmp;
+            return GridPtrType(tmp);
         }
 
       private:
