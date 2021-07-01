@@ -308,12 +308,11 @@ public:
 
         /** \brief Create an Entity from an EntitySeed */
         template <class EntitySeed>
-        static typename Traits::template Codim<EntitySeed::codimension>::Entity
-        entity(const EntitySeed& seed)
+        typename Traits::template Codim<EntitySeed::codimension>::Entity
+        entity(const EntitySeed& seed) const
         {
           const int codim = EntitySeed::codimension;
-          typedef typename Traits::template Codim<codim>::Entity Entity;
-          return Entity(FoamGridEntity<codim, dimgrid, const FoamGrid>(seed.impl().target()));
+          return FoamGridEntity<codim, dimgrid, const FoamGrid>(seed.impl().target());
         }
 
 
