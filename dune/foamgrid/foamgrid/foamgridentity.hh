@@ -453,26 +453,12 @@ class FoamGridEntity<0, 2, GridImp> :
         * Returns iterator to first son.
         */
         FoamGridHierarchicIterator<GridImp> hbegin (int maxLevel) const
-        {
-            FoamGridHierarchicIterator<GridImp> it(maxLevel);
-
-            // Load sons of old target onto the iterator stack
-            if (level()<=maxLevel && !isLeaf())
-                for (std::size_t i=0; i<target_->nSons(); i++)
-                    it.elemStack.push(target_->sons_[i]);
-
-            it.virtualEntity_.impl().setToTarget((it.elemStack.empty())
-                                          ? nullptr : it.elemStack.top());
-
-            return it;
-        }
+        { return { target_, maxLevel }; }
 
 
         //! Returns iterator to one past the last son
         FoamGridHierarchicIterator<GridImp> hend (int maxLevel) const
-        {
-            return FoamGridHierarchicIterator<const GridImp>(maxLevel);
-        }
+        { return { maxLevel }; }
 
 
         // /////////////////////////////////////////
@@ -758,26 +744,12 @@ class FoamGridEntity<0, 1, GridImp> :
         * Returns iterator to first son.
         */
         FoamGridHierarchicIterator<GridImp> hbegin (int maxLevel) const
-        {
-            FoamGridHierarchicIterator<GridImp> it(maxLevel);
-
-            // Load sons of old target onto the iterator stack
-            if (level()<=maxLevel && !isLeaf())
-                for (std::size_t i=0; i<target_->nSons(); i++)
-                    it.elemStack.push(target_->sons_[i]);
-
-            it.virtualEntity_.impl().setToTarget((it.elemStack.empty())
-                                          ? nullptr : it.elemStack.top());
-
-            return it;
-        }
+        { return { target_, maxLevel }; }
 
 
         //! Returns iterator to one past the last son
         FoamGridHierarchicIterator<GridImp> hend (int maxLevel) const
-        {
-            return FoamGridHierarchicIterator<const GridImp>(maxLevel);
-        }
+        { return { maxLevel }; }
 
 
         // /////////////////////////////////////////
