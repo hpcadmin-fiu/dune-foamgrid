@@ -495,443 +495,450 @@ void Dune::FoamGrid<dimgrid, dimworld, ctype>::coarsenSimplexElement(FoamGridEnt
 
 // Refine one simplex element (2D simplex)
 template <int dimgrid, int dimworld, class ctype>
-void Dune::FoamGrid<dimgrid, dimworld, ctype>::refineSimplexElement(FoamGridEntityImp<2, dimgrid, dimworld, ctype>& element,
-                                                    int refCount)
+void FoamGrid<dimgrid, dimworld, ctype>::refineSimplexElement(FoamGridEntityImp<2, 2, dimworld, ctype>& element,
+                                                              int refCount)
 {
-  if(refCount<=0)
+  if constexpr(dimgrid==2)
   {
-    DUNE_THROW(NotImplemented, "Called refineSimplexElement with refCount <= 0");
-    return;
-  }
 
-  unsigned int nextLevel=element.level()+1;
-
-  std::array<FoamGridEntityImp<0, dimgrid, dimworld, ctype>*, 3*dimgrid> nextLevelVertices;
-  std::size_t vertexIndex=0;
-
-  // create copies of the vertices of the element
-  for(int c=0; c<element.corners(); ++c)
-  {
-    if(element.vertex_[c]->sons_[0]==nullptr){
-      // Vertex doesn't exist yet on the next level
-      std::get<0>(entityImps_[nextLevel])
-      .push_back(FoamGridEntityImp<0, dimgrid, dimworld, ctype>(nextLevel,
-                                               element.vertex_[c]->pos_,
-                                               element.vertex_[c]->id_));
-      FoamGridEntityImp<0, dimgrid, dimworld, ctype>& newVertex =
-      std::get<0>(entityImps_[nextLevel]).back();
-      element.vertex_[c]->sons_[0]=&newVertex;
-      newVertex.father_ = element.vertex_[c];
-    }
-    nextLevelVertices[vertexIndex++]=element.vertex_[c]->sons_[0];
-  }
-
-  // create new vertices from facet-midpoints together with the new facets that
-  // have a father
-  typedef typename std::array<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld, ctype>*, dimgrid+1>::iterator FacetIterator;
-
-  std::array<FoamGridEntityImp<1, dimgrid, dimworld, ctype>*, 9> nextLevelFacets;
-  std::size_t facetIndex=0;
-#ifndef NDEBUG
-  const auto refElement = ReferenceElements<ctype, dimgrid>::general(element.type());
-#endif
-
-  // I am just to dumb for a general facet to vertice mapping.
-  // Therefore we just store it here
-  std::array<std::pair<unsigned int,unsigned int>,3 > facetVertexMapping;
-  facetVertexMapping[0]=std::make_pair(0,1);
-  facetVertexMapping[1]=std::make_pair(2,0);
-  facetVertexMapping[2]=std::make_pair(1,2);
-
-  for(FacetIterator facet=element.facet_.begin(); facet != element.facet_.end(); ++facet)
-  {
-#ifndef NDEBUG
-    const auto* v0 = element.vertex_[refElement.subEntity(facetIndex/2, 1, 0, 2)];
-    const auto* v1 = element.vertex_[refElement.subEntity(facetIndex/2, 1, 1, 2)];
-#endif
-
-    if(!(*facet)->nSons_)
+    if(refCount<=0)
     {
-      // Not refined yet
-      // Compute facet midpoint
-      FieldVector<ctype, dimworld> midPoint;
-      for(int dim=0; dim<dimworld;++dim)
-        midPoint[dim]=((*facet)->vertex_[0]->pos_[dim]
-        + (*facet)->vertex_[1]->pos_[dim]) /2.0;
+      DUNE_THROW(NotImplemented, "Called refineSimplexElement with refCount <= 0");
+      return;
+    }
 
-      // if the element is parametrized we obtain the new point by the parametrization
-      if(element.elementParametrization_)
-      {
-        // we know the local coordinates of the midpoint
-        FoamGridEntity<0, dimgrid, Dune::FoamGrid<dimgrid, dimworld, ctype> > e(&element);
-        FieldVector<ctype, dimgrid> localMidPoint(e.geometry().local(midPoint));
-        while(e.hasFather())
-        {
-          localMidPoint = e.geometryInFather().global(localMidPoint);
-          e.target_ = e.target_->father_;
-        }
-        // overwrite the midpoint with the coordinates mapped by the parametrization
-        midPoint = element.elementParametrization_(localMidPoint);
-      }
+    unsigned int nextLevel=element.level()+1;
 
-      //create midpoint
-      std::get<0>(entityImps_[nextLevel])
-        .push_back(FoamGridEntityImp<0, dimgrid, dimworld, ctype>(nextLevel, midPoint,
-                                               getNextFreeId()));
-      FoamGridEntityImp<0, dimgrid, dimworld, ctype>& midVertex =
+    std::array<FoamGridEntityImp<0, dimgrid, dimworld, ctype>*, 3*dimgrid> nextLevelVertices;
+    std::size_t vertexIndex=0;
+
+    // create copies of the vertices of the element
+    for(int c=0; c<element.corners(); ++c)
+    {
+      if(element.vertex_[c]->sons_[0]==nullptr){
+        // Vertex doesn't exist yet on the next level
+        std::get<0>(entityImps_[nextLevel])
+        .push_back(FoamGridEntityImp<0, dimgrid, dimworld, ctype>(nextLevel,
+                                                element.vertex_[c]->pos_,
+                                                element.vertex_[c]->id_));
+        FoamGridEntityImp<0, dimgrid, dimworld, ctype>& newVertex =
         std::get<0>(entityImps_[nextLevel]).back();
-      nextLevelVertices[vertexIndex++]=&midVertex;
-
-      // sanity check for DUNE numbering
-      assert(v0->sons_[0]!=nullptr);
-      assert(v1->sons_[0]!=nullptr);
-      assert(v0->sons_[0] == nextLevelVertices[facetVertexMapping[facetIndex/2].first] ||
-        v0->sons_[0] == nextLevelVertices[facetVertexMapping[facetIndex/2].second]);
-
-      assert(v1->sons_[0] == nextLevelVertices[facetVertexMapping[facetIndex/2].first] ||
-        v1->sons_[0] == nextLevelVertices[facetVertexMapping[facetIndex/2].second]);
-
-      // create the facets and publish them in the father
-      std::get<1>(entityImps_[nextLevel])
-        .push_back(FoamGridEntityImp<1, dimgrid, dimworld, ctype>(nextLevelVertices[facetVertexMapping[facetIndex/2].first], &midVertex,
-                                                 nextLevel, getNextFreeId(), *facet));
-      (*facet)->sons_[0] = &std::get<1>(entityImps_[nextLevel]).back();
-      ++((*facet)->nSons_);
-      // Inherit the boundaryId and SegmentIndex (are treated as the same for now)
-      (*facet)->sons_[0]->boundaryId_=(*facet)->boundaryId_;
-      (*facet)->sons_[0]->boundarySegmentIndex_=(*facet)->boundarySegmentIndex_;
-      nextLevelFacets[facetIndex++]= (*facet)->sons_[0];
-
-      // Initialize the elements_ vector of the new facet
-      // with that of the father. Later we will overwrite it
-      // with the correct values.
-      (*facet)->sons_[0]->elements_=(*facet)->elements_;
-
-      assert((*facet)->vertex_[1]->sons_[0]!=nullptr);
-      std::get<1>(entityImps_[nextLevel])
-        .push_back(FoamGridEntityImp<1, dimgrid, dimworld, ctype>(&midVertex, nextLevelVertices[facetVertexMapping[facetIndex/2].second],
-                                                 nextLevel, getNextFreeId(), *facet));
-      (*facet)->sons_[1] = &std::get<1>(entityImps_[nextLevel]).back();
-      ++((*facet)->nSons_);
-      // Inherit the boundaryId and SegmentIndex (are treated as the same for now)
-      (*facet)->sons_[1]->boundaryId_=(*facet)->boundaryId_;
-      (*facet)->sons_[1]->boundarySegmentIndex_=(*facet)->boundarySegmentIndex_;
-      nextLevelFacets[facetIndex++]= (*facet)->sons_[1];
-
-      // Initialize the elements_ vector of the new facet
-      // with that of the father. Later we will overwrite it
-      // with the correct values.
-      (*facet)->sons_[1]->elements_=(*facet)->elements_;
-
-      (*facet)->nSons_=2;
-    } else {
-      // Facets do already exist. Just add its sons to nextLevelFacets
-      // but make sure that the one containing vertex facetIndex comes first
-      if((*facet)->sons_[0]->vertex_[0]->id_ ==
-        nextLevelVertices[facetVertexMapping[facetIndex/2].first]->id_ ||
-        (*facet)->sons_[0]->vertex_[1]->id_ ==
-        nextLevelVertices[facetVertexMapping[facetIndex/2].first]->id_)
-      {
-        nextLevelFacets[facetIndex++]=(*facet)->sons_[0];
-      nextLevelFacets[facetIndex++]=(*facet)->sons_[1];
-      }else{
-        nextLevelFacets[facetIndex++]=(*facet)->sons_[1];
-        nextLevelFacets[facetIndex++]=(*facet)->sons_[0];
+        element.vertex_[c]->sons_[0]=&newVertex;
+        newVertex.father_ = element.vertex_[c];
       }
-      if((*facet)->sons_[0]->vertex_[0]->id_!=(*facet)->vertex_[0]->id_ &&
-         (*facet)->sons_[0]->vertex_[0]->id_!=(*facet)->vertex_[1]->id_)
+      nextLevelVertices[vertexIndex++]=element.vertex_[c]->sons_[0];
+    }
+
+    // create new vertices from facet-midpoints together with the new facets that
+    // have a father
+    typedef typename std::array<FoamGridEntityImp<dimgrid-1, dimgrid, dimworld, ctype>*, dimgrid+1>::iterator FacetIterator;
+
+    std::array<FoamGridEntityImp<1, dimgrid, dimworld, ctype>*, 9> nextLevelFacets;
+    std::size_t facetIndex=0;
+  #ifndef NDEBUG
+    const auto refElement = ReferenceElements<ctype, dimgrid>::general(element.type());
+  #endif
+
+    // I am just to dumb for a general facet to vertice mapping.
+    // Therefore we just store it here
+    std::array<std::pair<unsigned int,unsigned int>,3 > facetVertexMapping;
+    facetVertexMapping[0]=std::make_pair(0,1);
+    facetVertexMapping[1]=std::make_pair(2,0);
+    facetVertexMapping[2]=std::make_pair(1,2);
+
+    for(FacetIterator facet=element.facet_.begin(); facet != element.facet_.end(); ++facet)
+    {
+  #ifndef NDEBUG
+      const auto* v0 = element.vertex_[refElement.subEntity(facetIndex/2, 1, 0, 2)];
+      const auto* v1 = element.vertex_[refElement.subEntity(facetIndex/2, 1, 1, 2)];
+  #endif
+
+      if(!(*facet)->nSons_)
       {
-        //vertex 0 is the midpoint
-        nextLevelVertices[vertexIndex++]=const_cast<FoamGridEntityImp<0, dimgrid, dimworld, ctype>*>((*facet)->sons_[0]->vertex_[0]);
+        // Not refined yet
+        // Compute facet midpoint
+        FieldVector<ctype, dimworld> midPoint;
+        for(int dim=0; dim<dimworld;++dim)
+          midPoint[dim]=((*facet)->vertex_[0]->pos_[dim]
+          + (*facet)->vertex_[1]->pos_[dim]) /2.0;
+
+        // if the element is parametrized we obtain the new point by the parametrization
+        if(element.elementParametrization_)
+        {
+          // we know the local coordinates of the midpoint
+          FoamGridEntity<0, dimgrid, Dune::FoamGrid<dimgrid, dimworld, ctype> > e(&element);
+          FieldVector<ctype, dimgrid> localMidPoint(e.geometry().local(midPoint));
+          while(e.hasFather())
+          {
+            localMidPoint = e.geometryInFather().global(localMidPoint);
+            e.target_ = e.target_->father_;
+          }
+          // overwrite the midpoint with the coordinates mapped by the parametrization
+          midPoint = element.elementParametrization_(localMidPoint);
+        }
+
+        //create midpoint
+        std::get<0>(entityImps_[nextLevel])
+          .push_back(FoamGridEntityImp<0, dimgrid, dimworld, ctype>(nextLevel, midPoint,
+                                                getNextFreeId()));
+        FoamGridEntityImp<0, dimgrid, dimworld, ctype>& midVertex =
+          std::get<0>(entityImps_[nextLevel]).back();
+        nextLevelVertices[vertexIndex++]=&midVertex;
+
+        // sanity check for DUNE numbering
+        assert(v0->sons_[0]!=nullptr);
+        assert(v1->sons_[0]!=nullptr);
+        assert(v0->sons_[0] == nextLevelVertices[facetVertexMapping[facetIndex/2].first] ||
+          v0->sons_[0] == nextLevelVertices[facetVertexMapping[facetIndex/2].second]);
+
+        assert(v1->sons_[0] == nextLevelVertices[facetVertexMapping[facetIndex/2].first] ||
+          v1->sons_[0] == nextLevelVertices[facetVertexMapping[facetIndex/2].second]);
+
+        // create the facets and publish them in the father
+        std::get<1>(entityImps_[nextLevel])
+          .push_back(FoamGridEntityImp<1, dimgrid, dimworld, ctype>(nextLevelVertices[facetVertexMapping[facetIndex/2].first], &midVertex,
+                                                  nextLevel, getNextFreeId(), *facet));
+        (*facet)->sons_[0] = &std::get<1>(entityImps_[nextLevel]).back();
+        ++((*facet)->nSons_);
+        // Inherit the boundaryId and SegmentIndex (are treated as the same for now)
+        (*facet)->sons_[0]->boundaryId_=(*facet)->boundaryId_;
+        (*facet)->sons_[0]->boundarySegmentIndex_=(*facet)->boundarySegmentIndex_;
+        nextLevelFacets[facetIndex++]= (*facet)->sons_[0];
+
+        // Initialize the elements_ vector of the new facet
+        // with that of the father. Later we will overwrite it
+        // with the correct values.
+        (*facet)->sons_[0]->elements_=(*facet)->elements_;
+
+        assert((*facet)->vertex_[1]->sons_[0]!=nullptr);
+        std::get<1>(entityImps_[nextLevel])
+          .push_back(FoamGridEntityImp<1, dimgrid, dimworld, ctype>(&midVertex, nextLevelVertices[facetVertexMapping[facetIndex/2].second],
+                                                  nextLevel, getNextFreeId(), *facet));
+        (*facet)->sons_[1] = &std::get<1>(entityImps_[nextLevel]).back();
+        ++((*facet)->nSons_);
+        // Inherit the boundaryId and SegmentIndex (are treated as the same for now)
+        (*facet)->sons_[1]->boundaryId_=(*facet)->boundaryId_;
+        (*facet)->sons_[1]->boundarySegmentIndex_=(*facet)->boundarySegmentIndex_;
+        nextLevelFacets[facetIndex++]= (*facet)->sons_[1];
+
+        // Initialize the elements_ vector of the new facet
+        // with that of the father. Later we will overwrite it
+        // with the correct values.
+        (*facet)->sons_[1]->elements_=(*facet)->elements_;
+
+        (*facet)->nSons_=2;
       } else {
-        nextLevelVertices[vertexIndex++]=const_cast<FoamGridEntityImp<0, dimgrid, dimworld, ctype>*>((*facet)->sons_[0]->vertex_[1]);
+        // Facets do already exist. Just add its sons to nextLevelFacets
+        // but make sure that the one containing vertex facetIndex comes first
+        if((*facet)->sons_[0]->vertex_[0]->id_ ==
+          nextLevelVertices[facetVertexMapping[facetIndex/2].first]->id_ ||
+          (*facet)->sons_[0]->vertex_[1]->id_ ==
+          nextLevelVertices[facetVertexMapping[facetIndex/2].first]->id_)
+        {
+          nextLevelFacets[facetIndex++]=(*facet)->sons_[0];
+        nextLevelFacets[facetIndex++]=(*facet)->sons_[1];
+        }else{
+          nextLevelFacets[facetIndex++]=(*facet)->sons_[1];
+          nextLevelFacets[facetIndex++]=(*facet)->sons_[0];
+        }
+        if((*facet)->sons_[0]->vertex_[0]->id_!=(*facet)->vertex_[0]->id_ &&
+          (*facet)->sons_[0]->vertex_[0]->id_!=(*facet)->vertex_[1]->id_)
+        {
+          //vertex 0 is the midpoint
+          nextLevelVertices[vertexIndex++]=const_cast<FoamGridEntityImp<0, dimgrid, dimworld, ctype>*>((*facet)->sons_[0]->vertex_[0]);
+        } else {
+          nextLevelVertices[vertexIndex++]=const_cast<FoamGridEntityImp<0, dimgrid, dimworld, ctype>*>((*facet)->sons_[0]->vertex_[1]);
+        }
       }
     }
-  }
-  assert(facetIndex==6);
-  // Create the facets that lie within the father element
-  // first the one that lies opposite to the vertex 0 in the father
-  std::get<1>(entityImps_[nextLevel])
-    .push_back(FoamGridEntityImp<1, dimgrid, dimworld, ctype>(nextLevelVertices[3],
-                                             nextLevelVertices[4], nextLevel,
-                                             getNextFreeId()));
-  nextLevelFacets[facetIndex++]=&std::get<1>(entityImps_[nextLevel]).back();
+    assert(facetIndex==6);
+    // Create the facets that lie within the father element
+    // first the one that lies opposite to the vertex 0 in the father
+    std::get<1>(entityImps_[nextLevel])
+      .push_back(FoamGridEntityImp<1, dimgrid, dimworld, ctype>(nextLevelVertices[3],
+                                              nextLevelVertices[4], nextLevel,
+                                              getNextFreeId()));
+    nextLevelFacets[facetIndex++]=&std::get<1>(entityImps_[nextLevel]).back();
 
-  // the one opposite to father vertex 1
-  std::get<1>(entityImps_[nextLevel])
-    .push_back(FoamGridEntityImp<1, dimgrid, dimworld, ctype>(nextLevelVertices[3],
-                                             nextLevelVertices[5], nextLevel,
-                                             getNextFreeId()));
-  nextLevelFacets[facetIndex++]=&std::get<1>(entityImps_[nextLevel]).back();
+    // the one opposite to father vertex 1
+    std::get<1>(entityImps_[nextLevel])
+      .push_back(FoamGridEntityImp<1, dimgrid, dimworld, ctype>(nextLevelVertices[3],
+                                              nextLevelVertices[5], nextLevel,
+                                              getNextFreeId()));
+    nextLevelFacets[facetIndex++]=&std::get<1>(entityImps_[nextLevel]).back();
 
-  // and the one opposite to father vertex 2
-  std::get<1>(entityImps_[nextLevel])
-    .push_back(FoamGridEntityImp<1, dimgrid, dimworld, ctype>(nextLevelVertices[4],
-                                             nextLevelVertices[5], nextLevel,
-                                             getNextFreeId()));
-  nextLevelFacets[facetIndex++]=&std::get<1>(entityImps_[nextLevel]).back();
+    // and the one opposite to father vertex 2
+    std::get<1>(entityImps_[nextLevel])
+      .push_back(FoamGridEntityImp<1, dimgrid, dimworld, ctype>(nextLevelVertices[4],
+                                              nextLevelVertices[5], nextLevel,
+                                              getNextFreeId()));
+    nextLevelFacets[facetIndex++]=&std::get<1>(entityImps_[nextLevel]).back();
 
-  assert(facetIndex==nextLevelFacets.size());
-  assert(vertexIndex==nextLevelVertices.size());
+    assert(facetIndex==nextLevelFacets.size());
+    assert(vertexIndex==nextLevelVertices.size());
 
-  std::array<FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>*, 4> nextLevelElements;
-  // create the new triangles that lie in the corners
-  // First the one that contains vertex 0 of the father.
-  std::get<2>(entityImps_[nextLevel])
-    .push_back(FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>(nextLevel, getNextFreeId()));
+    std::array<FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>*, 4> nextLevelElements;
+    // create the new triangles that lie in the corners
+    // First the one that contains vertex 0 of the father.
+    std::get<2>(entityImps_[nextLevel])
+      .push_back(FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>(nextLevel, getNextFreeId()));
 
-  FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>* newElement = &(std::get<dimgrid>(entityImps_[nextLevel]).back());
-  newElement->isNew_=true;
-  newElement->father_=&element;
-  newElement->facet_[0]=nextLevelFacets[0];
-  newElement->facet_[1]=nextLevelFacets[3];
-  newElement->facet_[2]=nextLevelFacets[6];
-  newElement->vertex_[0]=nextLevelVertices[0];
-  newElement->vertex_[1]=nextLevelVertices[3];
-  newElement->vertex_[2]=nextLevelVertices[4];
-  newElement->refinementIndex_=0;
-  nextLevelElements[0]=newElement;
-  element.sons_[0]=newElement;
+    FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>* newElement = &(std::get<dimgrid>(entityImps_[nextLevel]).back());
+    newElement->isNew_=true;
+    newElement->father_=&element;
+    newElement->facet_[0]=nextLevelFacets[0];
+    newElement->facet_[1]=nextLevelFacets[3];
+    newElement->facet_[2]=nextLevelFacets[6];
+    newElement->vertex_[0]=nextLevelVertices[0];
+    newElement->vertex_[1]=nextLevelVertices[3];
+    newElement->vertex_[2]=nextLevelVertices[4];
+    newElement->refinementIndex_=0;
+    nextLevelElements[0]=newElement;
+    element.sons_[0]=newElement;
 
-  // if the father is parametrized the son will be parametrized too
-  if(element.elementParametrization_)
-    newElement->elementParametrization_ = element.elementParametrization_;
+    // if the father is parametrized the son will be parametrized too
+    if(element.elementParametrization_)
+      newElement->elementParametrization_ = element.elementParametrization_;
 
-  // Next the one that contains vertex 1 of the father.
-  std::get<2>(entityImps_[nextLevel])
-    .push_back(FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>(nextLevel, getNextFreeId()));
-  newElement = &(std::get<dimgrid>(entityImps_[nextLevel]).back());
-  newElement->isNew_=true;
-  newElement->father_=&element;
-  newElement->facet_[0]=nextLevelFacets[4];
-  newElement->facet_[1]=nextLevelFacets[1];
-  newElement->facet_[2]=nextLevelFacets[7];
-  newElement->vertex_[0]=nextLevelVertices[1];
-  newElement->vertex_[1]=nextLevelVertices[5];
-  newElement->vertex_[2]=nextLevelVertices[3];
-  newElement->refinementIndex_=1;
-  nextLevelElements[1]=newElement;
-  element.sons_[1]=newElement;
+    // Next the one that contains vertex 1 of the father.
+    std::get<2>(entityImps_[nextLevel])
+      .push_back(FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>(nextLevel, getNextFreeId()));
+    newElement = &(std::get<dimgrid>(entityImps_[nextLevel]).back());
+    newElement->isNew_=true;
+    newElement->father_=&element;
+    newElement->facet_[0]=nextLevelFacets[4];
+    newElement->facet_[1]=nextLevelFacets[1];
+    newElement->facet_[2]=nextLevelFacets[7];
+    newElement->vertex_[0]=nextLevelVertices[1];
+    newElement->vertex_[1]=nextLevelVertices[5];
+    newElement->vertex_[2]=nextLevelVertices[3];
+    newElement->refinementIndex_=1;
+    nextLevelElements[1]=newElement;
+    element.sons_[1]=newElement;
 
-  // if the father is parametrized the son will be parametrized too
-  if(element.elementParametrization_)
-    newElement->elementParametrization_ = element.elementParametrization_;
+    // if the father is parametrized the son will be parametrized too
+    if(element.elementParametrization_)
+      newElement->elementParametrization_ = element.elementParametrization_;
 
-  // Last the one that contains vertex 2 of the father.
-  std::get<dimgrid>(entityImps_[nextLevel])
-    .push_back(FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>(nextLevel, getNextFreeId()));
-  newElement = &(std::get<2>(entityImps_[nextLevel]).back());
-  newElement->isNew_=true;
-  newElement->father_=&element;
-  newElement->facet_[0]=nextLevelFacets[2];
-  newElement->facet_[1]=nextLevelFacets[5];
-  newElement->facet_[2]=nextLevelFacets[8];
-  newElement->vertex_[0]=nextLevelVertices[2];
-  newElement->vertex_[1]=nextLevelVertices[4];
-  newElement->vertex_[2]=nextLevelVertices[5];
-  newElement->refinementIndex_=2;
-  nextLevelElements[2]=newElement;
-  element.sons_[2]=newElement;
+    // Last the one that contains vertex 2 of the father.
+    std::get<dimgrid>(entityImps_[nextLevel])
+      .push_back(FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>(nextLevel, getNextFreeId()));
+    newElement = &(std::get<2>(entityImps_[nextLevel]).back());
+    newElement->isNew_=true;
+    newElement->father_=&element;
+    newElement->facet_[0]=nextLevelFacets[2];
+    newElement->facet_[1]=nextLevelFacets[5];
+    newElement->facet_[2]=nextLevelFacets[8];
+    newElement->vertex_[0]=nextLevelVertices[2];
+    newElement->vertex_[1]=nextLevelVertices[4];
+    newElement->vertex_[2]=nextLevelVertices[5];
+    newElement->refinementIndex_=2;
+    nextLevelElements[2]=newElement;
+    element.sons_[2]=newElement;
 
-  // if the father is parametrized the son will be parametrized too
-  if(element.elementParametrization_)
-    newElement->elementParametrization_ = element.elementParametrization_;
+    // if the father is parametrized the son will be parametrized too
+    if(element.elementParametrization_)
+      newElement->elementParametrization_ = element.elementParametrization_;
 
-  // create the triangle in the center
-  std::get<dimgrid>(entityImps_[nextLevel])
-    .push_back(FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>(nextLevel, getNextFreeId()));
-  newElement = &(std::get<2>(entityImps_[nextLevel]).back());
-  newElement->isNew_=true;
-  newElement->father_=&element;
-  newElement->facet_[0]=nextLevelFacets[7];
-  newElement->facet_[1]=nextLevelFacets[6];
-  newElement->facet_[2]=nextLevelFacets[8];
-  newElement->vertex_[0]=nextLevelVertices[3];
-  newElement->vertex_[1]=nextLevelVertices[5];
-  newElement->vertex_[2]=nextLevelVertices[4];
-  newElement->refinementIndex_=3;
-  nextLevelElements[3]=newElement;
-  element.sons_[3]=newElement;
+    // create the triangle in the center
+    std::get<dimgrid>(entityImps_[nextLevel])
+      .push_back(FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>(nextLevel, getNextFreeId()));
+    newElement = &(std::get<2>(entityImps_[nextLevel]).back());
+    newElement->isNew_=true;
+    newElement->father_=&element;
+    newElement->facet_[0]=nextLevelFacets[7];
+    newElement->facet_[1]=nextLevelFacets[6];
+    newElement->facet_[2]=nextLevelFacets[8];
+    newElement->vertex_[0]=nextLevelVertices[3];
+    newElement->vertex_[1]=nextLevelVertices[5];
+    newElement->vertex_[2]=nextLevelVertices[4];
+    newElement->refinementIndex_=3;
+    nextLevelElements[3]=newElement;
+    element.sons_[3]=newElement;
 
-  // if the father is parametrized the son will be parametrized too
-  if(element.elementParametrization_)
-    newElement->elementParametrization_ = element.elementParametrization_;
+    // if the father is parametrized the son will be parametrized too
+    if(element.elementParametrization_)
+      newElement->elementParametrization_ = element.elementParametrization_;
 
-  // Now that all the triangle are created, we can update the elements attached
-  // to the facets.
-  // The new (inside) neighbors of the facets lying on facets of the father element.
-  std::size_t neighbors[6] = {0, 1, 2, 0, 1, 2};
-  for(std::size_t i=0; i<6; ++i){
-    // Overwrite the father element by the newly created elements.
-    overwriteFineLevelNeighbours(*nextLevelFacets[i], nextLevelElements[neighbors[i]],
-                                 &element);
-  }
+    // Now that all the triangle are created, we can update the elements attached
+    // to the facets.
+    // The new (inside) neighbors of the facets lying on facets of the father element.
+    std::size_t neighbors[6] = {0, 1, 2, 0, 1, 2};
+    for(std::size_t i=0; i<6; ++i){
+      // Overwrite the father element by the newly created elements.
+      overwriteFineLevelNeighbours(*nextLevelFacets[i], nextLevelElements[neighbors[i]],
+                                  &element);
+    }
 
-  // Update the neighbours of the inner facets
-  nextLevelFacets[6]->elements_.push_back(nextLevelElements[0]);
-  nextLevelFacets[6]->elements_.push_back(nextLevelElements[3]);
-  nextLevelFacets[7]->elements_.push_back(nextLevelElements[3]);
-  nextLevelFacets[7]->elements_.push_back(nextLevelElements[1]);
-  nextLevelFacets[8]->elements_.push_back(nextLevelElements[3]);
-  nextLevelFacets[8]->elements_.push_back(nextLevelElements[2]);
+    // Update the neighbours of the inner facets
+    nextLevelFacets[6]->elements_.push_back(nextLevelElements[0]);
+    nextLevelFacets[6]->elements_.push_back(nextLevelElements[3]);
+    nextLevelFacets[7]->elements_.push_back(nextLevelElements[3]);
+    nextLevelFacets[7]->elements_.push_back(nextLevelElements[1]);
+    nextLevelFacets[8]->elements_.push_back(nextLevelElements[3]);
+    nextLevelFacets[8]->elements_.push_back(nextLevelElements[2]);
 
-  element.nSons_=4;
+    element.nSons_=4;
 
-  if((refCount--)>1)
-  {
-    typedef typename std::array<FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>*, 1<<dimgrid>::iterator ElementIterator;
-    for(ElementIterator elem=nextLevelElements.begin();
-        elem != nextLevelElements.end(); ++elem)
+    if((refCount--)>1)
     {
-      refineSimplexElement(**elem, refCount);
+      typedef typename std::array<FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>*, 1<<dimgrid>::iterator ElementIterator;
+      for(ElementIterator elem=nextLevelElements.begin();
+          elem != nextLevelElements.end(); ++elem)
+      {
+        refineSimplexElement(**elem, refCount);
+      }
     }
   }
 }
 
 // Refine one simplex element (1D simplex element)
 template <int dimgrid, int dimworld, class ctype>
-void Dune::FoamGrid<dimgrid, dimworld, ctype>::refineSimplexElement(FoamGridEntityImp<1, dimgrid, dimworld, ctype>& element,
-                                                    int refCount)
+void FoamGrid<dimgrid, dimworld, ctype>::refineSimplexElement(FoamGridEntityImp<1, 1, dimworld, ctype>& element,
+                                                              int refCount)
 {
-  if(refCount<=0)
+  if constexpr(dimgrid==1)
   {
-    DUNE_THROW(NotImplemented, "Called refineSimplexElement with refCount <= 0");
-    return;
-  }
-
-  unsigned int nextLevel=element.level()+1;
-
-  std::array<FoamGridEntityImp<0, dimgrid, dimworld, ctype>*, 3*dimgrid> nextLevelVertices;
-  std::size_t vertexIndex=0;
-
-  // create copies of the vertices of the element
-  for(int c=0; c<element.corners(); ++c)
-  {
-    if(element.vertex_[c]->sons_[0]==nullptr){
-      // Vertex doesn't exist yet on the next level
-      std::get<0>(entityImps_[nextLevel])
-        .push_back(FoamGridEntityImp<0, dimgrid, dimworld, ctype>(nextLevel,
-                                               element.vertex_[c]->pos_,
-                                               element.vertex_[c]->id_));
-      FoamGridEntityImp<0, dimgrid, dimworld, ctype>& newVertex =
-        std::get<0>(entityImps_[nextLevel]).back();
-
-      // publish vertex in the father
-      element.vertex_[c]->sons_[0] = &newVertex;
-      element.vertex_[c]->nSons_++;
-      assert(element.vertex_[c]->nSons_==1); // Vertex can't have more than one son
-      // publish father in the new vertex
-      newVertex.father_ = element.vertex_[c];
-      assert(newVertex.hasFather());
-
-      // Inherit the boundaryId_ and the boundarySegmentIndex
-      element.vertex_[c]->sons_[0]->boundaryId_= element.vertex_[c]->boundaryId_;
-      element.vertex_[c]->sons_[0]->boundarySegmentIndex_= element.vertex_[c]->boundarySegmentIndex_;
-
-      // Initialize the elements_ vector if the new facet with that of the father. Later,
-      // we will overwrite it with the correct values
-      element.vertex_[c]->sons_[0]->elements_= element.vertex_[c]->elements_;
-    }
-    //add vertex to nextLevelVertices
-    nextLevelVertices[vertexIndex++]=element.vertex_[c]->sons_[0];
-  }
-  assert(vertexIndex==2);
-
-  // Create the facet/vertex which lies within the father element
-  // Compute element midpoint
-  typedef FoamGridEntityImp<0, dimgrid, dimworld, ctype> FoamGridVertex;
-  const FoamGridVertex* v0 = element.vertex_[0];
-  const FoamGridVertex* v1 = element.vertex_[1];
-  FieldVector<ctype, dimworld> midPoint;
-  for(int dim=0; dim<dimworld;++dim)
-    midPoint[dim]=(v0->pos_[dim] + v1->pos_[dim])*0.5;
-
-  // if the element is parametrized we obtain the new point by the parametrization
-  if(element.elementParametrization_)
-  {
-    // we know the local coordinates of the midpoint
-    FoamGridEntity<0, dimgrid, Dune::FoamGrid<dimgrid, dimworld, ctype> > e(&element);
-    FieldVector<ctype, dimgrid> localMidPoint(0.5);
-    while(e.hasFather())
+    if(refCount<=0)
     {
-      localMidPoint = e.geometryInFather().global(localMidPoint);
-      e.target_ = e.target_->father_;
+      DUNE_THROW(NotImplemented, "Called refineSimplexElement with refCount <= 0");
+      return;
     }
-    // overwrite the midpoint with the coordinates mapped by the parametrization
-    midPoint = element.elementParametrization_(localMidPoint);
-  }
-  // Create element midpoint
-  std::get<0>(entityImps_[nextLevel]).push_back(FoamGridEntityImp<0, dimgrid, dimworld, ctype>(nextLevel, midPoint, getNextFreeId()));
-  FoamGridEntityImp<0, dimgrid, dimworld, ctype>& midVertex = std::get<0>(entityImps_[nextLevel]).back();
-  nextLevelVertices[vertexIndex++]=&midVertex;
 
-  assert(vertexIndex==nextLevelVertices.size()); //==3
+    unsigned int nextLevel=element.level()+1;
 
-  // Create next level elements
-  std::array<FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>*, 1<<dimgrid > nextLevelElements;
-  // create the elements
-  // First the one that contains vertex 0 of the father.
-  std::get<dimgrid>(entityImps_[nextLevel])
-    .push_back(FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>(nextLevel, getNextFreeId()));
+    std::array<FoamGridEntityImp<0, dimgrid, dimworld, ctype>*, 3*dimgrid> nextLevelVertices;
+    std::size_t vertexIndex=0;
 
-  FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>* newElement = &(std::get<dimgrid>(entityImps_[nextLevel]).back());
-  newElement->isNew_=true;
-  newElement->father_=&element;
-  newElement->vertex_[0]=nextLevelVertices[0];
-  newElement->vertex_[1]=nextLevelVertices[2];
-  newElement->facet_[0]=nextLevelVertices[0]; // are equal to vertices but are
-  newElement->facet_[1]=nextLevelVertices[2]; // set for consistent interface
-  newElement->refinementIndex_=0;
-  nextLevelElements[0]=newElement;
-  element.sons_[0]=newElement;
-  element.nSons_++;
-
-  // if the father is parametrized the son will be parametrized too
-  if(element.elementParametrization_)
-    newElement->elementParametrization_ = element.elementParametrization_;
-
-  // Next the one that contains vertex 1 of the father.
-  std::get<dimgrid>(entityImps_[nextLevel])
-    .push_back(FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>(nextLevel, getNextFreeId()));
-  newElement = &(std::get<dimgrid>(entityImps_[nextLevel]).back());
-  newElement->isNew_=true;
-  newElement->father_=&element;
-  newElement->vertex_[0]=nextLevelVertices[2];
-  newElement->vertex_[1]=nextLevelVertices[1];
-  newElement->facet_[0]=nextLevelVertices[2]; // are equal to vertices but are
-  newElement->facet_[1]=nextLevelVertices[1]; // set for consistent interface
-  newElement->refinementIndex_=1;
-  nextLevelElements[1]=newElement;
-  element.sons_[1]=newElement;
-  element.nSons_++;
-
-  // if the father is parametrized the son will be parametrized too
-  if(element.elementParametrization_)
-    newElement->elementParametrization_ = element.elementParametrization_;
-
-  assert(element.nSons_== 1<<dimgrid); //==2
-
-  // Now that all the elements are created, we can update the elements attached
-  // to the facets.
-  // The new (inside) neighbors of the facets lying on facets of the father element.
-  std::size_t neighbors[2] = {0, 1};
-  for(std::size_t i=0; i<2; ++i)
-  {
-    // Overwrite the father element by the newly created elements.
-    overwriteFineLevelNeighbours(*nextLevelVertices[i], nextLevelElements[neighbors[i]],
-                                    &element);
-  }
-  // Update the neighbours of the inner vertex
-  nextLevelVertices[2]->elements_.push_back(nextLevelElements[0]);
-  nextLevelVertices[2]->elements_.push_back(nextLevelElements[1]);
-
-  if((refCount--)>1)
-  {
-    typedef typename std::array<FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>*, 1<<dimgrid >::iterator ElementIterator;
-    for(ElementIterator elem=nextLevelElements.begin();
-        elem != nextLevelElements.end(); ++elem)
+    // create copies of the vertices of the element
+    for(int c=0; c<element.corners(); ++c)
     {
-      refineSimplexElement(**elem, refCount);
+      if(element.vertex_[c]->sons_[0]==nullptr){
+        // Vertex doesn't exist yet on the next level
+        std::get<0>(entityImps_[nextLevel])
+          .push_back(FoamGridEntityImp<0, dimgrid, dimworld, ctype>(nextLevel,
+                                                element.vertex_[c]->pos_,
+                                                element.vertex_[c]->id_));
+        FoamGridEntityImp<0, dimgrid, dimworld, ctype>& newVertex =
+          std::get<0>(entityImps_[nextLevel]).back();
+
+        // publish vertex in the father
+        element.vertex_[c]->sons_[0] = &newVertex;
+        element.vertex_[c]->nSons_++;
+        assert(element.vertex_[c]->nSons_==1); // Vertex can't have more than one son
+        // publish father in the new vertex
+        newVertex.father_ = element.vertex_[c];
+        assert(newVertex.hasFather());
+
+        // Inherit the boundaryId_ and the boundarySegmentIndex
+        element.vertex_[c]->sons_[0]->boundaryId_= element.vertex_[c]->boundaryId_;
+        element.vertex_[c]->sons_[0]->boundarySegmentIndex_= element.vertex_[c]->boundarySegmentIndex_;
+
+        // Initialize the elements_ vector if the new facet with that of the father. Later,
+        // we will overwrite it with the correct values
+        element.vertex_[c]->sons_[0]->elements_= element.vertex_[c]->elements_;
+      }
+      //add vertex to nextLevelVertices
+      nextLevelVertices[vertexIndex++]=element.vertex_[c]->sons_[0];
+    }
+    assert(vertexIndex==2);
+
+    // Create the facet/vertex which lies within the father element
+    // Compute element midpoint
+    typedef FoamGridEntityImp<0, dimgrid, dimworld, ctype> FoamGridVertex;
+    const FoamGridVertex* v0 = element.vertex_[0];
+    const FoamGridVertex* v1 = element.vertex_[1];
+    FieldVector<ctype, dimworld> midPoint;
+    for(int dim=0; dim<dimworld;++dim)
+      midPoint[dim]=(v0->pos_[dim] + v1->pos_[dim])*0.5;
+
+    // if the element is parametrized we obtain the new point by the parametrization
+    if(element.elementParametrization_)
+    {
+      // we know the local coordinates of the midpoint
+      FoamGridEntity<0, dimgrid, Dune::FoamGrid<dimgrid, dimworld, ctype> > e(&element);
+      FieldVector<ctype, dimgrid> localMidPoint(0.5);
+      while(e.hasFather())
+      {
+        localMidPoint = e.geometryInFather().global(localMidPoint);
+        e.target_ = e.target_->father_;
+      }
+      // overwrite the midpoint with the coordinates mapped by the parametrization
+      midPoint = element.elementParametrization_(localMidPoint);
+    }
+    // Create element midpoint
+    std::get<0>(entityImps_[nextLevel]).push_back(FoamGridEntityImp<0, dimgrid, dimworld, ctype>(nextLevel, midPoint, getNextFreeId()));
+    FoamGridEntityImp<0, dimgrid, dimworld, ctype>& midVertex = std::get<0>(entityImps_[nextLevel]).back();
+    nextLevelVertices[vertexIndex++]=&midVertex;
+
+    assert(vertexIndex==nextLevelVertices.size()); //==3
+
+    // Create next level elements
+    std::array<FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>*, 1<<dimgrid > nextLevelElements;
+    // create the elements
+    // First the one that contains vertex 0 of the father.
+    std::get<dimgrid>(entityImps_[nextLevel])
+      .push_back(FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>(nextLevel, getNextFreeId()));
+
+    FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>* newElement = &(std::get<dimgrid>(entityImps_[nextLevel]).back());
+    newElement->isNew_=true;
+    newElement->father_=&element;
+    newElement->vertex_[0]=nextLevelVertices[0];
+    newElement->vertex_[1]=nextLevelVertices[2];
+    newElement->facet_[0]=nextLevelVertices[0]; // are equal to vertices but are
+    newElement->facet_[1]=nextLevelVertices[2]; // set for consistent interface
+    newElement->refinementIndex_=0;
+    nextLevelElements[0]=newElement;
+    element.sons_[0]=newElement;
+    element.nSons_++;
+
+    // if the father is parametrized the son will be parametrized too
+    if(element.elementParametrization_)
+      newElement->elementParametrization_ = element.elementParametrization_;
+
+    // Next the one that contains vertex 1 of the father.
+    std::get<dimgrid>(entityImps_[nextLevel])
+      .push_back(FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>(nextLevel, getNextFreeId()));
+    newElement = &(std::get<dimgrid>(entityImps_[nextLevel]).back());
+    newElement->isNew_=true;
+    newElement->father_=&element;
+    newElement->vertex_[0]=nextLevelVertices[2];
+    newElement->vertex_[1]=nextLevelVertices[1];
+    newElement->facet_[0]=nextLevelVertices[2]; // are equal to vertices but are
+    newElement->facet_[1]=nextLevelVertices[1]; // set for consistent interface
+    newElement->refinementIndex_=1;
+    nextLevelElements[1]=newElement;
+    element.sons_[1]=newElement;
+    element.nSons_++;
+
+    // if the father is parametrized the son will be parametrized too
+    if(element.elementParametrization_)
+      newElement->elementParametrization_ = element.elementParametrization_;
+
+    assert(element.nSons_== 1<<dimgrid); //==2
+
+    // Now that all the elements are created, we can update the elements attached
+    // to the facets.
+    // The new (inside) neighbors of the facets lying on facets of the father element.
+    std::size_t neighbors[2] = {0, 1};
+    for(std::size_t i=0; i<2; ++i)
+    {
+      // Overwrite the father element by the newly created elements.
+      overwriteFineLevelNeighbours(*nextLevelVertices[i], nextLevelElements[neighbors[i]],
+                                      &element);
+    }
+    // Update the neighbours of the inner vertex
+    nextLevelVertices[2]->elements_.push_back(nextLevelElements[0]);
+    nextLevelVertices[2]->elements_.push_back(nextLevelElements[1]);
+
+    if((refCount--)>1)
+    {
+      typedef typename std::array<FoamGridEntityImp<dimgrid, dimgrid, dimworld, ctype>*, 1<<dimgrid >::iterator ElementIterator;
+      for(ElementIterator elem=nextLevelElements.begin();
+          elem != nextLevelElements.end(); ++elem)
+      {
+        refineSimplexElement(**elem, refCount);
+      }
     }
   }
 }
@@ -1297,22 +1304,21 @@ void Dune::FoamGrid<dimgrid, dimworld, ctype>::addElementForFacet(const FoamGrid
       addElementForFacet(element, son);
 }
 
-// helper function to add new facets in 1d (they already exist as vertices)
-template <int dimgrid, int dimworld, class ctype>
-void Dune::FoamGrid<dimgrid, dimworld, ctype>::addNewFacet(FoamGridEntityImp<0, dimgrid, dimworld, ctype>* &facet,
-                                                    std::array<FoamGridEntityImp<0, dimgrid, dimworld, ctype>*,dimgrid> vertexArray,
-                                                    int level)
-{ facet = vertexArray[0]; }
 
-// helper function to add new facets in 2d
+// helper function to add new facets in 1d (they already exist as vertices) and 2d
 template <int dimgrid, int dimworld, class ctype>
-void Dune::FoamGrid<dimgrid, dimworld, ctype>::addNewFacet(FoamGridEntityImp<1, dimgrid, dimworld, ctype>* &facet,
-                                                    std::array<FoamGridEntityImp<0, dimgrid, dimworld, ctype>*,dimgrid> vertexArray,
-                                                    int level)
+void FoamGrid<dimgrid, dimworld, ctype>::addNewFacet(FoamGridEntityImp<dimgrid-1, dimgrid, dimworld, ctype>* &facet,
+                                                     std::array<FoamGridEntityImp<0, dimgrid, dimworld, ctype>*,dimgrid> vertexArray,
+                                                     int level)
 {
-  std::get<1>(entityImps_[level]).push_back(FoamGridEntityImp<1, 2, dimworld, ctype>(vertexArray[0], vertexArray[1], level, getNextFreeId()));
-  facet = &*std::get<1>(entityImps_[level]).rbegin();
+  if constexpr(dimgrid==1)
+    facet = vertexArray[0];
+  else if constexpr(dimgrid==2) {
+    std::get<1>(entityImps_[level]).push_back(FoamGridEntityImp<1, 2, dimworld, ctype>(vertexArray[0], vertexArray[1], level, getNextFreeId()));
+    facet = &*std::get<1>(entityImps_[level]).rbegin();
+  }
 }
+
 
 // Clean up refinement markers
 template <int dimgrid, int dimworld, class ctype>
