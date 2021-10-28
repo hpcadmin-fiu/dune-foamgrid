@@ -23,10 +23,20 @@ add_subdirectory(dune)
 add_subdirectory(doc)
 add_subdirectory(cmake/modules)
 add_subdirectory(examples)
-if (dune-python_FOUND)
+
+# Since 2.9 Python bindings are enabled by default
+if(${dune-common_VERSION} VERSION_GREATER_EQUAL 2.9)
   add_subdirectory(python)
-  dune_python_install_package(PATH python)
+else()
+  if(DUNE_ENABLE_PYTHONBINDINGS)
+    add_subdirectory(python)
+  endif()
 endif()
 
 # finalize the dune project, e.g. generating config.h etc.
 finalize_dune_project(GENERATE_CONFIG_H_CMAKE)
+
+# set policy for install accepting generator expressions
+if ("${CMAKE_VERSION}" VERSION_GREATER 3.14)
+  cmake_policy(SET CMP0087 NEW)
+endif ("${CMAKE_VERSION}" VERSION_GREATER 3.14)
