@@ -1,1 +1,1 @@
-add_python_targets(dune foamgrid)
+add_subdirectory(foamgrid)
