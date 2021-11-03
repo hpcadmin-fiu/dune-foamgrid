@@ -138,7 +138,7 @@ namespace Dune {
         /** \brief Return level index of sub entity with codim = cc and local number i
          */
         int subLevelIndex (int i, unsigned int codim) const {
-            assert(0<=codim && codim<=1);
+            assert(codim<=1);
             switch (codim) {
             case 0:
                 return this->levelIndex_;
@@ -151,7 +151,7 @@ namespace Dune {
         /** \brief Return leaf index of sub entity with codim = cc and local number i
          */
         int subLeafIndex (int i,unsigned int codim) const {
-            assert(0<=codim && codim<=1);
+            assert(codim<=1);
             switch (codim) {
             case 0:
                 return this->leafIndex_;
@@ -313,7 +313,7 @@ namespace Dune {
         /** \brief Return level index of sub entity with codim = cc and local number i
          */
         int subLevelIndex (int i, unsigned int codim) const {
-            assert(0<=codim && codim<=2);
+            assert(codim<=2);
             switch (codim) {
             case 0:
                 return this->levelIndex_;
@@ -328,7 +328,7 @@ namespace Dune {
         /** \brief Return leaf index of sub entity with codim = cc and local number i
          */
         int subLeafIndex (int i,unsigned int codim) const {
-            assert(0<=codim && codim<=2);
+            assert(codim<=2);
             switch (codim) {
             case 0:
                 return this->leafIndex_;
