@@ -24,13 +24,8 @@ add_subdirectory(doc)
 add_subdirectory(cmake/modules)
 add_subdirectory(examples)
 
-# Since 2.9 Python bindings are enabled by default
-if(${dune-common_VERSION} VERSION_GREATER_EQUAL 2.9)
+if(DUNE_ENABLE_PYTHONBINDINGS)
   add_subdirectory(python)
-else()
-  if(DUNE_ENABLE_PYTHONBINDINGS)
-    add_subdirectory(python)
-  endif()
 endif()
 
 # finalize the dune project, e.g. generating config.h etc.
