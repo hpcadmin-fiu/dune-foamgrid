@@ -52,10 +52,6 @@ private:
     //! The entity that the iterator is pointing to
     Entity virtualEntity_;
 
-    // This iterator derives from FoamGridEntityPointer, and that base class stores the value
-    // of the iterator, i.e. the 'pointer' to the entity.  However, that pointer can not be
-    // set to its successor in the level std::list, not even by magic.  Therefore we keep the
-    // same information redundantly in this iterator, which can be incremented.
     typename std::list<EntityImp>::const_iterator levelIterator_;
 
 };
