@@ -27,9 +27,6 @@ namespace Dune {
 template<int codim, int dimentity, class GridImp>
 class FoamGridEntity;
 
-template<int codim, class GridImp>
-class FoamGridEntityPointer;
-
 template<int codim, PartitionIteratorType pitype, class GridImp>
 class FoamGridLevelIterator;
 
@@ -63,9 +60,6 @@ class FoamGridEntity :
 
     template <class GridImp_>
     friend class FoamGridGlobalIdSet;
-
-    friend class FoamGridEntityPointer<codim,GridImp>;
-
 
     private:
 
