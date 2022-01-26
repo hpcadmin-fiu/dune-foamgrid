@@ -359,7 +359,8 @@ void oneDimensionalTest ()
   // using a finite volume method with an explicit Euler time discretization
 
   // make a mapper for codim 0 entities in the leaf grid
-  Dune::LeafMultipleCodimMultipleGeomTypeMapper<Grid> mapper(*grid, Dune::mcmgElementLayout());
+  Dune::MultipleCodimMultipleGeomTypeMapper<Grid::LeafGridView>
+    mapper(grid->leafGridView(), Dune::mcmgElementLayout());
 
   // the primary variable vector
   std::vector<double> temperature(mapper.size());
@@ -466,7 +467,8 @@ void twoDimensionalTest ()
   // using an h-adaptive finite volume method with an explicit Euler time discretization
 
   // make a mapper for codim 0 entities in the leaf grid
-  Dune::LeafMultipleCodimMultipleGeomTypeMapper<Grid> mapper(*grid, Dune::mcmgElementLayout());
+  Dune::MultipleCodimMultipleGeomTypeMapper<Grid::LeafGridView>
+    mapper(grid->leafGridView(), Dune::mcmgElementLayout());
 
   // the primary variable vector
   std::vector<double> temperature(mapper.size());
