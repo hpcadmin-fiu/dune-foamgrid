@@ -38,7 +38,8 @@ void checkGridElementGrowth(Grid& grid, int numElements)
         if (i==0)
         {
           // find the second index
-          Dune::LeafMultipleCodimMultipleGeomTypeMapper<Grid> mapper(grid, Dune::mcmgVertexLayout());
+          Dune::MultipleCodimMultipleGeomTypeMapper<typename Grid::LeafGridView>
+            mapper(grid.leafGridView(), Dune::mcmgVertexLayout());
 
           // insert the new element
           grid.insertElement(GeometryTypes::line,
@@ -115,7 +116,8 @@ void checkGridElementMerge(Grid& grid)
   enum { dim = Grid::dimension };
 
   // vertex mapper
-  Dune::LeafMultipleCodimMultipleGeomTypeMapper<Grid> mapper(grid, Dune::mcmgVertexLayout());
+  Dune::MultipleCodimMultipleGeomTypeMapper<typename Grid::LeafGridView>
+    mapper(grid.leafGridView(), Dune::mcmgVertexLayout());
 
   // insert an element between the two closest boundary facets
   std::vector<unsigned int> vertices(dim+1);
@@ -255,7 +257,9 @@ void checkGridElementGrowthLevel(Grid& grid)
   std::cout << "-------------------------------------------" << std::endl;
 
   // vertex mapper
-  Dune::LeafMultipleCodimMultipleGeomTypeMapper<Grid> mapper(grid, Dune::mcmgVertexLayout());
+  Dune::MultipleCodimMultipleGeomTypeMapper<typename Grid::LeafGridView>
+    mapper(grid.leafGridView(), Dune::mcmgVertexLayout());
+
   // Then we do a merge with a level 1 and a level 0 vertex
   std::vector<unsigned int> elementVertices(dim+1);
   for (const auto& element : elements(grid.leafGridView()))

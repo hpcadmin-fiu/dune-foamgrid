@@ -20,7 +20,8 @@ void checkGridElementGrowth(Grid& grid)
   enum { dim = Grid::dimension };
 
   // the vertex mapper
-  LeafMultipleCodimMultipleGeomTypeMapper<Grid> mapper(grid, mcmgVertexLayout());
+  MultipleCodimMultipleGeomTypeMapper<typename Grid::LeafGridView>
+    mapper(grid.leafGridView(), mcmgVertexLayout());
 
   // let the top element grow
   for (const auto& element : elements(grid.leafGridView()))
