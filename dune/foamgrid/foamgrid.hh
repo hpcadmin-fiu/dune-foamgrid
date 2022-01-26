@@ -21,11 +21,7 @@
 #include <dune/common/function.hh>
 
 #include <dune/common/version.hh>
-#if DUNE_VERSION_LT(DUNE_COMMON,2,7)
-#include <dune/common/parallel/collectivecommunication.hh>
-#else
 #include <dune/common/parallel/communication.hh>
-#endif
 
 #include <dune/common/stdstreams.hh>
 #include <dune/grid/common/capabilities.hh>
@@ -76,7 +72,7 @@ struct FoamGridFamily
         unsigned int,   // global id type
         FoamGridIdSet< const FoamGrid<dimgrid, dimworld, ctype> >,  // local IdSet
         unsigned int,   // local id type
-        CollectiveCommunication<Dune::FoamGrid<dimgrid, dimworld, ctype> > ,
+        Communication<Dune::FoamGrid<dimgrid, dimworld, ctype> > ,
         DefaultLevelGridViewTraits,
         DefaultLeafGridViewTraits,
         FoamGridEntitySeed
