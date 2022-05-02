@@ -8,4 +8,3 @@ Version: 2.8-git
 Maintainer: timokoch@uio.no, oliver.sander@tu-dresden.de
 #depending on
 Depends: dune-common (>= 2.8) dune-geometry (>= 2.8) dune-grid (>= 2.8)
-Suggests: dune-python
