@@ -18,7 +18,7 @@ As a unique feature of a `dune-grid` implementation, a FoamGrid is allowed to gr
 Installation
 ------------
 
-`dune-foamgrid` requires the DUNE core modules, version 2.4 or later.
+`dune-foamgrid` requires the DUNE core modules, version 2.8 or later.
 
 Please see the [general instructions for building DUNE modules](https://www.dune-project.org/doc/installation-notes.html) for detailed instructions on how to build the module.
 
