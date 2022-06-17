@@ -72,7 +72,7 @@ struct FoamGridFamily
         unsigned int,   // global id type
         FoamGridIdSet< const FoamGrid<dimgrid, dimworld, ctype> >,  // local IdSet
         unsigned int,   // local id type
-        Communication<Dune::FoamGrid<dimgrid, dimworld, ctype> > ,
+        Communication<Dune::No_Comm> ,
         DefaultLevelGridViewTraits,
         DefaultLeafGridViewTraits,
         FoamGridEntitySeed
