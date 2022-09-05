@@ -801,6 +801,13 @@ namespace Capabilities
     {
         static const bool v = false;
     };
+
+    /** \brief FoamGrid is thread-safe for grid views
+     */
+    template<int dimgrid, int dimworld, class ctype>
+    struct viewThreadSafe< FoamGrid<dimgrid, dimworld, ctype> > {
+      static const bool v = true;
+    };
 }
 
 } // namespace Dune
