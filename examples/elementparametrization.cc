@@ -257,7 +257,7 @@ bool finitevolumeadapt (Grid& grid, Mapper& mapper, std::vector<double>& tempera
 
   // adapt mesh and mapper
   bool refined=grid.adapt();
-  mapper.update();
+  mapper.update(leafGridView);
   restrictionmap.resize();
   temperature.resize(mapper.size());
 
