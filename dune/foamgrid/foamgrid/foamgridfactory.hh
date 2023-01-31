@@ -13,14 +13,8 @@
 #include <unordered_map>
 #include <functional>
 
-#include <dune/common/deprecated.hh>
-#include <dune/common/version.hh>
 #include <dune/common/fvector.hh>
 #include <dune/common/hash.hh>
-
-#if DUNE_VERSION_EQUAL(DUNE_COMMON, 2, 7)
-#include <dune/common/to_unique_ptr.hh>
-#endif
 
 #include <dune/grid/common/gridfactory.hh>
 #include <dune/foamgrid/foamgrid.hh>
@@ -38,15 +32,7 @@ template <int dimgrid, int dimworld, class ct>
 
     public:
 
-#if DUNE_VERSION_LT(DUNE_COMMON, 2, 7)
-    using GridPtrType = FoamGrid<dimgrid, dimworld, ctype>*;
-#elif DUNE_VERSION_LT(DUNE_COMMON, 2, 8)
-    using GridPtrType = ToUniquePtr<FoamGrid<dimgrid, dimworld, ctype>>;
-#else
-    using GridPtrType = std::unique_ptr<FoamGrid<dimgrid, dimworld,ctype>>;
-#endif
-
-    public:
+        using GridPtrType = std::unique_ptr<FoamGrid<dimgrid, dimworld,ctype>>;
 
         /** \brief Default constructor */
         GridFactoryBase()
@@ -213,9 +199,7 @@ template <int dimworld, class ct>
         void insertElement(const GeometryType& type,
                            const std::vector<unsigned int>& vertices,
                            std::function<FieldVector<ctype,dimworld>(FieldVector<ctype,dimgrid>)> elementParametrization)
-#if DUNE_VERSION_GT(DUNE_COMMON, 2, 7)
         override
-#endif
         {
             assert(type.isLine());
             EntityImp<1> newElement(this->vertexArray_[vertices[0]],
@@ -380,9 +364,7 @@ template <int dimworld, class ct>
         void insertElement(const GeometryType& type,
                            const std::vector<unsigned int>& vertices,
                            std::function<FieldVector<ctype,dimworld>(FieldVector<ctype,dimgrid>)> elementParametrization)
-#if DUNE_VERSION_GT(DUNE_COMMON, 2, 7)
         override
-#endif
         {
             assert(type.isTriangle());
             EntityImp<dimgrid> newElement(/*level=*/0, this->grid_->getNextFreeId());

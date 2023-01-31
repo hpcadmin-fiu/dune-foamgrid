@@ -16,7 +16,6 @@
 #include <type_traits>
 #include <functional>
 
-#include <dune/common/version.hh>
 #include <dune/common/parallel/communication.hh>
 
 #include <dune/common/stdstreams.hh>
