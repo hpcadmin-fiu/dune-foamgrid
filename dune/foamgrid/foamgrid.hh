@@ -16,10 +16,6 @@
 #include <type_traits>
 #include <functional>
 
-// TODO remove header and macro after release Dune 2.8
-#define DUNE_FUNCTION_HH_SILENCE_DEPRECATION // silence deprecation warning from <dune/common/function.hh>
-#include <dune/common/function.hh>
-
 #include <dune/common/version.hh>
 #include <dune/common/parallel/communication.hh>
 
@@ -449,31 +445,6 @@ public:
           newElement.growthInsertionIndex_ = elementsToInsert_.size()-1;
           return newElement.growthInsertionIndex_;
         }
-
-DUNE_NO_DEPRECATED_BEGIN
-        /** \brief Add a new element to be added to the grid
-        \param type The GeometryType of the new element
-        \param vertices The vertices of the new element, using the DUNE numbering
-        \param elementParametrization A function prescribing the shape of this element
-        \return The growthInsertionIndex that can be used to attach user data to this element.
-                It is valid between until calling postGrow.
-        */
-        [[deprecated("Signature with VirtualFunction is deprecated and will be removed after Dune 2.8. Use signature with std::function.")]]
-        unsigned int insertElement(const GeometryType& type,
-                                   const std::vector<unsigned int>& vertices,
-                                   const std::shared_ptr<VirtualFunction<FieldVector<ctype,dimgrid>,FieldVector<ctype,dimworld> > >& elementParametrization)
-        {
-          auto growthInsertionIndex = insertElement(type, vertices);
-          // save the pointer to the element parametrization
-          elementsToInsert_.back().elementParametrization_ =
-            [elementParametrization](const FieldVector<ctype,dimgrid>& x){
-              FieldVector<ctype,dimworld> y;
-              elementParametrization->evaluate(x, y);
-              return y;
-            };
-          return growthInsertionIndex;
-        }
-DUNE_NO_DEPRECATED_END
 
         /** \brief Add a new element to be added to the grid
         \param type The GeometryType of the new element
